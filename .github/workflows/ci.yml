@@ -183,3 +183,22 @@ jobs:
       - name: Run pnpm audit
         # Fail only on high/critical vulnerabilities
         run: pnpm audit --audit-level=high
+
+  # ─── Aggregator Job for Branch Protection ────────────────────────
+  # This job acts as a single status check that branch protection can require,
+  # preventing issues when jobs are dynamically skipped (like E2E tests).
+  status-aggregator:
+    name: Build, Lint & Test Pipeline
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [lint-and-typecheck, unit-tests, build, e2e-tests, security-audit]
+    steps:
+      - name: Check overall status
+        run: |
+          if [ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" = "true" ]; then
+            echo "One or more required jobs failed or were cancelled."
+            exit 1
+          else
+            echo "All required jobs passed or were intentionally skipped."
+            exit 0
+          fi
