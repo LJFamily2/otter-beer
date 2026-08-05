@@ -7,10 +7,10 @@
 > Every AI agent (Antigravity, Claude Code, Cursor, Copilot, etc.) making changes to this codebase **MUST** follow this exact order:
 >
 > 1. **Read existing tests** — understand what is already covered
-> 2. **Run existing tests** — confirm the baseline passes (`npm test`)
+> 2. **Run existing tests** — confirm the baseline passes (`pnpm test`)
 > 3. **Make the requested changes**
 > 4. **Write new tests** for the new/changed behavior
-> 5. **Run all tests** — confirm nothing is broken (`npm test && npm run test:e2e`)
+> 5. **Run all tests** — confirm nothing is broken (`pnpm test && pnpm run test:e2e`)
 >
 > No PR should ever reduce test coverage. If you cannot write a test for a change, document why in a code comment.
 
@@ -65,17 +65,17 @@ tests/
 
 ```bash
 # Unit + integration tests
-npm test                   # Run all Jest tests once
-npm run test:watch         # Watch mode (TDD)
-npm run test:coverage      # With coverage report
+pnpm test                   # Run all Jest tests once
+pnpm run test:watch         # Watch mode (TDD)
+pnpm run test:coverage      # With coverage report
 
 # E2E tests
-npm run test:e2e           # Run all Playwright tests (headless)
-npm run test:e2e:ui        # Playwright UI mode (visual debugging)
-npm run test:e2e:headed    # Run with browser visible
+pnpm run test:e2e           # Run all Playwright tests (headless)
+pnpm run test:e2e:ui        # Playwright UI mode (visual debugging)
+pnpm run test:e2e:headed    # Run with browser visible
 
 # Type checking
-npm run type-check         # tsc --noEmit (no emit, just validate)
+pnpm run type-check         # tsc --noEmit (no emit, just validate)
 ```
 
 ---
@@ -286,7 +286,7 @@ node tests/e2e/scripts/seed-test-db.js
 | API routes | 80% |
 | Components | 60% (Playwright covers the rest) |
 
-View coverage: `npm run test:coverage` → opens `coverage/lcov-report/index.html`
+View coverage: `pnpm run test:coverage` → opens `coverage/lcov-report/index.html`
 
 ---
 
@@ -311,4 +311,4 @@ See [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) for the full pipel
 - TypeScript → no type errors
 - Jest unit + integration → all pass, coverage thresholds met
 - Playwright E2E → all pass
-- `npm run build` → successful
+- `pnpm run build` → successful

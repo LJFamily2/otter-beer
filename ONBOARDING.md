@@ -22,14 +22,14 @@ git clone <repo-url>
 cd otter-beer
 
 # 2. Install dependencies
-npm install
+pnpm install
 
 # 3. Set up environment variables
 cp .env.example .env.local
 # Fill in all values in .env.local (see below)
 
 # 4. Start the dev server
-npm run dev
+pnpm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
@@ -122,9 +122,9 @@ src/
 ## 🧑‍💻 Development Workflow
 
 ```bash
-npm run dev      # Start dev server (http://localhost:3000)
-npm run build    # Production build
-npm run lint     # Run ESLint
+pnpm run dev      # Start dev server (http://localhost:3000)
+pnpm run build    # Production build
+pnpm run lint     # Run ESLint
 ```
 
 ---

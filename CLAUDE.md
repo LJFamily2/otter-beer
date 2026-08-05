@@ -9,10 +9,10 @@ Skipping any step is not acceptable.
 
 ```
 1. READ   → Read existing tests for the area you're changing
-2. RUN    → Run npm test to confirm baseline passes
+2. RUN    → Run pnpm test to confirm baseline passes
 3. CHANGE → Make the requested changes
 4. TEST   → Write new or updated tests for the changes
-5. VERIFY → Run npm test && npm run test:e2e to confirm all pass
+5. VERIFY → Run pnpm test && pnpm run test:e2e to confirm all pass
 ```
 
 **No change should reduce test coverage.**
