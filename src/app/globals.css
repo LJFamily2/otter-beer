@@ -1,0 +1,20 @@
+/* globals.css — OtterBeer base styles */
+/* Full design token system to be built out when implementation begins */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: var(--font-sans, system-ui, sans-serif);
+  min-height: 100dvh;
+}
