@@ -145,7 +145,7 @@ const sanitizedContent = DOMPurify.sanitize(body.content, {
 });
 ```
 
-Install: `npm install isomorphic-dompurify`
+Install: `pnpm add isomorphic-dompurify`
 
 ### Content Security Policy (CSP)
 CSP is a browser security layer that prevents unauthorized scripts from running.
@@ -195,7 +195,7 @@ if (!success) {
 - `POST /api/upload` — prevent abuse (3 uploads / minute per user)
 - All public-facing POST routes
 
-Install: `npm install @upstash/ratelimit @upstash/redis`
+Install: `pnpm add @upstash/ratelimit @upstash/redis`
 
 ---
 
@@ -348,10 +348,11 @@ export const env = envSchema.parse(process.env);
 
 ```bash
 # Run before every release
-npm audit
+pnpm audit
 
 # Auto-fix low/moderate issues
-npm audit fix
+# (Note: pnpm doesn't have an exact 'audit fix' equivalent, but you can upgrade packages)
+# Or manually resolve reported vulnerabilities.
 
 # Check for known vulnerabilities weekly
 # (Automated in GitHub Actions CI — see .github/workflows/ci.yml)
@@ -370,7 +371,7 @@ When adding any new feature that handles user data, answer these:
 - [ ] Is any HTML content sanitized with DOMPurify before saving?
 - [ ] Is rate limiting applied if this is a public-facing endpoint?
 - [ ] Are new environment variables documented in `.env.example`?
-- [ ] Does `npm audit` pass after adding any new dependency?
+- [ ] Does `pnpm audit` pass after adding any new dependency?
 
 ---
 

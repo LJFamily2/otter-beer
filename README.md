@@ -7,9 +7,9 @@
 See **[ONBOARDING.md](./ONBOARDING.md)** for the full setup guide.
 
 ```bash
-npm install
+pnpm install
 cp .env.example .env.local  # Fill in your values
-npm run dev
+pnpm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
@@ -37,7 +37,7 @@ src/
 ## Scripts
 
 ```bash
-npm run dev    # Development server
-npm run build  # Production build
-npm run lint   # ESLint
+pnpm run dev    # Development server
+pnpm run build  # Production build
+pnpm run lint   # ESLint
 ```
