@@ -1,0 +1,108 @@
+.wrap {
+  border: 1px solid rgba(196, 198, 210, 0.5);
+  border-radius: var(--radius-default);
+  background: var(--color-surface-container-lowest);
+  overflow: hidden;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 6px;
+  background: var(--color-surface);
+  border-bottom: 1px solid rgba(196, 198, 210, 0.5);
+}
+
+.toolButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-on-surface-variant);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toolButton:hover {
+  background: var(--color-surface-container);
+}
+
+.toolButtonActive {
+  background: var(--color-secondary-container);
+  color: var(--color-on-secondary-container);
+}
+
+.toolDivider {
+  width: 1px;
+  background: rgba(196, 198, 210, 0.5);
+  margin: 4px 4px;
+}
+
+.content {
+  padding: 16px;
+  min-height: 260px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.content :global(.ProseMirror) {
+  outline: none;
+  min-height: 240px;
+}
+
+.content :global(.ProseMirror p.is-editor-empty:first-child::before) {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--color-outline);
+}
+
+.content :global(.ProseMirror h2) {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--color-primary);
+  margin: 1em 0 0.4em;
+}
+
+.content :global(.ProseMirror h3) {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--color-primary);
+  margin: 1em 0 0.4em;
+}
+
+.content :global(.ProseMirror p) {
+  margin: 0 0 0.9em;
+}
+
+.content :global(.ProseMirror ul),
+.content :global(.ProseMirror ol) {
+  margin: 0 0 0.9em;
+  padding-left: 1.4em;
+}
+
+.content :global(.ProseMirror blockquote) {
+  border-left: 3px solid var(--color-secondary-fixed-dim);
+  padding-left: 1em;
+  margin: 0 0 0.9em;
+  color: var(--color-on-surface-variant);
+}
+
+.content :global(.ProseMirror img) {
+  max-width: 100%;
+  border-radius: var(--radius-default);
+}
+
+.content :global(.ProseMirror a) {
+  color: var(--color-primary);
+  text-decoration: underline;
+}

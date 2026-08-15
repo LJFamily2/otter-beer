@@ -1,4 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { auth } from "@/auth";
+import { MODULE_KEYS } from "@/config/permissions";
 import { storageService } from "@/lib/storage/StorageService";
 import { BlogPostRepository } from "@/repositories/BlogPostRepository";
 
@@ -9,19 +11,30 @@ interface RouteParams {
 }
 
 /**
- * Public, unauthenticated image endpoint — the R2 bucket itself stays
- * private (see docs/security.md), but published-post images need a fast,
- * cacheable, crawlable URL for SEO/social previews. This streams the
- * object through only if it's actually referenced by a published post;
- * everything else (draft cover images, orphaned uploads) 404s.
+ * Image endpoint behind a dual gate — the R2 bucket itself stays private
+ * (see docs/security.md), but this route needs to serve two different
+ * audiences the same way:
+ *  1. Public visitors: only images actually referenced by a *published*
+ *     post (fast, cacheable, crawlable — required for SEO/social previews).
+ *  2. Logged-in admins with news_blog view access: any key, so the Tiptap
+ *     editor can preview inline/cover images on a post that isn't
+ *     published yet.
+ * Everything else (orphaned uploads, guesses) 404s either way.
  */
 export async function GET(_request: NextRequest, context: RouteParams) {
   const { key: keyParts } = await context.params;
   const key = keyParts.join("/");
 
-  const visible = await blogPostRepository.isKeyPubliclyVisible(key);
-  if (!visible) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const session = await auth();
+  const canPreviewAsAdmin = Boolean(
+    session?.user?.permissions?.[MODULE_KEYS.NEWS_BLOG]?.view
+  );
+
+  if (!canPreviewAsAdmin) {
+    const visible = await blogPostRepository.isKeyPubliclyVisible(key);
+    if (!visible) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
   }
 
   const object = await storageService.getObject(key);
