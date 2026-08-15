@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ALLOWED_IMAGE_CONTENT_TYPES } from "@/lib/storage/StorageService";
+import { ALLOWED_IMAGE_CONTENT_TYPES } from "@/lib/storage/constants";
 
 export const RequestUploadSchema = z.object({
   contentType: z.enum(

@@ -4,8 +4,12 @@ import { auth } from "@/auth";
 import { blogPostService } from "@/services/BlogPostService";
 import { pickTranslation } from "@/lib/utils/BlogPostPresenter";
 import { PlusIcon, SearchIcon, EditIcon, TrashIcon } from "@/components/admin/icons";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Pagination } from "@/components/ui/Pagination";
+import { buttonVariants } from "@/components/ui/Button";
+import { rowActionButtonClass } from "@/components/admin/classNames";
 import { DeletePostButton } from "./DeletePostButton";
-import styles from "./BlogListPage.module.css";
 
 export const metadata: Metadata = {
   title: "Tin tức & Blog",
@@ -36,7 +40,7 @@ export default async function BlogListPage({
 
   if (!grant?.view) {
     return (
-      <div className={styles.emptyState}>
+      <div className="p-16 text-center text-on-surface-variant">
         Bạn không có quyền xem nội dung này.
       </div>
     );
@@ -59,46 +63,62 @@ export default async function BlogListPage({
   };
 
   return (
-    <div className={styles.wrap}>
-      <div className={styles.header}>
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[rgba(196,198,210,0.3)] pb-4">
         <div>
-          <h1 className={styles.headerTitle}>Quản lý Tin tức & Blog</h1>
-          <p className={styles.headerSubtitle}>
+          <h1 className="text-4xl tracking-wide text-primary">
+            Quản lý Tin tức & Blog
+          </h1>
+          <p className="mt-2 text-base text-on-surface-variant">
             Theo dõi bài viết, thông báo, và cập nhật từ nhà máy bia.
           </p>
         </div>
         {grant.add ? (
-          <Link href="/admin/blog/moi" className={styles.createButton}>
+          <Link href="/admin/blog/moi" className={buttonVariants("primary")}>
             <PlusIcon width={14} height={14} />
             Tạo bài viết
           </Link>
         ) : null}
       </div>
 
-      <div className={styles.kpiGrid}>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiAccent} />
-          <div className={styles.kpiLabel}>Tổng số bài viết</div>
-          <div className={styles.kpiValue}>{stats.total}</div>
-        </div>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiLabel}>Đã xuất bản</div>
-          <div className={styles.kpiValue}>{stats.published}</div>
-          <div className={styles.kpiHint}>Đang hiển thị trên trang web</div>
-        </div>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiLabel}>Bản nháp</div>
-          <div className={styles.kpiValue}>{stats.draft}</div>
-          <div className={styles.kpiHint}>Cần xem lại</div>
-        </div>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-6">
+        <Card className="relative overflow-hidden p-6">
+          <div className="absolute inset-x-0 top-0 h-1 bg-secondary-container" />
+          <div className="text-sm font-bold uppercase tracking-wide text-on-surface-variant">
+            Tổng số bài viết
+          </div>
+          <div className="mt-2 text-4xl tracking-wide text-primary">
+            {stats.total}
+          </div>
+        </Card>
+        <Card className="p-6">
+          <div className="text-sm font-bold uppercase tracking-wide text-on-surface-variant">
+            Đã xuất bản
+          </div>
+          <div className="mt-2 text-4xl tracking-wide text-primary">
+            {stats.published}
+          </div>
+          <div className="mt-2 text-xs text-on-surface-variant">
+            Đang hiển thị trên trang web
+          </div>
+        </Card>
+        <Card className="p-6">
+          <div className="text-sm font-bold uppercase tracking-wide text-on-surface-variant">
+            Bản nháp
+          </div>
+          <div className="mt-2 text-4xl tracking-wide text-primary">
+            {stats.draft}
+          </div>
+          <div className="mt-2 text-xs text-on-surface-variant">Cần xem lại</div>
+        </Card>
       </div>
 
-      <div className={styles.tableSection}>
-        <div className={styles.tableToolbar}>
-          <h2 className={styles.tableTitle}>Bài viết gần đây</h2>
-          <form className={styles.searchForm} action="/admin/blog" method="get">
+      <Card className="overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[rgba(196,198,210,0.3)] bg-[#fdf9f4] p-6">
+          <h2 className="text-xl tracking-wide text-primary">Bài viết gần đây</h2>
+          <form className="flex gap-2" action="/admin/blog" method="get">
             <input
-              className={styles.searchInput}
+              className="min-w-[220px] rounded border border-[rgba(196,198,210,0.5)] bg-surface-container-lowest px-3.5 py-2.5 text-sm focus:border-secondary-fixed-dim focus:outline-none"
               type="search"
               name="search"
               placeholder="Tìm kiếm bài viết..."
@@ -106,7 +126,7 @@ export default async function BlogListPage({
             />
             <button
               type="submit"
-              className={styles.rowActionButton}
+              className={rowActionButtonClass}
               aria-label="Tìm kiếm"
             >
               <SearchIcon width={16} height={16} />
@@ -114,15 +134,22 @@ export default async function BlogListPage({
           </form>
         </div>
 
-        <div className={styles.tableScroll}>
-          <table className={styles.table}>
+        <div className="w-full overflow-x-auto">
+          <table className="w-full min-w-[640px] border-collapse">
             <thead>
               <tr>
-                <th>Tiêu đề bài viết</th>
-                <th>Tác giả</th>
-                <th>Ngày</th>
-                <th>Trạng thái</th>
-                <th>Thao tác</th>
+                {["Tiêu đề bài viết", "Tác giả", "Ngày", "Trạng thái", "Thao tác"].map(
+                  (heading, i) => (
+                    <th
+                      key={heading}
+                      className={`border-b border-[rgba(196,198,210,0.3)] bg-surface px-4 py-4 text-left text-[13px] font-medium uppercase tracking-wide text-on-surface-variant ${
+                        i === 0 ? "pl-6" : ""
+                      } ${i === 4 ? "pr-6 text-right" : ""}`}
+                    >
+                      {heading}
+                    </th>
+                  )
+                )}
               </tr>
             </thead>
             <tbody>
@@ -133,33 +160,31 @@ export default async function BlogListPage({
 
                 return (
                   <tr key={postId}>
-                    <td className={styles.postTitleCell}>
+                    <td className="max-w-[340px] border-t border-[rgba(196,198,210,0.2)] py-5 pl-6 pr-4 font-medium text-primary">
                       <Link
                         href={`/admin/blog/${postId}/sua`}
-                        className={styles.postTitleLink}
+                        className="text-inherit no-underline hover:underline"
                       >
                         {translation?.title ?? "(Chưa có tiêu đề)"}
                       </Link>
                     </td>
-                    <td>{author?.name ?? "—"}</td>
-                    <td>{dateFormatter.format(post.createdAt)}</td>
-                    <td>
-                      <span
-                        className={`${styles.badge} ${
-                          post.status === "published"
-                            ? styles.badgePublished
-                            : styles.badgeDraft
-                        }`}
-                      >
-                        {post.status === "published" ? "Đã xuất bản" : "Bản nháp"}
-                      </span>
+                    <td className="border-t border-[rgba(196,198,210,0.2)] px-4 py-5 text-base">
+                      {author?.name ?? "—"}
                     </td>
-                    <td>
-                      <div className={styles.rowActions}>
+                    <td className="border-t border-[rgba(196,198,210,0.2)] px-4 py-5 text-base">
+                      {dateFormatter.format(post.createdAt)}
+                    </td>
+                    <td className="border-t border-[rgba(196,198,210,0.2)] px-4 py-5">
+                      <Badge variant={post.status === "published" ? "primary" : "neutral"}>
+                        {post.status === "published" ? "Đã xuất bản" : "Bản nháp"}
+                      </Badge>
+                    </td>
+                    <td className="border-t border-[rgba(196,198,210,0.2)] py-5 pl-4 pr-6 text-right">
+                      <div className="inline-flex gap-1">
                         {grant.edit ? (
                           <Link
                             href={`/admin/blog/${postId}/sua`}
-                            className={styles.rowActionButton}
+                            className={rowActionButtonClass}
                             aria-label="Sửa"
                           >
                             <EditIcon width={15} height={15} />
@@ -179,7 +204,7 @@ export default async function BlogListPage({
           </table>
 
           {result.items.length === 0 ? (
-            <div className={styles.emptyState}>
+            <div className="p-16 text-center text-on-surface-variant">
               {search
                 ? `Không tìm thấy bài viết nào khớp với "${search}".`
                 : "Chưa có bài viết nào."}
@@ -187,45 +212,20 @@ export default async function BlogListPage({
           ) : null}
         </div>
 
-        <div className={styles.tableFooter}>
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[rgba(196,198,210,0.3)] bg-[#fdf9f4] p-6 text-sm text-on-surface-variant">
           <span>
             Hiển thị {result.items.length === 0 ? 0 : (result.page - 1) * result.pageSize + 1}
             {" "}đến {Math.min(result.page * result.pageSize, result.total)} trong tổng số{" "}
             {result.total} bài viết
           </span>
-          <div className={styles.pagination}>
-            <Link
-              href={buildPageHref(Math.max(1, result.page - 1))}
-              className={`${styles.pageLink} ${
-                result.page <= 1 ? styles.pageLinkDisabled : ""
-              }`}
-            >
-              Trước
-            </Link>
-            {Array.from({ length: result.totalPages }, (_, i) => i + 1)
-              .slice(0, 5)
-              .map((p) => (
-                <Link
-                  key={p}
-                  href={buildPageHref(p)}
-                  className={`${styles.pageLink} ${
-                    p === result.page ? styles.pageLinkActive : ""
-                  }`}
-                >
-                  {p}
-                </Link>
-              ))}
-            <Link
-              href={buildPageHref(Math.min(result.totalPages, result.page + 1))}
-              className={`${styles.pageLink} ${
-                result.page >= result.totalPages ? styles.pageLinkDisabled : ""
-              }`}
-            >
-              Sau
-            </Link>
-          </div>
+          <Pagination
+            page={result.page}
+            totalPages={result.totalPages}
+            buildHref={buildPageHref}
+            variant="compact"
+          />
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

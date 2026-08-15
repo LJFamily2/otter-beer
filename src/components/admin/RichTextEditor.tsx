@@ -7,13 +7,34 @@ import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import { useRef, useState } from "react";
 import { uploadImage } from "@/lib/utils/uploadImage";
-import styles from "./RichTextEditor.module.css";
 
 interface RichTextEditorProps {
   value: string;
   onChange: (html: string) => void;
   placeholder?: string;
 }
+
+const toolButtonClass = (active?: boolean) =>
+  `inline-flex h-[30px] min-w-[30px] items-center justify-center rounded-sm px-2 text-[13px] font-semibold ${
+    active
+      ? "bg-secondary-container text-on-secondary-container"
+      : "text-on-surface-variant hover:bg-surface-container"
+  }`;
+
+// Tiptap renders its own DOM (.ProseMirror) that we don't control via
+// className props directly, so its typography is styled through Tailwind's
+// arbitrary descendant-selector variants on the wrapping div instead of a
+// separate stylesheet.
+const proseMirrorStyles =
+  "[&_.ProseMirror]:min-h-[240px] [&_.ProseMirror]:outline-none " +
+  "[&_.ProseMirror_p]:mb-[0.9em] " +
+  "[&_.ProseMirror_h2]:mt-4 [&_.ProseMirror_h2]:mb-2 [&_.ProseMirror_h2]:font-display [&_.ProseMirror_h2]:text-2xl [&_.ProseMirror_h2]:text-primary " +
+  "[&_.ProseMirror_h3]:mt-4 [&_.ProseMirror_h3]:mb-2 [&_.ProseMirror_h3]:font-display [&_.ProseMirror_h3]:text-xl [&_.ProseMirror_h3]:text-primary " +
+  "[&_.ProseMirror_ul]:mb-[0.9em] [&_.ProseMirror_ul]:pl-6 [&_.ProseMirror_ol]:mb-[0.9em] [&_.ProseMirror_ol]:pl-6 " +
+  "[&_.ProseMirror_blockquote]:my-0 [&_.ProseMirror_blockquote]:mb-[0.9em] [&_.ProseMirror_blockquote]:border-l-[3px] [&_.ProseMirror_blockquote]:border-secondary-fixed-dim [&_.ProseMirror_blockquote]:pl-4 [&_.ProseMirror_blockquote]:text-on-surface-variant " +
+  "[&_.ProseMirror_img]:max-w-full [&_.ProseMirror_img]:rounded " +
+  "[&_.ProseMirror_a]:text-primary [&_.ProseMirror_a]:underline " +
+  "[&_.is-editor-empty::before]:pointer-events-none [&_.is-editor-empty::before]:float-left [&_.is-editor-empty::before]:h-0 [&_.is-editor-empty::before]:text-outline [&_.is-editor-empty::before]:content-[attr(data-placeholder)]";
 
 export function RichTextEditor({
   value,
@@ -69,8 +90,8 @@ export function RichTextEditor({
   }
 
   return (
-    <div className={styles.wrap}>
-      <div className={styles.toolbar}>
+    <div className="overflow-hidden rounded border border-[rgba(196,198,210,0.5)] bg-surface-container-lowest">
+      <div className="flex flex-wrap gap-0.5 border-b border-[rgba(196,198,210,0.5)] bg-surface p-1.5">
         <ToolButton
           label="B"
           active={editor.isActive("bold")}
@@ -81,7 +102,7 @@ export function RichTextEditor({
           active={editor.isActive("italic")}
           onClick={() => editor.chain().focus().toggleItalic().run()}
         />
-        <div className={styles.toolDivider} />
+        <div className="mx-1 my-1 w-px bg-[rgba(196,198,210,0.5)]" />
         <ToolButton
           label="H2"
           active={editor.isActive("heading", { level: 2 })}
@@ -96,7 +117,7 @@ export function RichTextEditor({
             editor.chain().focus().toggleHeading({ level: 3 }).run()
           }
         />
-        <div className={styles.toolDivider} />
+        <div className="mx-1 my-1 w-px bg-[rgba(196,198,210,0.5)]" />
         <ToolButton
           label="• Danh sách"
           active={editor.isActive("bulletList")}
@@ -112,7 +133,7 @@ export function RichTextEditor({
           active={editor.isActive("blockquote")}
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
         />
-        <div className={styles.toolDivider} />
+        <div className="mx-1 my-1 w-px bg-[rgba(196,198,210,0.5)]" />
         <ToolButton
           label="Liên kết"
           active={editor.isActive("link")}
@@ -130,7 +151,7 @@ export function RichTextEditor({
           onChange={handleImagePick}
         />
       </div>
-      <div className={styles.content}>
+      <div className={`p-4 text-base leading-relaxed ${proseMirrorStyles}`}>
         <EditorContent editor={editor} />
       </div>
     </div>
@@ -147,11 +168,7 @@ function ToolButton({
   onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
-      className={`${styles.toolButton} ${active ? styles.toolButtonActive : ""}`}
-      onClick={onClick}
-    >
+    <button type="button" className={toolButtonClass(active)} onClick={onClick}>
       {label}
     </button>
   );

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import styles from "./BlogListPage.module.css";
+import { rowActionButtonClass } from "@/components/admin/classNames";
 
 export function DeletePostButton({
   postId,
@@ -37,7 +37,7 @@ export function DeletePostButton({
   return (
     <button
       type="button"
-      className={styles.rowActionButton}
+      className={rowActionButtonClass}
       aria-label="Xóa"
       disabled={isDeleting}
       onClick={handleDelete}

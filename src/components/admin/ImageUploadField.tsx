@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { uploadImage } from "@/lib/utils/uploadImage";
-import styles from "./ImageUploadField.module.css";
+import { buttonVariants } from "@/components/ui/Button";
 
 interface ImageUploadFieldProps {
   imageKey?: string;
@@ -33,44 +33,50 @@ export function ImageUploadField({
   }
 
   return (
-    <div className={styles.field}>
-      <div className={styles.dropzone}>
-        <div className={styles.preview}>
-          {imageKey ? (
-            // eslint-disable-next-line @next/next/no-img-element -- served by our own proxy route, arbitrary R2 key, next/image optimization not applicable
-            <img src={`/api/media/public/${imageKey}`} alt="" />
-          ) : (
-            <span className={styles.placeholder}>Chưa có ảnh</span>
-          )}
-        </div>
-        <div className={styles.actions}>
+    <div className="flex items-center gap-4 rounded border border-dashed border-[rgba(196,198,210,0.7)] bg-surface p-4">
+      <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded bg-surface-container-high">
+        {imageKey ? (
+          // eslint-disable-next-line @next/next/no-img-element -- served by our own proxy route, arbitrary R2 key, next/image optimization not applicable
+          <img
+            src={`/api/media/public/${imageKey}`}
+            alt=""
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <span className="px-2 text-center text-xs text-on-surface-variant">
+            Chưa có ảnh
+          </span>
+        )}
+      </div>
+      <div className="flex flex-col items-start gap-2">
+        <button
+          type="button"
+          className={buttonVariants("secondary")}
+          onClick={() => inputRef.current?.click()}
+          disabled={isUploading}
+        >
+          {isUploading ? "Đang tải..." : imageKey ? "Thay ảnh" : "Tải ảnh lên"}
+        </button>
+        {imageKey ? (
           <button
             type="button"
-            className={styles.uploadButton}
-            onClick={() => inputRef.current?.click()}
-            disabled={isUploading}
+            className="cursor-pointer border-none bg-transparent p-0 text-[13px] text-error"
+            onClick={() => onChange(undefined)}
           >
-            {isUploading ? "Đang tải..." : imageKey ? "Thay ảnh" : "Tải ảnh lên"}
+            Xóa ảnh
           </button>
-          {imageKey ? (
-            <button
-              type="button"
-              className={styles.removeButton}
-              onClick={() => onChange(undefined)}
-            >
-              Xóa ảnh
-            </button>
-          ) : null}
-          <span className={styles.hint}>JPEG, PNG, WebP, hoặc GIF — tối đa 5MB</span>
-        </div>
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          hidden
-          onChange={handlePick}
-        />
+        ) : null}
+        <span className="text-xs text-on-surface-variant">
+          JPEG, PNG, WebP, hoặc GIF — tối đa 5MB
+        </span>
       </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        hidden
+        onChange={handlePick}
+      />
     </div>
   );
 }

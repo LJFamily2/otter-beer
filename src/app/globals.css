@@ -1,7 +1,10 @@
-/* globals.css — OtterBeer base styles
-   Design tokens: "Coastal Premium" system — see docs/DESIGN.md */
+@import "tailwindcss";
 
-:root {
+/* Design tokens: "Coastal Premium" system — see docs/DESIGN.md.
+   Registering these under @theme makes them real Tailwind utilities
+   (bg-primary, text-on-surface-variant, font-display, rounded-lg, ...)
+   instead of ad-hoc CSS custom properties. */
+@theme {
   /* Color: surfaces */
   --color-surface: #f4fafd;
   --color-surface-dim: #d4dbdd;
@@ -60,41 +63,18 @@
   /* Typography */
   --font-display: var(--font-anton), "Anton", sans-serif;
   --font-body: var(--font-hanken-grotesk), "Hanken Grotesk", sans-serif;
+  --font-sans: var(--font-hanken-grotesk), "Hanken Grotesk", sans-serif;
 
-  /* Shape */
+  /* Shape — Coastal Premium is deliberately soft, not fully rounded */
+  --radius: 0.25rem;
   --radius-sm: 0.125rem;
-  --radius-default: 0.25rem;
   --radius-md: 0.375rem;
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
-  --radius-full: 9999px;
 
-  /* Spacing / layout */
-  --container-max: 1280px;
-  --gutter: 24px;
-  --margin-desktop: 64px;
-  --margin-mobile: 20px;
-  --section-gap: 120px;
-  --stack-sm: 8px;
-  --stack-md: 16px;
-  --stack-lg: 32px;
-
-  /* Elevation — diffused, blue-tinted ambient shadows only */
+  /* Elevation — diffused, blue-tinted ambient shadows only (see DESIGN.md) */
   --shadow-sm: 0px 4px 10px rgba(29, 63, 130, 0.06);
   --shadow-md: 0px 24px 64px -12px rgba(29, 63, 130, 0.08);
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html {
-  scroll-behavior: smooth;
-  -webkit-font-smoothing: antialiased;
 }
 
 body {
@@ -111,12 +91,4 @@ h4 {
   font-family: var(--font-display);
   font-weight: 400;
   color: var(--color-primary);
-}
-
-a {
-  color: inherit;
-}
-
-button {
-  font-family: inherit;
 }

@@ -3,7 +3,6 @@ import { auth, signOut } from "@/auth";
 import { MODULE_KEYS } from "@/config/permissions";
 import { NewsBlogIcon, LogoutIcon } from "@/components/admin/icons";
 import { AdminNavLink } from "../AdminNavLink";
-import styles from "../AdminShell.module.css";
 
 /**
  * Shell for every authenticated admin page (sidebar + user card + logout).
@@ -31,14 +30,18 @@ export default async function ProtectedAdminLayout({
   const initial = session?.user?.name?.charAt(0).toUpperCase() ?? "?";
 
   return (
-    <div className={styles.shell}>
-      <aside className={styles.sidebar}>
+    <div className="flex min-h-dvh bg-surface">
+      <aside className="sticky top-0 flex h-dvh w-64 shrink-0 flex-col justify-between border-r border-[rgba(196,198,210,0.2)] bg-surface-container-low py-8 shadow-[0px_4px_6px_-1px_rgba(0,40,103,0.05),0px_2px_4px_-2px_rgba(0,40,103,0.05)] max-[900px]:hidden">
         <div>
-          <div className={styles.brand}>
-            <div className={styles.brandTitle}>Otter Beer</div>
-            <div className={styles.brandSubtitle}>Cổng quản trị nội dung</div>
+          <div className="px-6 pb-8">
+            <div className="text-2xl leading-[1.3] tracking-wide text-primary">
+              Otter Beer
+            </div>
+            <div className="mt-1 text-xs font-medium leading-[1.3] text-on-surface-variant">
+              Cổng quản trị nội dung
+            </div>
           </div>
-          <nav className={styles.nav}>
+          <nav className="flex flex-col gap-1 px-6 pt-1">
             {navItems.map((item) => (
               <AdminNavLink key={item.key} href={item.href} icon={item.icon}>
                 {item.label}
@@ -47,9 +50,9 @@ export default async function ProtectedAdminLayout({
           </nav>
         </div>
 
-        <div className={styles.footerNav}>
-          <div className={styles.userCard}>
-            <span className={styles.userAvatar}>
+        <div className="flex flex-col gap-1 px-6">
+          <div className="flex items-center gap-2 px-4 pb-4 pt-2 text-xs text-on-surface-variant">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary font-display text-xs text-on-primary">
               {session?.user?.image ? (
                 <Image src={session.user.image} alt="" width={28} height={28} />
               ) : (
@@ -59,14 +62,16 @@ export default async function ProtectedAdminLayout({
             <span>{session?.user?.name ?? "Không xác định"}</span>
           </div>
           <form
-            className={styles.logoutForm}
             action={async () => {
               "use server";
               await signOut({ redirectTo: "/admin/dang-nhap" });
             }}
           >
-            <button type="submit">
-              <span className={styles.navIcon}>
+            <button
+              type="submit"
+              className="flex w-full items-center gap-3 rounded-md px-4 py-3 text-left text-sm font-bold tracking-wide text-on-surface-variant hover:bg-surface-container"
+            >
+              <span className="h-[18px] w-[18px] shrink-0">
                 <LogoutIcon />
               </span>
               Đăng xuất
@@ -75,7 +80,9 @@ export default async function ProtectedAdminLayout({
         </div>
       </aside>
 
-      <main className={styles.main}>{children}</main>
+      <main className="max-w-[1280px] flex-1 min-w-0 p-16 max-[900px]:px-5 max-[900px]:py-8">
+        {children}
+      </main>
     </div>
   );
 }

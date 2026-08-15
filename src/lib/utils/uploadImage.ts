@@ -1,4 +1,4 @@
-import { ALLOWED_IMAGE_CONTENT_TYPES } from "@/lib/storage/StorageService";
+import { ALLOWED_IMAGE_CONTENT_TYPES } from "@/lib/storage/constants";
 
 export interface UploadedImage {
   key: string;

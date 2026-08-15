@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { signIn } from "@/auth";
-import styles from "./page.module.css";
 
 export const metadata: Metadata = {
   title: "Đăng nhập",
@@ -17,64 +16,66 @@ export default async function AdminLoginPage({
   const { callbackUrl, error } = await searchParams;
 
   return (
-    <div className={styles.page}>
-      <div className={styles.container}>
-        <div className={styles.card}>
-          <div className={styles.goldAccent} />
-          <div className={styles.cardInner}>
-            <div className={styles.branding}>
-              <h1 className={styles.wordmark}>Otter Beer</h1>
-              <p className={styles.tagline}>Cổng quản trị</p>
+    <div className="flex min-h-dvh items-center justify-center bg-surface px-5 py-20">
+      <div className="flex w-full max-w-[480px] flex-col items-center gap-8">
+        <div className="relative w-full overflow-hidden rounded-lg border border-[rgba(0,40,103,0.05)] bg-surface-container-lowest shadow-md">
+          <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-secondary-container/0 via-secondary-container to-secondary-container/0" />
+
+          <div className="flex flex-col items-center p-12">
+            <div className="flex w-full flex-col items-center gap-2">
+              <h1 className="text-center text-[40px] uppercase leading-[1.15] tracking-[0.1em] text-primary">
+                Otter Beer
+              </h1>
+              <p className="text-center text-sm font-bold uppercase tracking-[0.2em] text-on-surface-variant">
+                Cổng quản trị
+              </p>
             </div>
 
-            <div className={styles.divider} />
+            <div className="my-8 h-px w-12 bg-[rgba(196,198,210,0.3)]" />
 
             {error ? (
-              <p className={styles.errorBanner} role="alert">
+              <p
+                role="alert"
+                className="mb-4 w-full rounded bg-error-container px-4 py-3 text-center text-sm text-on-error-container"
+              >
                 Truy cập bị từ chối. Tài khoản của bạn chưa được cấp quyền
                 hoặc đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.
               </p>
             ) : null}
 
             <form
-              className={styles.form}
+              className="w-full"
               action={async () => {
                 "use server";
                 await signIn("google", { redirectTo: callbackUrl || "/admin" });
               }}
             >
-              <button type="submit" className={styles.googleButton}>
-                <GoogleIcon className={styles.googleIcon} />
+              <button
+                type="submit"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 text-sm font-bold uppercase tracking-[0.1em] text-on-primary transition-colors [filter:drop-shadow(0px_1px_1px_rgba(0,0,0,0.05))] hover:bg-primary-container"
+              >
+                <GoogleIcon />
                 Đăng nhập với Google
               </button>
             </form>
 
-            <p className={styles.helperText}>
+            <p className="mt-4 text-center text-[13px] text-on-surface-variant">
               Chỉ những tài khoản đã được cấp quyền mới có thể đăng nhập.
             </p>
           </div>
         </div>
 
-        <div className={styles.footer}>Chỉ dành cho nhân viên được ủy quyền</div>
+        <div className="flex items-center justify-center gap-2 text-center text-xs font-medium uppercase tracking-[0.1em] text-on-surface-variant opacity-60">
+          Chỉ dành cho nhân viên được ủy quyền
+        </div>
       </div>
     </div>
   );
 }
 
-function GoogleIcon({ className }: { className?: string }) {
+function GoogleIcon() {
   return (
-    <span
-      className={className}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: 20,
-        height: 20,
-        borderRadius: "50%",
-        background: "#fff",
-      }}
-    >
+    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white">
       <svg width="13" height="13" viewBox="0 0 18 18" aria-hidden="true">
         <path
           fill="#4285F4"

@@ -5,7 +5,8 @@ import { useState } from "react";
 import { LOCALES, type LocaleCode } from "@/config/locales";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
-import styles from "./PostForm.module.css";
+import { Card } from "@/components/ui/Card";
+import { Button, buttonVariants } from "@/components/ui/Button";
 
 interface TranslationFormState {
   title: string;
@@ -43,6 +44,16 @@ interface PostFormProps {
   postId?: string;
   initialData?: PostFormInitialData;
 }
+
+const labelClass =
+  "text-xs font-medium uppercase tracking-wide text-on-surface";
+const inputClass =
+  "rounded border border-[rgba(196,198,210,0.5)] bg-surface-container-lowest px-3.5 py-3 text-[15px] text-on-surface focus:border-secondary-fixed-dim focus:outline-none";
+const textareaClass = `${inputClass} min-h-[72px] resize-y`;
+const fieldClass = "flex flex-col gap-1.5";
+const sectionClass =
+  "flex flex-col gap-4 rounded-lg border border-[rgba(196,198,210,0.3)] bg-surface-container-lowest p-6 shadow-sm";
+const sectionTitleClass = "font-display text-lg tracking-wide text-primary";
 
 export function PostForm({ mode, postId, initialData }: PostFormProps) {
   const router = useRouter();
@@ -143,25 +154,34 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
   const active = translations[activeLocale];
 
   return (
-    <form className={styles.wrap} onSubmit={handleSubmit}>
-      <div className={styles.header}>
-        <h1 className={styles.headerTitle}>
+    <form
+      className="flex max-w-[860px] flex-col gap-8"
+      onSubmit={handleSubmit}
+    >
+      <div className="border-b border-[rgba(196,198,210,0.3)] pb-4">
+        <h1 className="text-[32px] tracking-wide text-primary">
           {mode === "create" ? "Tạo bài viết mới" : "Chỉnh sửa bài viết"}
         </h1>
       </div>
 
-      {error ? <p className={styles.errorBanner}>{error}</p> : null}
+      {error ? (
+        <p className="rounded bg-error-container px-4 py-3 text-sm text-on-error-container">
+          {error}
+        </p>
+      ) : null}
 
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>Nội dung theo ngôn ngữ</h2>
-        <div className={styles.localeTabs}>
+      <Card className={sectionClass}>
+        <h2 className={sectionTitleClass}>Nội dung theo ngôn ngữ</h2>
+        <div className="flex gap-2">
           {LOCALES.map((locale) => (
             <button
               key={locale.code}
               type="button"
-              className={`${styles.localeTab} ${
-                activeLocale === locale.code ? styles.localeTabActive : ""
-              } ${locale.required ? styles.localeTabRequired : ""}`}
+              className={`rounded-full border px-4 py-2 text-[13px] font-bold ${
+                activeLocale === locale.code
+                  ? "border-primary bg-primary text-on-primary"
+                  : "border-[rgba(196,198,210,0.5)] bg-surface-container-lowest text-on-surface-variant"
+              } ${locale.required ? "after:ml-0.5 after:text-error after:content-['*']" : ""}`}
               onClick={() => setActiveLocale(locale.code)}
             >
               {locale.label}
@@ -169,13 +189,13 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
           ))}
         </div>
 
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="title">
+        <div className={fieldClass}>
+          <label className={labelClass} htmlFor="title">
             Tiêu đề
           </label>
           <input
             id="title"
-            className={styles.input}
+            className={inputClass}
             value={active.title}
             onChange={(e) =>
               updateTranslation(activeLocale, { title: e.target.value })
@@ -186,13 +206,13 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
           />
         </div>
 
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="slug">
+        <div className={fieldClass}>
+          <label className={labelClass} htmlFor="slug">
             Đường dẫn (để trống để tự tạo)
           </label>
           <input
             id="slug"
-            className={styles.input}
+            className={inputClass}
             value={active.slug}
             placeholder="vi-du-duong-dan-bai-viet"
             onChange={(e) =>
@@ -201,24 +221,26 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
           />
         </div>
 
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="excerpt">
+        <div className={fieldClass}>
+          <label className={labelClass} htmlFor="excerpt">
             Mô tả ngắn
           </label>
           <textarea
             id="excerpt"
-            className={styles.textarea}
+            className={textareaClass}
             maxLength={300}
             value={active.excerpt}
             onChange={(e) =>
               updateTranslation(activeLocale, { excerpt: e.target.value })
             }
           />
-          <span className={styles.hint}>{active.excerpt.length}/300</span>
+          <span className="text-xs text-on-surface-variant">
+            {active.excerpt.length}/300
+          </span>
         </div>
 
-        <div className={styles.field}>
-          <label className={styles.label}>Nội dung</label>
+        <div className={fieldClass}>
+          <label className={labelClass}>Nội dung</label>
           <RichTextEditor
             value={active.content}
             onChange={(html) =>
@@ -227,17 +249,19 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
             placeholder="Viết nội dung bài viết..."
           />
         </div>
-      </div>
+      </Card>
 
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>SEO ({LOCALES.find((l) => l.code === activeLocale)?.label})</h2>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="seoTitle">
+      <Card className={sectionClass}>
+        <h2 className={sectionTitleClass}>
+          SEO ({LOCALES.find((l) => l.code === activeLocale)?.label})
+        </h2>
+        <div className={fieldClass}>
+          <label className={labelClass} htmlFor="seoTitle">
             Tiêu đề SEO
           </label>
           <input
             id="seoTitle"
-            className={styles.input}
+            className={inputClass}
             maxLength={70}
             value={active.seoTitle}
             onChange={(e) =>
@@ -245,13 +269,13 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
             }
           />
         </div>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="seoDescription">
+        <div className={fieldClass}>
+          <label className={labelClass} htmlFor="seoDescription">
             Mô tả SEO
           </label>
           <textarea
             id="seoDescription"
-            className={styles.textarea}
+            className={textareaClass}
             maxLength={160}
             value={active.seoDescription}
             onChange={(e) =>
@@ -261,13 +285,13 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
             }
           />
         </div>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="seoKeywords">
+        <div className={fieldClass}>
+          <label className={labelClass} htmlFor="seoKeywords">
             Từ khóa (phân cách bằng dấu phẩy)
           </label>
           <input
             id="seoKeywords"
-            className={styles.input}
+            className={inputClass}
             value={active.seoKeywords}
             onChange={(e) =>
               updateTranslation(activeLocale, {
@@ -276,39 +300,39 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
             }
           />
         </div>
-      </div>
+      </Card>
 
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>Ảnh & Thẻ</h2>
-        <div className={styles.field}>
-          <label className={styles.label}>Ảnh bìa</label>
+      <Card className={sectionClass}>
+        <h2 className={sectionTitleClass}>Ảnh & Thẻ</h2>
+        <div className={fieldClass}>
+          <label className={labelClass}>Ảnh bìa</label>
           <ImageUploadField
             imageKey={coverImageKey}
             onChange={setCoverImageKey}
           />
         </div>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="tags">
+        <div className={fieldClass}>
+          <label className={labelClass} htmlFor="tags">
             Thẻ (phân cách bằng dấu phẩy)
           </label>
           <input
             id="tags"
-            className={styles.input}
+            className={inputClass}
             value={tagsInput}
             placeholder="brewing, ipa, taproom"
             onChange={(e) => setTagsInput(e.target.value)}
           />
         </div>
-      </div>
+      </Card>
 
-      <div className={styles.footerActions}>
-        <div className={styles.statusSelect}>
-          <label className={styles.label} htmlFor="status">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <label className={labelClass} htmlFor="status">
             Trạng thái
           </label>
           <select
             id="status"
-            className={styles.input}
+            className={inputClass}
             value={status}
             onChange={(e) =>
               setStatus(e.target.value as "draft" | "published")
@@ -318,21 +342,17 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
             <option value="published">Xuất bản</option>
           </select>
         </div>
-        <div className={styles.buttons}>
+        <div className="flex gap-2">
           <button
             type="button"
-            className={styles.secondaryButton}
+            className={buttonVariants("secondary")}
             onClick={() => router.push("/admin/blog")}
           >
             Hủy
           </button>
-          <button
-            type="submit"
-            className={styles.primaryButton}
-            disabled={isSubmitting}
-          >
+          <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Đang lưu..." : "Lưu bài viết"}
-          </button>
+          </Button>
         </div>
       </div>
     </form>
