@@ -20,21 +20,11 @@ localStorage.setItem("token", jwt);
 
 ### ✅ Always use `httpOnly` Secure cookies
 
-NextAuth.js (our auth library) handles this automatically. Its session cookies are:
+Auth.js (our auth library) handles this automatically. `src/auth.ts` makes it explicit:
 
-| Cookie attribute | Value | Why |
-|---|---|---|
-| `HttpOnly` | `true` | JavaScript **cannot** access the cookie — immune to XSS |
-| `Secure` | `true` | Only sent over HTTPS — never over HTTP |
-| `SameSite` | `Lax` | Blocks cross-origin form POST CSRF attacks |
-| `Path` | `/` | Cookie is scoped to the whole site |
-
-**NextAuth.js config to enforce this:**
 ```typescript
 // src/auth.ts
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  // NextAuth uses httpOnly cookies by default.
-  // The following makes it explicit:
+export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
   cookies: {
     sessionToken: {
       options: {
@@ -45,13 +35,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     },
   },
+  // ...
 });
 ```
 
 ### CSRF Protection
 
 `SameSite=Lax` prevents cross-site request forgery for most cases.
-For admin state-mutation routes (POST/PUT/DELETE), NextAuth also generates a CSRF token.
+For admin state-mutation routes (POST/PATCH/DELETE), Auth.js also generates a CSRF token.
 Never disable this.
 
 ---
@@ -63,50 +54,29 @@ Client-side validation is a UX feature, not a security feature.
 
 ### Zod Schemas
 
-Define schemas alongside your models in `src/lib/validation/`.
+Defined per-domain in `src/lib/validation/` (`blogPost.ts`, `user.ts`, `role.ts`, `permission.ts`, `media.ts`).
 
 ```typescript
-// src/lib/validation/beer.ts
-import { z } from "zod";
-
-export const BeerSchema = z.object({
-  name: z.string().min(1).max(100).trim(),
-  slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with dashes"),
-  description: z.string().min(10).max(2000).trim(),
-  style: z.string().min(1).max(50).trim(),
-  abv: z.number().min(0).max(100),
-  ibu: z.number().min(0).max(1000).optional(),
-  price: z.number().int().min(0).max(10_000_000), // VND cap
-  isAvailable: z.boolean().default(true),
-  isFeatured: z.boolean().default(false),
-  tags: z.array(z.string().max(30)).max(10).default([]),
-  imageUrl: z.string().url().optional(),
+// src/lib/validation/blogPost.ts (excerpt)
+export const BlogPostTranslationInputSchema = z.object({
+  locale: localeEnum,
+  title: z.string().trim().min(1).max(200),
+  slug: z.string().trim().toLowerCase().regex(/^[a-z0-9-]+$/).optional(),
+  excerpt: z.string().trim().min(1).max(300),
+  content: z.string().min(1),
+  seoKeywords: z.array(z.string().trim().max(50)).max(20).default([]),
 });
-
-export const BeerUpdateSchema = BeerSchema.partial();
-
-export type BeerInput = z.infer<typeof BeerSchema>;
 ```
 
 ### Using Zod in API routes
 ```typescript
-// src/app/api/beers/route.ts
-import { BeerSchema } from "@/lib/validation/beer";
-
-export async function POST(request: Request) {
-  const body = await request.json();
-
-  const result = BeerSchema.safeParse(body);
-  if (!result.success) {
-    return Response.json(
-      { error: "Validation failed", details: result.error.flatten() },
-      { status: 400 }
-    );
-  }
-
-  // result.data is now safe to use
-  const beer = await Beer.create(result.data);
-  return Response.json(beer, { status: 201 });
+// src/app/api/news-blog/route.ts (excerpt)
+const parsed = BlogPostCreateSchema.safeParse(body);
+if (!parsed.success) {
+  return NextResponse.json(
+    { error: "Validation failed", details: parsed.error.flatten() },
+    { status: 400 }
+  );
 }
 ```
 
@@ -116,12 +86,10 @@ export async function POST(request: Request) {
 |---|---|
 | Text | `.trim()`, `min(1)`, `max()` |
 | Email | `z.string().email()` |
-| URL | `z.string().url()` |
-| Numbers | `.min()`, `.max()`, `.int()` where applicable |
 | Slugs | `/^[a-z0-9-]+$/` regex |
-| Enums | `z.enum(["a", "b", "c"])` — never trust raw strings |
+| Enums | `z.enum([...])` — never trust raw strings |
 | Arrays | `.max()` to prevent oversized payloads |
-| HTML content | Strip with DOMPurify on input (see XSS section) |
+| HTML content | Sanitized with DOMPurify on write (see XSS section) |
 
 ---
 
@@ -131,34 +99,33 @@ export async function POST(request: Request) {
 React automatically escapes JSX output — you get XSS protection for free when you use JSX normally.
 
 ### `dangerouslySetInnerHTML` — handle with extreme care
-The blog post detail page currently uses `dangerouslySetInnerHTML`. This is only safe if the content is sanitized **before storage**.
+Blog post detail pages render `translations[].content` with `dangerouslySetInnerHTML`. This is only safe because the content is sanitized **before storage**, every time, with no bypass path.
 
-**Required: Sanitize before saving to MongoDB:**
+**Enforced in `src/lib/utils/HtmlSanitizer.ts`, called from `BlogPostService` before every create/update:**
 ```typescript
 import DOMPurify from "isomorphic-dompurify";
 
-// In the blog POST API route, before saving:
-const sanitizedContent = DOMPurify.sanitize(body.content, {
-  ALLOWED_TAGS: ["p", "h1", "h2", "h3", "h4", "strong", "em", "ul", "ol", "li",
-                  "a", "blockquote", "code", "pre", "img"],
-  ALLOWED_ATTR: ["href", "src", "alt", "title", "class"],
-});
+const ALLOWED_TAGS = ["p","h1","h2","h3","h4","strong","em","ul","ol","li",
+                "a","blockquote","code","pre","img", /* ... */];
+const ALLOWED_ATTR = ["href","src","alt","title","class","target","rel"];
+
+export class HtmlSanitizer {
+  static sanitize(html: string): string {
+    return DOMPurify.sanitize(html, { ALLOWED_TAGS, ALLOWED_ATTR });
+  }
+}
 ```
 
-Install: `pnpm add isomorphic-dompurify`
-
 ### Content Security Policy (CSP)
-CSP is a browser security layer that prevents unauthorized scripts from running.
-Add to `next.config.ts`:
+Add to `next.config.ts` (not yet wired — do this alongside the admin UI build):
 
 ```typescript
-// next.config.ts
 const cspHeader = `
   default-src 'self';
   script-src 'self' 'nonce-{nonce}' https://accounts.google.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com;
-  img-src 'self' blob: data: https://*.public.blob.vercel-storage.com https://lh3.googleusercontent.com;
+  img-src 'self' data: https://*.r2.cloudflarestorage.com https://lh3.googleusercontent.com;
   connect-src 'self';
   frame-ancestors 'none';
 `;
@@ -168,9 +135,7 @@ const cspHeader = `
 
 ## 4. API Rate Limiting
 
-Without rate limiting, your API endpoints can be abused for brute-force, spam, or DoS attacks.
-
-**Use Vercel's built-in rate limiting** or the `@upstash/ratelimit` library with Upstash Redis:
+Without rate limiting, your API endpoints can be abused for brute-force, spam, or DoS attacks. Not yet wired for the routes built so far — add before launch using `@upstash/ratelimit` + Upstash Redis:
 
 ```typescript
 // src/lib/rate-limit.ts
@@ -179,23 +144,14 @@ import { Redis } from "@upstash/redis";
 
 export const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(10, "10 s"), // 10 requests per 10 seconds
+  limiter: Ratelimit.slidingWindow(10, "10 s"),
 });
-
-// Usage in API route:
-const { success } = await ratelimit.limit(ip);
-if (!success) {
-  return Response.json({ error: "Too many requests" }, { status: 429 });
-}
 ```
 
 **Apply rate limiting to:**
-- `POST /api/contact` — prevent spam (5 requests / minute per IP)
-- `POST /api/auth/signin` — prevent brute force
-- `POST /api/upload` — prevent abuse (3 uploads / minute per user)
+- `POST /api/contact` — prevent spam (once built)
+- `POST /api/media/upload-url` — prevent abuse of presigned upload issuance
 - All public-facing POST routes
-
-Install: `pnpm add @upstash/ratelimit @upstash/redis`
 
 ---
 
@@ -205,113 +161,72 @@ Mongoose protects against most injection attacks by default, but you must follow
 
 ### ✅ Always use Mongoose schema validation
 ```typescript
-// Safe — Mongoose validates and casts
-await Beer.findById(id);
-await Beer.find({ slug: slug });
+await BlogPostModel.findById(id);
+await BlogPostModel.find({ status: "published" });
 ```
 
 ### ❌ Never use raw `$where` or direct query operators from user input
 ```typescript
 // DANGEROUS — user can pass { $gt: "" } to bypass filters
-await Beer.find({ price: req.body.price });
+await BlogPostModel.find({ status: req.body.status });
 
 // SAFE — validate first with Zod, then query
-const price = z.number().int().min(0).parse(req.body.price);
-await Beer.find({ price });
+const status = z.enum(["draft", "published"]).parse(req.body.status);
+await BlogPostModel.find({ status });
 ```
 
-### Protect dynamic `$or`, `$and` queries
-```typescript
-// Never spread user input directly into query operators
-// Always validate and whitelist fields before querying
-```
+Every repository (`src/repositories/`) builds queries from typed, validated inputs only — never spreads raw request bodies into a Mongoose filter.
 
 ---
 
 ## 6. File Upload Security
 
-The `/api/upload` route has these enforced controls:
+Images go straight from the browser to Cloudflare R2 via a short-lived **presigned POST**, never through the Next.js server as a request body — see `src/lib/storage/`.
 
-| Check | Rule |
-|---|---|
-| File type | Only `image/jpeg`, `image/png`, `image/webp`, `image/gif` |
-| File size | Maximum 5MB |
-| Authentication | Must be `editor` or `super_admin` (once auth is implemented) |
-| Filename | Sanitized and random suffix added by Vercel Blob |
-| Storage | Vercel Blob (isolated from app server) |
+| Check | Rule | Where enforced |
+|---|---|---|
+| File type | Only `image/jpeg`, `image/png`, `image/webp`, `image/gif` | `StorageService.isAllowedImageContentType` + baked into the R2 presigned POST policy (`Content-Type` condition) |
+| File size | Maximum 5MB | Baked into the R2 presigned POST policy (`content-length-range` condition) — R2 rejects an oversized upload itself, not just our server |
+| Authentication | `add` or `edit` on the `news_blog` module | `POST /api/media/upload-url` checks `session.user.permissions` |
+| Object key | Random UUID + date prefix, server-generated | `StorageService.buildImageKey` — the client never chooses the storage path |
+| Storage | Cloudflare R2, **private bucket** | Every read goes through a signed `GET` URL (`POST /api/media/view-url`), never a public bucket URL |
 
-**Additional rule:** Validate MIME type from the file buffer, not just the `Content-Type` header (can be spoofed).
-
-```typescript
-// TODO: Add magic bytes validation with `file-type` package
-import { fileTypeFromBuffer } from "file-type";
-const buffer = Buffer.from(await file.arrayBuffer());
-const type = await fileTypeFromBuffer(buffer);
-if (!type || !["image/jpeg", "image/png", "image/webp"].includes(type.mime)) {
-  return Response.json({ error: "Invalid file content" }, { status: 400 });
-}
-```
+Presigned POST enforces type/size at the storage layer itself (not just app-layer trust), which is the R2/S3-compatible way to get the guarantee `file-type` magic-byte sniffing would otherwise provide for a plain PUT.
 
 ---
 
-## 7. Admin Panel Security
+## 7. Admin Panel Security — Permission Matrix
 
-### Role hierarchy enforcement
+Role hierarchy has been replaced by a **per-module, per-action permission matrix** (Truy cập/Xem/Thêm/Sửa/Xóa) — see [rbac.md](./rbac.md) for the full design. The old fixed `viewer < editor < super_admin` hierarchy check no longer applies.
+
+### Route Guard — protect every API route
 ```typescript
-// src/lib/auth-utils.ts
-export function requireRole(
-  sessionRole: string,
-  minimumRole: "viewer" | "editor" | "super_admin"
-): boolean {
-  const hierarchy = { viewer: 0, editor: 1, super_admin: 2 };
-  return hierarchy[sessionRole] >= hierarchy[minimumRole];
-}
+// src/lib/auth/RouteGuard.ts (excerpt)
+export const POST = RouteGuard.requirePermission(
+  MODULE_KEYS.NEWS_BLOG,
+  "add",
+  async (request, _context, session) => { /* ... */ }
+);
 ```
 
-### Middleware — protect all `/admin` routes
-```typescript
-// src/middleware.ts
-import { auth } from "@/auth";
+`RouteGuard` re-reads `session.user.permissions` (computed fresh per-request in `auth.ts`'s `session` callback, not a stale cached claim) on every call — this satisfies "verify role on every write operation" without each route reimplementing the check.
 
-export default auth((req) => {
-  const { pathname } = req.nextUrl;
-
-  // All admin routes require authentication
-  if (pathname.startsWith("/admin")) {
-    if (!req.auth) {
-      return Response.redirect(new URL("/api/auth/signin", req.url));
-    }
-    // Role checks are done per-route in the page/layout
-  }
-});
-```
-
-### Verify role on EVERY write operation
-Never trust the session role alone for mutations. Always verify in the API route:
-```typescript
-export async function DELETE(req, ctx) {
-  const session = await auth();
-  if (!session || session.user.role !== "super_admin") {
-    return Response.json({ error: "Forbidden" }, { status: 403 });
-  }
-  // ... proceed
-}
-```
+### Proxy — coarse authentication gate only
+`src/proxy.ts` (Next.js 16 renamed `middleware.ts` → `proxy.ts`) only checks "is there a logged-in, active session" for `/admin/*`. It intentionally does **not** know about per-module permissions — that's a DB-backed decision left to the page/route layer, per Next's own guidance to verify authorization inside route handlers rather than relying on Proxy alone (see `node_modules/next/dist/docs/.../file-conventions/proxy.md`).
 
 ---
 
 ## 8. HTTP Security Headers
 
-Add these headers in `next.config.ts`:
+Add these headers in `next.config.ts` (not yet wired — do alongside the CSP work above):
 
 ```typescript
 const securityHeaders = [
-  { key: "X-Content-Type-Options", value: "nosniff" },           // Prevent MIME sniffing
-  { key: "X-Frame-Options", value: "DENY" },                      // Prevent clickjacking
-  { key: "X-XSS-Protection", value: "1; mode=block" },           // Legacy XSS filter
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }, // HSTS
+  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
 ];
 ```
 
@@ -321,25 +236,26 @@ const securityHeaders = [
 
 | Rule | Detail |
 |---|---|
-| Never commit `.env.local` | Already enforced in `.gitignore` |
+| Never commit `.env.local`, `.env.development.local`, `.env.production.local` | Already enforced in `.gitignore` |
+| Keep dev and prod credentials in separate files | `MONGODB_URI` and `R2_BUCKET_NAME` are dev-only in `.env.development.local`, prod-only in `.env.production.local` — never the same cluster/bucket. R2 account credentials (`R2_ACCOUNT_ID`/`R2_ACCESS_KEY_ID`/`R2_SECRET_ACCESS_KEY`) are shared in `.env.local` since dev and prod use one Cloudflare account. See [database-schema.md](./database-schema.md#per-environment-database--storage) |
 | No secrets in client code | Only `NEXT_PUBLIC_*` vars reach the browser |
-| Rotate secrets regularly | `AUTH_SECRET`, DB passwords |
-| Use Vercel environment UI | Never paste secrets in chat, PR comments, or issues |
-| Validate on startup | `lib/mongodb.ts` throws if `MONGODB_URI` is missing |
+| Rotate secrets regularly | `AUTH_SECRET`, R2 access keys, DB password |
+| Validate on startup | `src/lib/env.ts` — Zod-parsed, throws on first access if anything required is missing/malformed |
 
-**Server-only validation:**
+**Server-only validation (already implemented):**
 ```typescript
-// src/lib/env.ts (create this)
-import { z } from "zod";
-
+// src/lib/env.ts
 const envSchema = z.object({
   MONGODB_URI: z.string().url(),
   AUTH_SECRET: z.string().min(32),
-  BLOB_READ_WRITE_TOKEN: z.string().min(1),
-  NODE_ENV: z.enum(["development", "test", "production"]),
+  AUTH_GOOGLE_ID: z.string().min(1),
+  AUTH_GOOGLE_SECRET: z.string().min(1),
+  R2_ACCOUNT_ID: z.string().min(1),
+  R2_ACCESS_KEY_ID: z.string().min(1),
+  R2_SECRET_ACCESS_KEY: z.string().min(1),
+  R2_BUCKET_NAME: z.string().min(1),
+  // ...
 });
-
-export const env = envSchema.parse(process.env);
 ```
 
 ---
@@ -350,12 +266,7 @@ export const env = envSchema.parse(process.env);
 # Run before every release
 pnpm audit
 
-# Auto-fix low/moderate issues
-# (Note: pnpm doesn't have an exact 'audit fix' equivalent, but you can upgrade packages)
-# Or manually resolve reported vulnerabilities.
-
-# Check for known vulnerabilities weekly
-# (Automated in GitHub Actions CI — see .github/workflows/ci.yml)
+# Check for known vulnerabilities weekly (add to CI when set up)
 ```
 
 ---
@@ -365,12 +276,10 @@ pnpm audit
 When adding any new feature that handles user data, answer these:
 
 - [ ] Is all input validated with Zod before hitting the database?
-- [ ] Is the route protected by the correct role check?
-- [ ] Does the route appear in the middleware protection rules?
-- [ ] Are any tokens/secrets stored in httpOnly cookies (not localStorage)?
-- [ ] Is any HTML content sanitized with DOMPurify before saving?
+- [ ] Is the route wrapped in `RouteGuard.requirePermission`/`requireAuth`?
+- [ ] Is any HTML content sanitized with `HtmlSanitizer` before saving?
 - [ ] Is rate limiting applied if this is a public-facing endpoint?
-- [ ] Are new environment variables documented in `.env.example`?
+- [ ] Are new environment variables added to `src/lib/env.ts` and `.env.example`?
 - [ ] Does `pnpm audit` pass after adding any new dependency?
 
 ---
@@ -378,6 +287,7 @@ When adding any new feature that handles user data, answer these:
 ## References
 
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
-- [NextAuth.js Security](https://authjs.dev/security)
+- [Auth.js Security](https://authjs.dev/security)
 - [Next.js Security Headers](https://nextjs.org/docs/app/guides/content-security-policy)
 - [Zod Documentation](https://zod.dev)
+- [Cloudflare R2 presigned URLs](https://developers.cloudflare.com/r2/api/s3/presigned-urls/)

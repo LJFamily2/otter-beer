@@ -30,13 +30,16 @@
 │                    └────┬───────┬────────┘                       │
 │                         │       │                                │
 │              ┌──────────▼─┐  ┌──▼──────────────┐               │
-│              │  MongoDB   │  │  Vercel Blob     │               │
-│              │  (Atlas)   │  │  (Image Storage) │               │
+│              │  MongoDB   │  │  Cloudflare R2   │               │
+│              │  (Atlas)   │  │  (private bucket,│               │
+│              │            │  │   signed URLs)   │               │
 │              └────────────┘  └─────────────────┘               │
 └─────────────────────────────────────────────────────────────────┘
 
 External Services:
-  Google OAuth ←──── NextAuth.js
+  Google OAuth ←──── Auth.js v5
+
+Route protection: src/proxy.ts (Next.js 16 renamed middleware.ts → proxy.ts)
 ```
 
 ---
@@ -48,11 +51,12 @@ External Services:
 | Framework | Next.js | 16.x | App Router, Turbopack dev |
 | Language | TypeScript | 5.x | Strict mode |
 | Styling | Vanilla CSS | — | CSS Custom Properties (no Tailwind) |
-| Database | MongoDB + Mongoose | 8.x | Atlas cloud-hosted |
-| Auth | NextAuth.js (Auth.js) | v5 | Google OAuth only |
-| Image Storage | Vercel Blob | Latest | `@vercel/blob` |
+| Database | MongoDB + Mongoose | 9.x | Atlas cloud-hosted |
+| Auth | Auth.js (next-auth) | v5 (beta) | Google OAuth only + allowlist |
+| Authorization | Custom permission matrix | — | `src/services/PermissionService.ts` — see [rbac.md](./rbac.md) |
+| Image Storage | Cloudflare R2 | S3-compatible | `@aws-sdk/client-s3` + presigned POST/GET |
 | Deployment | Vercel | — | Serverless + Edge |
-| i18n | Next.js Middleware | Built-in | Domain path routing (VI default, `/en`) |
+| i18n | Next.js Proxy (`src/proxy.ts`) | Built-in | Domain path routing (VI default, `/en`); renamed from Middleware in Next 16 |
 
 ---
 
@@ -82,42 +86,54 @@ p:\Otter Beer\otter-beer\
 │   │   │       ├── blog/         ← Blog post CRUD
 │   │   │       └── events/       ← Event CRUD
 │   │   ├── api/
-│   │   │   ├── beers/            ← Beer REST endpoints
-│   │   │   ├── blog/             ← Blog REST endpoints
-│   │   │   ├── events/           ← Event REST endpoints
-│   │   │   ├── contact/          ← Contact form submission
-│   │   │   ├── upload/           ← Vercel Blob image upload
-│   │   │   └── auth/             ← NextAuth.js handler
+│   │   │   ├── news-blog/        ← News & Blog REST endpoints (built)
+│   │   │   ├── users/            ← User allowlist management (built)
+│   │   │   ├── roles/            ← Role CRUD (built)
+│   │   │   ├── permissions/      ← Permission-matrix read/update (built)
+│   │   │   ├── media/            ← R2 presigned upload/view URLs (built)
+│   │   │   ├── beers/            ← Beer REST endpoints (not yet built)
+│   │   │   ├── events/           ← Event REST endpoints (not yet built)
+│   │   │   ├── contact/          ← Contact form submission (not yet built)
+│   │   │   └── auth/[...nextauth]/ ← Auth.js handler
 │   │   ├── layout.tsx            ← Root layout (lang="vi", fonts, global meta)
 │   │   ├── globals.css           ← Design tokens + reset
 │   │   ├── sitemap.ts            ← Auto-generated SEO sitemap
 │   │   └── not-found.tsx         ← 404 page
+│   ├── proxy.ts                  ← Route protection (Next 16's middleware.ts → proxy.ts)
+│   ├── auth.ts                   ← Auth.js config (Google provider, callbacks)
 │   ├── components/
 │   │   ├── ui/                   ← Button, Card, Badge, Input, Modal…
 │   │   ├── layout/               ← Navbar, Footer, Sidebar
 │   │   ├── sections/             ← Hero, FeaturedBeers, EventCards…
-│   │   └── admin/                ← DataTable, Forms, ImageUploader…
+│   │   └── admin/                ← DataTable, Forms, ImageUploader… (not yet built)
+│   ├── config/
+│   │   ├── locales.ts            ← Content-language registry (vi/en, extensible)
+│   │   ├── roles.ts              ← System role keys (super_admin/admin/office_member)
+│   │   ├── permissions.ts        ← Module + action registry for the permission matrix
+│   │   └── site.ts               ← Brand info, nav links, socials, contact (not yet built)
 │   ├── lib/
-│   │   ├── mongodb.ts            ← Mongoose connection singleton
-│   │   ├── blob.ts               ← Vercel Blob helpers
-│   │   ├── utils.ts              ← cn(), slugify(), formatDate()…
-│   │   └── seo.ts                ← buildSEO() metadata factory
+│   │   ├── db/mongodb.ts         ← Mongoose connection singleton (`Database` class)
+│   │   ├── env.ts                ← Zod-validated environment variables
+│   │   ├── storage/               ← R2StorageProvider, StorageService (presigned URLs)
+│   │   ├── auth/RouteGuard.ts    ← API route auth/permission wrapper
+│   │   ├── utils/                 ← SlugGenerator, HtmlSanitizer
+│   │   └── validation/            ← Zod schemas per domain
+│   ├── repositories/             ← BaseRepository + one repository per model
+│   ├── services/                 ← AuthService, PermissionService, BlogPostService, RoleService, UserService
 │   ├── models/
-│   │   ├── Beer.ts               ← Beer Mongoose model
-│   │   ├── BlogPost.ts           ← BlogPost Mongoose model
-│   │   ├── Event.ts              ← Event Mongoose model
-│   │   └── Contact.ts            ← Contact submission model
+│   │   ├── User.ts               ← User Mongoose model
+│   │   ├── Role.ts               ← Role Mongoose model
+│   │   ├── Permission.ts         ← Permission-matrix row Mongoose model
+│   │   ├── BlogPost.ts           ← News & Blog Mongoose model (multi-locale)
+│   │   ├── Beer.ts               ← (not yet created)
+│   │   ├── Event.ts              ← (not yet created)
+│   │   └── Contact.ts            ← (not yet created)
 │   ├── hooks/
-│   │   ├── use-beers.ts          ← Client beer data fetcher
-│   │   ├── use-scroll.ts         ← Scroll position tracker
-│   │   └── use-media-query.ts    ← Responsive breakpoints
-│   ├── types/
-│   │   ├── beer.ts
-│   │   ├── blog.ts
-│   │   └── event.ts
-│   └── config/
-│       ├── site.ts               ← Brand info, nav links, socials, contact
-│       └── fonts.ts              ← Inter + Playfair Display + DM Sans
+│   │   ├── use-beers.ts          ← Client beer data fetcher (not yet built)
+│   │   ├── use-scroll.ts         ← Scroll position tracker (not yet built)
+│   │   └── use-media-query.ts    ← Responsive breakpoints (not yet built)
+│   └── types/
+│       └── next-auth.d.ts        ← Session/JWT module augmentation
 ├── .env.example                  ← Environment variable template
 ├── .gitignore
 ├── ONBOARDING.md                 ← New developer setup guide
@@ -132,38 +148,43 @@ p:\Otter Beer\otter-beer\
 
 ### Public page request (e.g. GET `/en/menu`)
 ```
-Browser → Vercel Edge → Next.js Middleware
+Browser → Vercel Edge → src/proxy.ts
   → Detects locale ("en") from path
-  → Passes to (marketing)/menu/page.tsx (Server Component)
+  → Passes to [locale]/menu/page.tsx (Server Component)
     → Fetches data from MongoDB directly (server-side)
     → Renders HTML with translations from i18n dictionaries
   → Returns complete HTML to browser
 ```
 
-### API request (e.g. GET `/api/beers`)
+### API request (e.g. GET `/api/news-blog`)
 ```
-Client → /api/beers/route.ts
-  → connectToDatabase() (cached Mongoose connection)
-  → Beer.find().lean()
-  → Response.json(beers)
-```
-
-### Admin page request (e.g. GET `/admin/beers`)
-```
-Browser → Next.js Middleware
-  → Checks NextAuth session (Google OAuth)
-  → If no session → redirect to /api/auth/signin
-  → If session + role check fails → redirect to /unauthorized
-  → (admin)/admin/beers/page.tsx renders
+Client → /api/news-blog/route.ts
+  → RouteGuard.requirePermission(NEWS_BLOG, "view", handler)
+    → auth() resolves session + live permission matrix
+    → 401 if no session, 403 if matrix denies "view"
+  → BlogPostService.list() → BlogPostRepository → Database.connect()
+  → Response.json(result)
 ```
 
-### Image upload (e.g. POST `/api/upload`)
+### Admin page request (e.g. GET `/admin/blog`)
 ```
-Admin form → /api/upload/route.ts
-  → Validates file type + size
-  → uploadBlob(filename, file) → Vercel Blob
-  → Returns { url: "https://blob.vercel.com/..." }
-  → URL saved to MongoDB document (e.g. Beer.imageUrl)
+Browser → src/proxy.ts
+  → auth() checks session (Google OAuth via Auth.js)
+  → If no session → redirect to /admin/dang-nhap
+  → (admin)/admin/blog/page.tsx renders (not yet built)
+    → reads session.user.permissions.news_blog to gate nav/view/actions
+```
+
+### Image upload (e.g. POST /api/media/upload-url)
+```
+Admin form → POST /api/media/upload-url { contentType }
+  → RouteGuard.requireAuth + checks news_blog add/edit permission
+  → StorageService.requestImageUpload() → R2StorageProvider
+    → createPresignedPost() with content-type + 5MB size conditions baked in
+  → Returns { url, fields, key } — browser POSTs the file directly to R2
+  → key (not a public URL) is saved on the BlogPost document
+  → Reading the image later goes through POST /api/media/view-url → a
+    short-lived signed GET URL (bucket is private)
 ```
 
 ---
@@ -174,10 +195,13 @@ Admin form → /api/upload/route.ts
 Reduces operational complexity — one deployment, one codebase. API routes run as Vercel Serverless Functions. For a brand website at this scale, this is the right tradeoff.
 
 ### Why MongoDB?
-Schema flexibility is important during early design — beer styles, event types, and blog structure may evolve. Mongoose provides schema validation while keeping migration overhead low.
+Schema flexibility is important during early design — beer styles, event types, and blog structure may evolve. Mongoose provides schema validation while keeping migration overhead low. The News & Blog module's per-language `translations[]` array is a direct example: adding a language is a data change, not a migration.
 
-### Why Vercel Blob for images?
-Native integration with Vercel — no separate AWS S3 setup, no CORS config, and images are served from the CDN edge automatically.
+### Why Cloudflare R2 for images?
+S3-compatible (so the standard AWS SDK works unmodified), no egress fees, and a private bucket + short-lived signed URLs keeps image access auditable rather than handing out permanent public URLs.
 
 ### Why Google OAuth only?
-Simplifies the auth surface. The security model relies on role allowlisting in MongoDB — only users with a matching email and an assigned role can access admin features. See [authentication.md](./authentication.md) for details.
+Simplifies the auth surface. The security model relies on an email allowlist (`User` documents) plus a per-module permission matrix — only invited, active users can sign in, and what they can do is configurable per role rather than a fixed hierarchy. See [authentication.md](./authentication.md) and [rbac.md](./rbac.md) for details.
+
+### Why a repository/service layer instead of calling Mongoose from routes?
+The user asked for an OOP, reusable structure. `BaseRepository<T>` centralizes CRUD + pagination so every new model gets consistent query behavior for free; `Service` classes hold business logic (slug generation, sanitization, permission resolution) so route handlers stay thin controllers. Adding the next module (beers, events) means extending these base classes, not duplicating query/validation code.

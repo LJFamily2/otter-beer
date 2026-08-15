@@ -3,268 +3,214 @@
 All API routes are located in `src/app/api/`.
 Base URL: `https://otterbeer.vn/api` (production) / `http://localhost:3000/api` (dev)
 
-> **Note:** Admin write operations (POST, PUT, DELETE) will require an authenticated session once auth is implemented. Currently no auth middleware is applied.
+> Every route below marked "Requires ... permission" is enforced server-side via
+> `RouteGuard` (`src/lib/auth/RouteGuard.ts`) against the live permission matrix
+> — see [rbac.md](./rbac.md). Unauthenticated requests get `401`; authenticated
+> but under-permissioned requests get `403`.
 
 ---
 
-## 🍺 Beers
+## 📰 News & Blog
 
-### `GET /api/beers`
-Returns a list of beers.
+### `GET /api/news-blog`
+List posts for the admin. *(Requires `news_blog` → `view`)*
 
 **Query parameters:**
 | Param | Type | Description |
 |---|---|---|
-| `featured` | `"true"` | Return only featured, available beers |
-
-**Response `200`:**
-```json
-[
-  {
-    "_id": "64f1a2b3...",
-    "name": "Otter IPA",
-    "slug": "otter-ipa",
-    "style": "IPA",
-    "abv": 6.2,
-    "price": 75000,
-    "imageUrl": "https://blob.vercel.com/...",
-    "isFeatured": true
-  }
-]
-```
-
----
-
-### `POST /api/beers`
-Create a new beer. *(Requires `editor` or `super_admin` role)*
-
-**Request body:**
-```json
-{
-  "name": "Otter Stout",
-  "slug": "otter-stout",
-  "description": "Rich and roasty...",
-  "style": "Stout",
-  "abv": 5.8,
-  "price": 70000,
-  "isAvailable": true,
-  "isFeatured": false,
-  "tags": ["stout", "dark"]
-}
-```
-
-**Response `201`:** Full beer document.
-
----
-
-### `GET /api/beers/[id]`
-Get a single beer by MongoDB ObjectId.
-
-**Response `200`:** Full beer document.
-**Response `404`:** `{ "error": "Beer not found" }`
-
----
-
-### `PUT /api/beers/[id]`
-Update a beer. *(Requires `editor` or `super_admin` role)*
-
-**Request body:** Any subset of beer fields to update.
-**Response `200`:** Updated beer document.
-
----
-
-### `DELETE /api/beers/[id]`
-Delete a beer. *(Requires `super_admin` role)*
-
-**Response `204`:** No content.
-
----
-
-## 📝 Blog
-
-### `GET /api/blog`
-Returns published blog posts with pagination.
-
-**Query parameters:**
-| Param | Type | Default | Description |
-|---|---|---|---|
-| `page` | number | `1` | Page number |
-| `limit` | number | `10` | Posts per page |
+| `status` | `"draft"` \| `"published"` | Filter by status |
+| `tag` | string | Filter by tag |
+| `search` | string | Case-insensitive title search (any language) |
+| `page` / `pageSize` | number | Default `1` / `20`, max `pageSize` 100 |
 
 **Response `200`:**
 ```json
 {
-  "posts": [...],
+  "items": [ /* BlogPost documents, author populated */ ],
   "total": 42,
   "page": 1,
-  "limit": 10
+  "pageSize": 20,
+  "totalPages": 3
 }
 ```
 
----
-
-### `POST /api/blog`
-Create a new blog post. *(Requires `editor` or `super_admin` role)*
+### `POST /api/news-blog`
+Create a post. *(Requires `news_blog` → `add`)*
 
 **Request body:**
 ```json
 {
-  "title": "The Story of Otter IPA",
-  "slug": "story-of-otter-ipa",
-  "excerpt": "How we crafted our signature IPA...",
-  "content": "<p>Full HTML or Markdown content...</p>",
-  "author": "Otter Beer Team",
-  "isPublished": false,
-  "tags": ["brewing", "ipa"]
+  "coverImageKey": "news-blog/2026-08-15/1a2b3c4d.webp",
+  "tags": ["brewing", "ipa"],
+  "status": "draft",
+  "translations": [
+    {
+      "locale": "vi",
+      "title": "Câu chuyện về Otter IPA",
+      "excerpt": "Cách chúng tôi tạo ra IPA đặc trưng...",
+      "content": "<p>...</p>"
+    }
+  ]
 }
 ```
+`slug` is optional per translation — auto-generated from `title` (Vietnamese-diacritic-aware, unique per locale) if omitted. Vietnamese content is required (see `src/config/locales.ts`); other languages are optional.
 
-**Response `201`:** Full blog post document.
+**Response `201`:** Full post document. **Response `409`:** slug already taken for that locale.
 
----
+### `GET /api/news-blog/[id]`
+*(Requires `news_blog` → `view`)*
 
-### `GET /api/blog/[slug]`
-Get a single published blog post by slug.
+### `PATCH /api/news-blog/[id]`
+Partial update — any subset of `coverImageKey`, `tags`, `status`, `translations`. *(Requires `news_blog` → `edit`)*
 
-**Response `200`:** Full blog post document.
-**Response `404`:** `{ "error": "Post not found" }`
-
----
-
-### `PUT /api/blog/[slug]`
-Update a blog post. *(Requires `editor` or `super_admin` role)*
+### `DELETE /api/news-blog/[id]`
+*(Requires `news_blog` → `delete`)* **Response `204`.**
 
 ---
 
-### `DELETE /api/blog/[slug]`
-Delete a blog post. *(Requires `super_admin` role)*
-**Response `204`:** No content.
+## 👤 Users
+
+### `GET /api/users`
+List every allowlisted user (role populated). *(Requires `users` → `view`)*
+
+### `POST /api/users`
+Invite a user — adds them to the login allowlist. *(Requires `users` → `add`)*
+```json
+{ "email": "member@otterbeer.vn", "name": "Nguyễn Văn A", "roleId": "<Role _id>" }
+```
+**Response `409`:** email already invited.
+
+### `PATCH /api/users/[id]`
+Change role and/or `isActive`. *(Requires `users` → `edit`)* Cannot target your own account (`400`).
+```json
+{ "roleId": "<Role _id>" }
+```
+```json
+{ "isActive": false }
+```
+
+### `DELETE /api/users/[id]`
+Removes a user from the allowlist. *(Requires `users` → `delete`)* Cannot target your own account.
 
 ---
 
-## 🎉 Events
+## 🛡️ Roles
 
-### `GET /api/events`
-Returns published events.
+### `GET /api/roles`
+*(Requires `roles_permissions` → `view`)*
 
-**Query parameters:**
-| Param | Type | Description |
-|---|---|---|
-| `upcoming` | `"true"` | Return only events with `startDate >= now` |
+### `POST /api/roles`
+Create a custom role beyond the three seeded ones. *(Requires `roles_permissions` → `add`)*
+```json
+{ "key": "content_reviewer", "name": "Biên tập viên nội dung" }
+```
 
-**Response `200`:** Array of event card objects.
+### `PATCH /api/roles/[id]`
+Rename a role. *(Requires `roles_permissions` → `edit`)*
+
+### `DELETE /api/roles/[id]`
+*(Requires `roles_permissions` → `delete`)* **Response `400`** if the role is a system role (`isSystem: true`).
 
 ---
 
-### `POST /api/events`
-Create an event. *(Requires `editor` or `super_admin` role)*
+## 🔐 Permissions (matrix)
 
-**Request body:**
+### `GET /api/permissions?roleId=<id>`
+Returns that role's full module → action grant. *(Requires `roles_permissions` → `view`)*
 ```json
 {
-  "title": "Tap Takeover Night",
-  "slug": "tap-takeover-night-jan-2027",
-  "description": "Join us for a special tap takeover...",
-  "location": "Otter Beer Bar, Hà Nội",
-  "startDate": "2027-01-20T18:00:00Z",
-  "endDate": "2027-01-20T23:00:00Z",
-  "isFree": false,
-  "ticketPrice": 150000,
-  "isPublished": false
+  "roleId": "...",
+  "matrix": {
+    "news_blog": { "access": true, "view": true, "add": true, "edit": false, "delete": false },
+    "users": { "access": false, "view": false, "add": false, "edit": false, "delete": false },
+    "roles_permissions": { "access": false, "view": false, "add": false, "edit": false, "delete": false }
+  }
 }
 ```
 
-**Response `201`:** Full event document.
-
----
-
-### `GET /api/events/[id]`
-Get a single event by ID.
-
-### `PUT /api/events/[id]`
-Update an event.
-
-### `DELETE /api/events/[id]`
-Delete an event.
-
----
-
-## 📬 Contact
-
-### `POST /api/contact`
-Submit a contact form.
-
-**Request body:**
+### `PUT /api/permissions`
+Bulk-writes one role's matrix. *(Requires `roles_permissions` → `edit`)* Rejects `super_admin` (`400`) — it always has full access and isn't stored as editable rows.
 ```json
 {
-  "name": "Nguyễn Văn A",
-  "email": "vana@example.com",
-  "phone": "0912345678",
-  "subject": "Đặt bàn nhóm",
-  "message": "Tôi muốn đặt bàn cho nhóm 10 người vào ngày..."
+  "roleId": "...",
+  "grants": [
+    { "moduleKey": "news_blog", "actions": { "access": true, "view": true, "add": true, "edit": true, "delete": false } }
+  ]
 }
-```
-
-**Required fields:** `name`, `email`, `subject`, `message`
-
-**Response `201`:**
-```json
-{ "success": true, "id": "64f1a2b3..." }
 ```
 
 ---
 
-## 📤 Upload
+## 🖼️ Media (Cloudflare R2)
 
-### `POST /api/upload`
-Upload an image to Vercel Blob.
+Images never pass through the Next.js server body — the browser uploads directly to R2 using a presigned POST, and reads go through a short-lived signed URL (bucket is private). See [security.md](./security.md#6-file-upload-security).
 
-**Request:** `multipart/form-data`
-
-| Field | Type | Description |
-|---|---|---|
-| `file` | File | The image to upload (JPEG, PNG, WebP, GIF) |
-| `folder` | string | Storage prefix — e.g. `"beers"`, `"blog"`, `"events"` |
-
-**Constraints:**
-- Max file size: **5MB**
-- Allowed types: `image/jpeg`, `image/png`, `image/webp`, `image/gif`
-
+### `POST /api/media/upload-url`
+*(Requires `news_blog` → `add` OR `edit`)*
+```json
+{ "contentType": "image/webp" }
+```
 **Response `200`:**
 ```json
 {
-  "url": "https://abc123.public.blob.vercel-storage.com/beers/otter-ipa-xyz.webp",
-  "pathname": "beers/otter-ipa-xyz.webp"
+  "key": "news-blog/2026-08-15/1a2b3c4d.webp",
+  "url": "https://<account>.r2.cloudflarestorage.com/...",
+  "fields": { "Content-Type": "image/webp", "...": "..." },
+  "expiresAt": "2026-08-15T10:05:00Z"
 }
 ```
+The client `POST`s the actual file to `url` with `fields` as multipart form fields (standard S3 presigned-POST flow), then saves `key` (not the R2 URL) onto the post.
+
+### `POST /api/media/view-url`
+*(Requires `news_blog` → `view`)*
+```json
+{ "key": "news-blog/2026-08-15/1a2b3c4d.webp" }
+```
+**Response `200`:** `{ "url": "https://<account>.r2.cloudflarestorage.com/...?X-Amz-Signature=..." }` — valid for 1 hour.
 
 ---
 
 ## 🔐 Auth
 
-> **TODO:** Implemented with `next-auth@beta`
+Implemented with `next-auth@beta` (Auth.js v5), Google provider only. See [authentication.md](./authentication.md).
 
 ### `GET /api/auth/signin`
 Redirects to Google OAuth consent screen.
 
 ### `GET /api/auth/callback/google`
-OAuth callback handler — handled automatically by NextAuth.
+OAuth callback — handled automatically by Auth.js. Denies sign-in (redirects to error) for emails not on the allowlist or with `isActive: false`.
 
 ### `GET /api/auth/session`
-Returns the current session (if logged in).
+Returns the current session.
 
 **Response `200` (logged in):**
 ```json
 {
   "user": {
-    "name": "Nguyen Van A",
+    "id": "64f1a2b3...",
+    "name": "Nguyễn Văn A",
     "email": "admin@otterbeer.vn",
     "image": "https://lh3.googleusercontent.com/...",
-    "role": "super_admin"
+    "roleKey": "admin",
+    "permissions": {
+      "news_blog": { "access": true, "view": true, "add": true, "edit": true, "delete": true },
+      "users": { "access": true, "view": true, "add": false, "edit": false, "delete": false },
+      "roles_permissions": { "access": true, "view": true, "add": false, "edit": false, "delete": false }
+    }
   },
   "expires": "2026-09-05T..."
 }
 ```
+
+---
+
+## Not yet implemented (future modules)
+
+These endpoints don't exist yet — kept here as the earlier plan for when those modules are built. They'll likely follow the same `RouteGuard`/service/repository pattern as News & Blog above rather than this exact shape.
+
+### Beers — `GET/POST /api/beers`, `GET/PUT/DELETE /api/beers/[id]`
+### Events — `GET/POST /api/events`, `GET/PUT/DELETE /api/events/[id]`
+### Contact — `POST /api/contact`
 
 ---
 
@@ -274,6 +220,10 @@ All error responses follow this shape:
 ```json
 { "error": "Human-readable error message" }
 ```
+Validation errors additionally include `details` (Zod's `.flatten()` output):
+```json
+{ "error": "Validation failed", "details": { "fieldErrors": { "email": ["Invalid email"] } } }
+```
 
 | HTTP Status | Meaning |
 |---|---|
@@ -282,6 +232,7 @@ All error responses follow this shape:
 | `204` | Deleted (no body) |
 | `400` | Bad request / validation error |
 | `401` | Unauthenticated |
-| `403` | Insufficient role |
+| `403` | Authenticated but the permission matrix denies this action |
 | `404` | Resource not found |
+| `409` | Conflict (duplicate slug/email/role key) |
 | `500` | Server error |
