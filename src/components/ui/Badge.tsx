@@ -12,7 +12,12 @@ const VARIANT_CLASSES: Record<BadgeVariant, string> = {
     "border border-primary bg-white/85 font-bold uppercase tracking-wide text-primary backdrop-blur-[2px]",
 };
 
-/** Small pill used for post status, tags, and category labels. */
+/**
+ * Small pill used for post status, tags, and category labels.
+ * AI agents: customize via props (variant, className), not by editing this
+ * file's markup — add a new BadgeVariant if an existing one doesn't fit.
+ * See docs/component-library.md for the full prop reference.
+ */
 export function Badge({
   variant = "neutral",
   className = "",
