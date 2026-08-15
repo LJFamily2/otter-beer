@@ -135,23 +135,27 @@ const cspHeader = `
 
 ## 4. API Rate Limiting
 
-Without rate limiting, your API endpoints can be abused for brute-force, spam, or DoS attacks. Not yet wired for the routes built so far — add before launch using `@upstash/ratelimit` + Upstash Redis:
+Every mutation route (news-blog/users/roles/permissions writes, media upload-url, the Auth.js callback) is wrapped in `withRateLimit()` (`src/lib/rate-limit/withRateLimit.ts`), keyed per client IP, rejecting over-limit requests with `429` + a `Retry-After` header.
 
 ```typescript
-// src/lib/rate-limit.ts
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
-
-export const ratelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(10, "10 s"),
-});
+// src/app/api/media/upload-url/route.ts (excerpt)
+export const POST = withRateLimit(
+  uploadRateLimiter,
+  RouteGuard.requireAuth(async (request, _context, session) => { /* ... */ }),
+  "media-upload-url"
+);
 ```
 
-**Apply rate limiting to:**
-- `POST /api/contact` — prevent spam (once built)
-- `POST /api/media/upload-url` — prevent abuse of presigned upload issuance
-- All public-facing POST routes
+**`RateLimiter`** (`src/lib/rate-limit/RateLimiter.ts`) is an in-memory sliding-window counter — deliberately dependency-free, no Redis/Upstash required. The tradeoff: limits are **per server process**, not shared across serverless instances. This is fine for a single-instance deployment or as a baseline; if traffic outgrows one instance, swap `RateLimiter`'s internals for an Upstash-backed implementation (`@upstash/ratelimit` + `@upstash/redis`) — every call site goes through `withRateLimit()`, so nothing above that layer needs to change.
+
+**Current limits** (`src/lib/rate-limit/limiters.ts`):
+| Limiter | Limit | Applied to |
+|---|---|---|
+| `uploadRateLimiter` | 10/min | `POST /api/media/upload-url` |
+| `mutationRateLimiter` | 30/min | POST/PATCH/DELETE on news-blog, users, roles, permissions |
+| `authRateLimiter` | 20/min | `/api/auth/[...nextauth]` (GET+POST) |
+
+Add `POST /api/contact` to `mutationRateLimiter` (or a dedicated, stricter limiter) once that route is built.
 
 ---
 

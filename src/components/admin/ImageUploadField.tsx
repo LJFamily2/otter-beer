@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { uploadImage } from "@/lib/utils/uploadImage";
+import { publicImageUrl } from "@/lib/storage/constants";
 import { buttonVariants } from "@/components/ui/Button";
 
 interface ImageUploadFieldProps {
@@ -38,7 +39,7 @@ export function ImageUploadField({
         {imageKey ? (
           // eslint-disable-next-line @next/next/no-img-element -- served by our own proxy route, arbitrary R2 key, next/image optimization not applicable
           <img
-            src={`/api/media/public/${imageKey}`}
+            src={publicImageUrl(imageKey)}
             alt=""
             className="h-full w-full object-cover"
           />

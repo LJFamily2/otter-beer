@@ -4,6 +4,7 @@ import Image from "next/image";
 import { blogPostService } from "@/services/BlogPostService";
 import { pickTranslation } from "@/lib/utils/BlogPostPresenter";
 import { buildBlogListMetadata, localizedPath } from "@/lib/seo";
+import { publicImageUrl } from "@/lib/storage/constants";
 import { Badge } from "@/components/ui/Badge";
 import { Pagination } from "@/components/ui/Pagination";
 
@@ -68,7 +69,7 @@ export default async function BlogListPage({
             {featured.coverImageKey ? (
               <div className="absolute inset-0">
                 <Image
-                  src={`/api/media/public/${featured.coverImageKey}`}
+                  src={publicImageUrl(featured.coverImageKey)}
                   alt=""
                   fill
                   className="object-cover"
@@ -114,7 +115,7 @@ export default async function BlogListPage({
                   <div className="relative aspect-[16/10] border-b-2 border-secondary-fixed-dim bg-surface-container-high">
                     {post.coverImageKey ? (
                       <Image
-                        src={`/api/media/public/${post.coverImageKey}`}
+                        src={publicImageUrl(post.coverImageKey)}
                         alt=""
                         fill
                         className="object-cover"

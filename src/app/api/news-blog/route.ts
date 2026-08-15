@@ -7,6 +7,8 @@ import {
 } from "@/services/BlogPostService";
 import { BlogPostCreateSchema } from "@/lib/validation/blogPost";
 import type { BlogPostListFilters } from "@/repositories/BlogPostRepository";
+import { withRateLimit } from "@/lib/rate-limit/withRateLimit";
+import { mutationRateLimiter } from "@/lib/rate-limit/limiters";
 
 export const GET = RouteGuard.requirePermission(
   MODULE_KEYS.NEWS_BLOG,
@@ -30,27 +32,31 @@ export const GET = RouteGuard.requirePermission(
   }
 );
 
-export const POST = RouteGuard.requirePermission(
-  MODULE_KEYS.NEWS_BLOG,
-  "add",
-  async (request: NextRequest, _context, session) => {
-    const body = await request.json();
-    const parsed = BlogPostCreateSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Validation failed", details: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
-
-    try {
-      const post = await blogPostService.create(parsed.data, session.user.id);
-      return NextResponse.json(post, { status: 201 });
-    } catch (err) {
-      if (err instanceof SlugConflictError) {
-        return NextResponse.json({ error: err.message }, { status: 409 });
+export const POST = withRateLimit(
+  mutationRateLimiter,
+  RouteGuard.requirePermission(
+    MODULE_KEYS.NEWS_BLOG,
+    "add",
+    async (request: NextRequest, _context, session) => {
+      const body = await request.json();
+      const parsed = BlogPostCreateSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: "Validation failed", details: parsed.error.flatten() },
+          { status: 400 }
+        );
       }
-      throw err;
+
+      try {
+        const post = await blogPostService.create(parsed.data, session.user.id);
+        return NextResponse.json(post, { status: 201 });
+      } catch (err) {
+        if (err instanceof SlugConflictError) {
+          return NextResponse.json({ error: err.message }, { status: 409 });
+        }
+        throw err;
+      }
     }
-  }
+  ),
+  "news-blog-write"
 );

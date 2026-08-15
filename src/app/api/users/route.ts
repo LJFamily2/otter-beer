@@ -3,6 +3,8 @@ import { RouteGuard } from "@/lib/auth/RouteGuard";
 import { MODULE_KEYS } from "@/config/permissions";
 import { userService, UserMutationError } from "@/services/UserService";
 import { InviteUserSchema } from "@/lib/validation/user";
+import { withRateLimit } from "@/lib/rate-limit/withRateLimit";
+import { mutationRateLimiter } from "@/lib/rate-limit/limiters";
 
 export const GET = RouteGuard.requirePermission(
   MODULE_KEYS.USERS,
@@ -13,31 +15,35 @@ export const GET = RouteGuard.requirePermission(
   }
 );
 
-export const POST = RouteGuard.requirePermission(
-  MODULE_KEYS.USERS,
-  "add",
-  async (request: NextRequest) => {
-    const body = await request.json();
-    const parsed = InviteUserSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Validation failed", details: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
-
-    try {
-      const user = await userService.invite(
-        parsed.data.email,
-        parsed.data.name,
-        parsed.data.roleId
-      );
-      return NextResponse.json(user, { status: 201 });
-    } catch (err) {
-      if (err instanceof UserMutationError) {
-        return NextResponse.json({ error: err.message }, { status: 409 });
+export const POST = withRateLimit(
+  mutationRateLimiter,
+  RouteGuard.requirePermission(
+    MODULE_KEYS.USERS,
+    "add",
+    async (request: NextRequest) => {
+      const body = await request.json();
+      const parsed = InviteUserSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: "Validation failed", details: parsed.error.flatten() },
+          { status: 400 }
+        );
       }
-      throw err;
+
+      try {
+        const user = await userService.invite(
+          parsed.data.email,
+          parsed.data.name,
+          parsed.data.roleId
+        );
+        return NextResponse.json(user, { status: 201 });
+      } catch (err) {
+        if (err instanceof UserMutationError) {
+          return NextResponse.json({ error: err.message }, { status: 409 });
+        }
+        throw err;
+      }
     }
-  }
+  ),
+  "users-write"
 );

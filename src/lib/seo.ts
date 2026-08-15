@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { env } from "@/lib/env";
-import { publicImageUrl } from "@/lib/storage/StorageService";
+import { publicImageUrl } from "@/lib/storage/constants";
 import { DEFAULT_LOCALE, SUPPORTED_LOCALE_CODES } from "@/config/locales";
 import type { IBlogPost, IBlogPostTranslation } from "@/models/BlogPost";
 

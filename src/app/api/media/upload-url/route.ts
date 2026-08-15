@@ -3,11 +3,14 @@ import { RouteGuard } from "@/lib/auth/RouteGuard";
 import { MODULE_KEYS } from "@/config/permissions";
 import { storageService } from "@/lib/storage/StorageService";
 import { RequestUploadSchema } from "@/lib/validation/media";
+import { withRateLimit } from "@/lib/rate-limit/withRateLimit";
+import { uploadRateLimiter } from "@/lib/rate-limit/limiters";
 
 // Image uploads are shared by any content editing flow — grant on either
 // "add" or "edit" of news_blog (the only module with images today).
-export const POST = RouteGuard.requireAuth(
-  async (request: NextRequest, _context, session) => {
+export const POST = withRateLimit(
+  uploadRateLimiter,
+  RouteGuard.requireAuth(async (request: NextRequest, _context, session) => {
     const grant = session.user.permissions?.[MODULE_KEYS.NEWS_BLOG];
     if (!grant?.add && !grant?.edit) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -27,5 +30,6 @@ export const POST = RouteGuard.requireAuth(
       parsed.data.contentType
     );
     return NextResponse.json(upload);
-  }
+  }),
+  "media-upload-url"
 );

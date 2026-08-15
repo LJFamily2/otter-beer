@@ -62,8 +62,3 @@ export class StorageService {
 }
 
 export const storageService = new StorageService(new R2StorageProvider());
-
-/** Public, cacheable URL for an image key that belongs to a published post — see src/app/api/media/public/[...key]/route.ts. */
-export function publicImageUrl(key: string): string {
-  return `/api/media/public/${key}`;
-}

@@ -3,6 +3,8 @@ import { RouteGuard } from "@/lib/auth/RouteGuard";
 import { MODULE_KEYS } from "@/config/permissions";
 import { roleService, RoleMutationError } from "@/services/RoleService";
 import { CreateRoleSchema } from "@/lib/validation/role";
+import { withRateLimit } from "@/lib/rate-limit/withRateLimit";
+import { mutationRateLimiter } from "@/lib/rate-limit/limiters";
 
 export const GET = RouteGuard.requirePermission(
   MODULE_KEYS.ROLES_PERMISSIONS,
@@ -13,27 +15,31 @@ export const GET = RouteGuard.requirePermission(
   }
 );
 
-export const POST = RouteGuard.requirePermission(
-  MODULE_KEYS.ROLES_PERMISSIONS,
-  "add",
-  async (request: NextRequest) => {
-    const body = await request.json();
-    const parsed = CreateRoleSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Validation failed", details: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
-
-    try {
-      const role = await roleService.create(parsed.data.key, parsed.data.name);
-      return NextResponse.json(role, { status: 201 });
-    } catch (err) {
-      if (err instanceof RoleMutationError) {
-        return NextResponse.json({ error: err.message }, { status: 409 });
+export const POST = withRateLimit(
+  mutationRateLimiter,
+  RouteGuard.requirePermission(
+    MODULE_KEYS.ROLES_PERMISSIONS,
+    "add",
+    async (request: NextRequest) => {
+      const body = await request.json();
+      const parsed = CreateRoleSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: "Validation failed", details: parsed.error.flatten() },
+          { status: 400 }
+        );
       }
-      throw err;
+
+      try {
+        const role = await roleService.create(parsed.data.key, parsed.data.name);
+        return NextResponse.json(role, { status: 201 });
+      } catch (err) {
+        if (err instanceof RoleMutationError) {
+          return NextResponse.json({ error: err.message }, { status: 409 });
+        }
+        throw err;
+      }
     }
-  }
+  ),
+  "roles-write"
 );

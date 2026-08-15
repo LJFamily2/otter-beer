@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { blogPostService } from "@/services/BlogPostService";
 import { pickTranslation } from "@/lib/utils/BlogPostPresenter";
 import { buildBlogPostMetadata, buildArticleJsonLd, localizedPath } from "@/lib/seo";
+import { publicImageUrl } from "@/lib/storage/constants";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 
@@ -99,7 +100,7 @@ export default async function BlogDetailPage({
         {post.coverImageKey ? (
           <div className="relative my-8 aspect-video w-full overflow-hidden rounded-lg shadow-sm">
             <Image
-              src={`/api/media/public/${post.coverImageKey}`}
+              src={publicImageUrl(post.coverImageKey)}
               alt=""
               fill
               className="object-cover"
@@ -168,7 +169,7 @@ export default async function BlogDetailPage({
                     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded bg-surface-container-high">
                       {recent.coverImageKey ? (
                         <Image
-                          src={`/api/media/public/${recent.coverImageKey}`}
+                          src={publicImageUrl(recent.coverImageKey)}
                           alt=""
                           fill
                           className="object-cover"
