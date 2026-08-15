@@ -3,6 +3,8 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { blogPostService } from "@/services/BlogPostService";
 import { pickTranslation } from "@/lib/utils/BlogPostPresenter";
+import { formatDate } from "@/lib/utils/formatDate";
+import type { PopulatedAuthor } from "@/types/blogPost";
 import { PlusIcon, SearchIcon, EditIcon, TrashIcon } from "@/components/admin/icons";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -16,21 +18,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-interface PopulatedAuthor {
-  name: string;
-  email: string;
-  image?: string;
-}
-
 interface BlogListPageProps {
   searchParams: Promise<{ page?: string; search?: string }>;
 }
-
-const dateFormatter = new Intl.DateTimeFormat("vi-VN", {
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-});
 
 export default async function BlogListPage({
   searchParams,
@@ -172,7 +162,7 @@ export default async function BlogListPage({
                       {author?.name ?? "—"}
                     </td>
                     <td className="border-t border-[rgba(196,198,210,0.2)] px-4 py-5 text-base">
-                      {dateFormatter.format(post.createdAt)}
+                      {formatDate(post.createdAt, "vi")}
                     </td>
                     <td className="border-t border-[rgba(196,198,210,0.2)] px-4 py-5">
                       <Badge variant={post.status === "published" ? "primary" : "neutral"}>

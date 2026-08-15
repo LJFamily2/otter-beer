@@ -4,30 +4,16 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { blogPostService } from "@/services/BlogPostService";
 import { pickTranslation } from "@/lib/utils/BlogPostPresenter";
+import { formatDate } from "@/lib/utils/formatDate";
 import { buildBlogPostMetadata, buildArticleJsonLd, localizedPath } from "@/lib/seo";
 import { publicImageUrl } from "@/lib/storage/constants";
+import type { PopulatedAuthor } from "@/types/blogPost";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-
-interface PopulatedAuthor {
-  name: string;
-  image?: string;
-}
 
 interface BlogDetailPageProps {
   params: Promise<{ locale: string; slug: string }>;
 }
-
-const dateFormatterVi = new Intl.DateTimeFormat("vi-VN", {
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-});
-const dateFormatterEn = new Intl.DateTimeFormat("en-US", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-});
 
 // Sanitized post HTML (see HtmlSanitizer) is rendered via
 // dangerouslySetInnerHTML, so its typography is styled through Tailwind's
@@ -68,7 +54,6 @@ export default async function BlogDetailPage({
   ]);
 
   const author = post.authorId as unknown as PopulatedAuthor;
-  const dateFormatter = isVi ? dateFormatterVi : dateFormatterEn;
   const jsonLd = buildArticleJsonLd(
     post,
     locale,
@@ -87,7 +72,7 @@ export default async function BlogDetailPage({
         <div className="mb-8">
           <p className="text-[13px] font-bold uppercase tracking-[0.1em] text-secondary">
             {post.tags[0] ? `${post.tags[0]} • ` : ""}
-            {post.publishedAt ? dateFormatter.format(post.publishedAt) : ""}
+            {post.publishedAt ? formatDate(post.publishedAt, locale) : ""}
           </p>
           <h1 className="my-4 text-[clamp(32px,5vw,56px)] tracking-wide text-primary">
             {translation.title}
@@ -183,7 +168,7 @@ export default async function BlogDetailPage({
                       </p>
                       {recent.publishedAt ? (
                         <p className="mt-1 text-xs uppercase tracking-wide text-on-surface-variant">
-                          {dateFormatter.format(recent.publishedAt)}
+                          {formatDate(recent.publishedAt, locale)}
                         </p>
                       ) : null}
                     </div>
