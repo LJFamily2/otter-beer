@@ -29,3 +29,14 @@ Before submitting any change that touches user data or API routes:
 
 → Full security guide: `docs/security.md`
 → Full testing guide: `docs/testing.md`
+
+## MANDATORY: Reusable UI components — customize via props, not by editing
+
+`src/components/ui/*` is a shared component library (Button, Input, Card,
+FeatureCard, DataTable, Modal, Alert, etc.), used across admin and
+marketing pages. When a page needs different styling, content, or
+behavior from one of these, **add/use a prop — do not edit the component
+file** unless the change is a genuine bug fix or a new prop/variant that
+belongs to every consumer.
+
+→ Full component reference (props, variants, the reasoning behind this rule): `docs/component-library.md`
