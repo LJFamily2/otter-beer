@@ -7,6 +7,8 @@ import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import { useRef, useState } from "react";
 import { uploadImage } from "@/lib/utils/uploadImage";
+import { Modal } from "@/components/ui/Modal";
+import { Input } from "@/components/ui/Input";
 
 interface RichTextEditorProps {
   value: string;
@@ -41,6 +43,11 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Link Modal state
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [linkInputUrl, setLinkInputUrl] = useState("");
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -64,35 +71,48 @@ export function RichTextEditor({
     event.target.value = "";
     if (!file || !editor) return;
 
+    setUploadError(null);
     setIsUploadingImage(true);
     try {
       const uploaded = await uploadImage(file);
       editor.chain().focus().setImage({ src: uploaded.url }).run();
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : "Tải ảnh thất bại.");
+      setUploadError(err instanceof Error ? err.message : "Tải ảnh thất bại.");
     } finally {
       setIsUploadingImage(false);
     }
   }
 
-  function setLink() {
-    const previousUrl = editor?.getAttributes("link").href as
-      | string
-      | undefined;
-    const url = window.prompt("Nhập URL liên kết:", previousUrl ?? "");
-    if (url === null) return;
-    if (url === "") {
-      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
-      return;
-    }
-    editor?.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+  function handleOpenLinkModal() {
+    const previousUrl = (editor?.getAttributes("link").href as string | undefined) ?? "";
+    setLinkInputUrl(previousUrl);
+    setIsLinkModalOpen(true);
   }
+
+  function handleSaveLink() {
+    if (!editor) return;
+    const url = linkInputUrl.trim();
+    if (!url) {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    } else {
+      editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+    }
+    setIsLinkModalOpen(false);
+  }
+
+  function handleRemoveLink() {
+    if (!editor) return;
+    editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    setIsLinkModalOpen(false);
+  }
+
+  const effectiveError = uploadError ?? error;
 
   return (
     <div className="flex flex-col gap-1.5">
       <div
         className={`overflow-hidden rounded border transition-colors ${
-          error
+          effectiveError
             ? "border-error bg-error-container/10"
             : "border-[rgba(196,198,210,0.5)] bg-surface-container-lowest"
         }`}
@@ -143,7 +163,7 @@ export function RichTextEditor({
           <ToolButton
             label="Liên kết"
             active={editor.isActive("link")}
-            onClick={setLink}
+            onClick={handleOpenLinkModal}
           />
           <ToolButton
             label={isUploadingImage ? "Đang tải..." : "Ảnh"}
@@ -161,11 +181,45 @@ export function RichTextEditor({
           <EditorContent editor={editor} />
         </div>
       </div>
-      {error ? (
+      {effectiveError ? (
         <p className="flex items-center gap-1 text-xs font-medium text-error">
-          {error}
+          {effectiveError}
         </p>
       ) : null}
+
+      <Modal
+        open={isLinkModalOpen}
+        onClose={() => setIsLinkModalOpen(false)}
+        title="Chèn liên kết"
+        description="Nhập URL liên kết cho văn bản đã chọn."
+        cancelLabel="Hủy"
+        confirmLabel="Lưu liên kết"
+        onConfirm={handleSaveLink}
+      >
+        <div className="mt-4 flex flex-col gap-3 text-left">
+          <Input
+            label="Đường dẫn URL"
+            placeholder="https://example.com"
+            value={linkInputUrl}
+            onChange={(e) => setLinkInputUrl(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSaveLink();
+              }
+            }}
+          />
+          {editor.isActive("link") ? (
+            <button
+              type="button"
+              className="self-start text-xs font-semibold text-error hover:underline"
+              onClick={handleRemoveLink}
+            >
+              Gỡ liên kết
+            </button>
+          ) : null}
+        </div>
+      </Modal>
     </div>
   );
 }
