@@ -6,8 +6,8 @@ import { buttonVariants } from "./Button";
 /**
  * Centered confirmation dialog with a blurred backdrop.
  * AI agents: customize via props (icon, title, description, cancelLabel,
- * confirmLabel, onConfirm, children), not by editing this file's markup.
- * See docs/component-library.md for the full prop reference.
+ * confirmLabel, confirmDisabled, onConfirm, children), not by editing this
+ * file's markup. See docs/component-library.md for the full prop reference.
  */
 interface ModalProps {
   open: boolean;
@@ -17,6 +17,8 @@ interface ModalProps {
   description?: ReactNode;
   cancelLabel?: string;
   confirmLabel?: string;
+  /** Disables the confirm button — e.g. while an async onConfirm submit is in flight. */
+  confirmDisabled?: boolean;
   onConfirm?: () => void;
   children?: ReactNode;
 }
@@ -29,6 +31,7 @@ export function Modal({
   description,
   cancelLabel = "Cancel",
   confirmLabel = "Confirm",
+  confirmDisabled = false,
   onConfirm,
   children,
 }: ModalProps) {
@@ -59,6 +62,7 @@ export function Modal({
           <button
             type="button"
             onClick={onConfirm ?? onClose}
+            disabled={confirmDisabled}
             className={`flex-1 ${buttonVariants("primary")}`}
           >
             {confirmLabel}

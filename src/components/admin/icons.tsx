@@ -73,3 +73,14 @@ export function TrashIcon(props: SVGProps<SVGSVGElement>) {
     </IconBase>
   );
 }
+
+export function UsersIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <circle cx="7.2" cy="6.5" r="2.8" />
+      <path d="M2.2 16.5c.7-3 2.5-4.5 5-4.5s4.3 1.5 5 4.5" />
+      <path d="M12.8 4.3a2.8 2.8 0 010 4.4" />
+      <path d="M14.5 12.3c2 .4 3.2 1.8 3.8 4.2" />
+    </IconBase>
+  );
+}
