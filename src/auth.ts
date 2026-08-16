@@ -54,11 +54,13 @@ export const {
       if (!resolved || !resolved.user.isActive) {
         token.userId = undefined;
         token.roleKey = undefined;
+        token.roleLevel = undefined;
         return token;
       }
 
       token.userId = String(resolved.user._id);
       token.roleKey = resolved.roleKey;
+      token.roleLevel = resolved.roleLevel;
       return token;
     },
 
@@ -71,12 +73,14 @@ export const {
       // undefined) in the `jwt` callback right above.
       const userId = token.userId as string | undefined;
       const roleKey = token.roleKey as string | undefined;
+      const roleLevel = token.roleLevel as number | undefined;
 
-      if (!userId || !roleKey) {
+      if (!userId || !roleKey || roleLevel === undefined) {
         // Revoked/unknown user — strip identifying fields so downstream
         // guards (RouteGuard, proxy.ts) treat this as unauthenticated.
         session.user.id = "";
         session.user.roleKey = "";
+        session.user.roleLevel = Number.MAX_SAFE_INTEGER;
         session.user.permissions = {} as PermissionMatrix;
         return session;
       }
@@ -84,6 +88,7 @@ export const {
       const permissions = await permissionService.getMatrixForRoleKey(roleKey);
       session.user.id = userId;
       session.user.roleKey = roleKey;
+      session.user.roleLevel = roleLevel;
       session.user.permissions = permissions;
       return session;
     },

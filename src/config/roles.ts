@@ -26,10 +26,32 @@ export const SYSTEM_ROLE_LABELS_VI: Record<SystemRoleKey, string> = {
 };
 
 /**
+ * Hierarchy rank for the three built-in roles — lower is more senior.
+ * Seeded onto Role.level by scripts/seed.ts. Custom roles never appear
+ * here; their level is always computed at creation time as
+ * (creator's level + 1) — see RoleService.create().
+ */
+export const SYSTEM_ROLE_LEVELS: Record<SystemRoleKey, number> = {
+  [SYSTEM_ROLE_KEYS.SUPER_ADMIN]: 0,
+  [SYSTEM_ROLE_KEYS.ADMIN]: 1,
+  [SYSTEM_ROLE_KEYS.OFFICE_MEMBER]: 2,
+};
+
+/**
  * The super admin always has full access to every module and action and is
  * never checked against the Permission matrix — this prevents a misconfigured
  * matrix from locking every admin out of the system. See PermissionService.
  */
 export function isSuperAdminRoleKey(key: string): boolean {
   return key === SYSTEM_ROLE_KEYS.SUPER_ADMIN;
+}
+
+/**
+ * Whether an actor at `actorLevel` may create/edit/delete a role (or grant
+ * it to a user) at `targetLevel`. Strictly lower only — an actor can never
+ * manage a role at their own rank or above, so e.g. an admin can't touch
+ * the admin role itself or promote anyone to it.
+ */
+export function canManageRole(actorLevel: number, targetLevel: number): boolean {
+  return actorLevel < targetLevel;
 }

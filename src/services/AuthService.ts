@@ -1,5 +1,5 @@
 import { env } from "@/lib/env";
-import { SYSTEM_ROLE_KEYS } from "@/config/roles";
+import { SYSTEM_ROLE_KEYS, isSuperAdminRoleKey } from "@/config/roles";
 import { UserRepository } from "@/repositories/UserRepository";
 import { RoleRepository } from "@/repositories/RoleRepository";
 import type { IUser } from "@/models/User";
@@ -87,11 +87,16 @@ export class AuthService {
 
   async getUserWithRoleKey(
     email: string
-  ): Promise<{ user: IUser; roleKey: string } | null> {
+  ): Promise<{ user: IUser; roleKey: string; roleLevel: number } | null> {
     const user = await this.userRepository.findByEmailWithRole(email);
     if (!user) return null;
-    const role = user.roleId as unknown as { key: string };
-    return { user, roleKey: role.key };
+    const role = user.roleId as unknown as { key: string; level: number };
+    // superAdmin's level is hardcoded rather than trusted from the DB row,
+    // mirroring the same safety-valve pattern PermissionService uses for
+    // its matrix bypass — a bad edit to the Role document can never strip
+    // superAdmin's ability to manage every other role.
+    const roleLevel = isSuperAdminRoleKey(role.key) ? 0 : role.level;
+    return { user, roleKey: role.key, roleLevel };
   }
 }
 

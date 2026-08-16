@@ -17,6 +17,7 @@ import { PermissionModel } from "../src/models/Permission";
 import {
   SYSTEM_ROLE_KEYS,
   SYSTEM_ROLE_LABELS_VI,
+  SYSTEM_ROLE_LEVELS,
   type SystemRoleKey,
 } from "../src/config/roles";
 import {
@@ -83,7 +84,7 @@ async function seed() {
   ][]) {
     const role = await RoleModel.findOneAndUpdate(
       { key },
-      { $set: { name: label, isSystem: true } },
+      { $set: { name: label, isSystem: true, level: SYSTEM_ROLE_LEVELS[key] } },
       { upsert: true, new: true }
     );
 
