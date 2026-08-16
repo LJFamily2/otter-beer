@@ -29,11 +29,15 @@ export async function generateMetadata({
   params,
 }: BlogDetailPageProps): Promise<Metadata> {
   const { locale, slug } = await params;
-  const post = await blogPostService.getPublishedByLocaleSlug(locale, slug);
-  if (!post) return {};
-  const translation = pickTranslation(post, locale);
-  if (!translation) return {};
-  return buildBlogPostMetadata(post, locale, translation);
+  try {
+    const post = await blogPostService.getPublishedByLocaleSlug(locale, slug);
+    if (!post) return {};
+    const translation = pickTranslation(post, locale);
+    if (!translation) return {};
+    return buildBlogPostMetadata(post, locale, translation);
+  } catch {
+    return {};
+  }
 }
 
 export default async function BlogDetailPage({
@@ -42,15 +46,20 @@ export default async function BlogDetailPage({
   const { locale, slug } = await params;
   const isVi = locale === "vi";
 
-  const post = await blogPostService.getPublishedByLocaleSlug(locale, slug);
+  let post = null;
+  try {
+    post = await blogPostService.getPublishedByLocaleSlug(locale, slug);
+  } catch {
+    notFound();
+  }
   if (!post) notFound();
 
   const translation = pickTranslation(post, locale);
   if (!translation) notFound();
 
   const [recentPosts, allTags] = await Promise.all([
-    blogPostService.getRecentPublished(3, String(post._id)),
-    blogPostService.getPublishedTags(),
+    blogPostService.getRecentPublished(3, String(post._id)).catch(() => []),
+    blogPostService.getPublishedTags().catch(() => []),
   ]);
 
   const author = post.authorId as unknown as PopulatedAuthor;

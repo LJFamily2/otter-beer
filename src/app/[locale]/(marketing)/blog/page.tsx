@@ -31,11 +31,13 @@ export default async function BlogListPage({
   const page = Number(pageParam ?? "1") || 1;
   const isVi = locale === "vi";
 
-  const result = await blogPostService.listPublished({
-    page,
-    pageSize: PAGE_SIZE,
-    tag,
-  });
+  const result = await blogPostService
+    .listPublished({
+      page,
+      pageSize: PAGE_SIZE,
+      tag,
+    })
+    .catch(() => ({ items: [], totalPages: 1, total: 0 }));
 
   // Only feature a post on the unfiltered first page — a tag filter should
   // show a plain filtered grid, not a featured pick that may not match it.
