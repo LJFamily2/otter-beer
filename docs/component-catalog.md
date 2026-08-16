@@ -32,7 +32,13 @@ VI-only, session-gated by `src/proxy.ts`, permission-gated per-page via
 | `/admin/blog/moi` | `(protected)/blog/moi/page.tsx` | Create post — renders `PostForm` (Tiptap editor) |
 | `/admin/blog/[id]/sua` | `(protected)/blog/[id]/sua/page.tsx` | Edit post — renders `PostForm` (Tiptap editor) |
 | — | `(protected)/blog/PostForm.tsx` | Shared create/edit form — `Breadcrumbs`, `Tabs` (locale switcher), `Input`/`Textarea`/`Select` for every field |
-| — | `(protected)/layout.tsx` | Admin shell — `NavSidebar` (route-aware active state) + `Avatar`, trimmed to modules that actually have UI |
+| `/admin/users` | `(protected)/users/page.tsx` | User Management — KPI cards (total/active/inactive), `Breadcrumbs`, role `Tabs` + search (client-side, `filterUsers()`), `DataTable` |
+| — | `(protected)/users/UsersDirectory.tsx` | Client filtering/table piece of the Users page |
+| — | `(protected)/users/AddUserModal.tsx` | Invite a user — `Modal` + `Input`/`Select`, `POST /api/users` |
+| — | `(protected)/users/EditUserModal.tsx` | Change a user's role/active state — `Modal` + `Select`, `PATCH /api/users/[id]` |
+| — | `(protected)/users/DeleteUserButton.tsx` | Revoke a user's access — `DELETE /api/users/[id]` (mirrors `blog/DeletePostButton.tsx`) |
+| `/admin/tai-khoan` | `(protected)/tai-khoan/page.tsx` | Account Settings — no Figma frame exists for this (self-designed): read-only profile (name/email/avatar synced from Google), role badge, permissions-matrix summary (`DataTable`), sign out |
+| — | `(protected)/layout.tsx` | Admin shell — `NavSidebar` (route-aware active state) + `Avatar`; footer profile block links to `/admin/tai-khoan`, trimmed to modules that actually have UI |
 
 **Reserved, not yet built** (empty `.gitkeep` scaffold folders — a future
 module, not a bug if you find nothing there): `admin/beers/`, `admin/events/`.
@@ -80,7 +86,7 @@ the admin shell/session context.
 |---|---|---|
 | `RichTextEditor` | `RichTextEditor.tsx` | Tiptap WYSIWYG editor used by the blog post form |
 | `ImageUploadField` | `ImageUploadField.tsx` | R2 signed-upload image field (cover image, inline post images) |
-| `icons.tsx` | `icons.tsx` | Admin-specific icon set (news/blog, logout, plus, search, edit, trash) |
+| `icons.tsx` | `icons.tsx` | Admin-specific icon set (news/blog, users, logout, plus, search, edit, trash) |
 | `classNames.ts` | `classNames.ts` | Shared Tailwind class strings reused across admin server/client component boundaries |
 
 **Retired**: `AdminNavLink.tsx` — superseded by `src/components/ui/NavSidebar.tsx`'s

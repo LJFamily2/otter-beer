@@ -63,7 +63,7 @@ Each component file repeats this rule in a short header comment.
 - **`DropdownMenu`** (`DropdownMenu.tsx`, client) — `trigger`, `header?: {title, subtitle?}`, `items: {label, href?, onClick?, icon?, danger?, dividerBefore?}[]`. Closes on outside click / Escape.
 
 ### Feedback & overlays
-- **`Modal`** (`Modal.tsx`, client) — `open`, `onClose`, `icon?`, `title`, `description?`, `cancelLabel?`, `confirmLabel?`, `onConfirm?`, `children?`. Fully controlled — the caller owns the `open` state (see `src/app/[locale]/(marketing)/design-system/ModalDemo.tsx` for the pattern).
+- **`Modal`** (`Modal.tsx`, client) — `open`, `onClose`, `icon?`, `title`, `description?`, `cancelLabel?`, `confirmLabel?`, `confirmDisabled?` (e.g. while an async `onConfirm` submit is in flight), `onConfirm?`, `children?`. Fully controlled — the caller owns the `open` state (see `src/app/[locale]/(marketing)/design-system/ModalDemo.tsx` for the pattern, or `(admin)/admin/(protected)/users/AddUserModal.tsx` for a real async-submit form-in-a-modal).
 - **`Alert`** (`Alert.tsx`) — `variant: "info" | "success" | "warning" | "error"`, `title`, `description?`, `icon?`.
 - **`Toast`** (`Toast.tsx`) — `icon?`, `message`, `onClose?`. Presentational only — no stacking/auto-dismiss queue; compose your own positioning wrapper around it.
 - **`Tooltip`** (`Tooltip.tsx`) — `label`, `side: "top" | "bottom"`, `children`. CSS-only (`:hover`/`:focus-within`), no JS.
