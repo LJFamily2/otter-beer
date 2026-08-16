@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
+import { Modal } from "@/components/ui/Modal";
 import { rowActionButtonClass } from "@/components/admin/classNames";
 
 export function DeletePostButton({
@@ -12,37 +13,57 @@ export function DeletePostButton({
   children: ReactNode;
 }) {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function handleDelete() {
-    if (!window.confirm("Xóa bài viết này? Hành động này không thể hoàn tác.")) {
-      return;
-    }
+  async function handleConfirmDelete() {
+    setError(null);
     setIsDeleting(true);
     try {
       const response = await fetch(`/api/news-blog/${postId}`, {
         method: "DELETE",
       });
       if (!response.ok && response.status !== 204) {
-        throw new Error("Xóa bài viết thất bại.");
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.error ?? "Xóa bài viết thất bại.");
       }
+      setOpen(false);
       router.refresh();
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : "Đã xảy ra lỗi.");
+      setError(err instanceof Error ? err.message : "Đã xảy ra lỗi.");
     } finally {
       setIsDeleting(false);
     }
   }
 
   return (
-    <button
-      type="button"
-      className={rowActionButtonClass}
-      aria-label="Xóa"
-      disabled={isDeleting}
-      onClick={handleDelete}
-    >
-      {children}
-    </button>
+    <>
+      <button
+        type="button"
+        className={rowActionButtonClass}
+        aria-label="Xóa"
+        onClick={() => setOpen(true)}
+      >
+        {children}
+      </button>
+
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Xác nhận xóa bài viết"
+        description="Xóa bài viết này? Hành động này không thể hoàn tác."
+        cancelLabel="Hủy"
+        confirmLabel={isDeleting ? "Đang xóa..." : "Xóa bài viết"}
+        confirmDisabled={isDeleting}
+        onConfirm={handleConfirmDelete}
+      >
+        {error ? (
+          <p className="mt-4 rounded bg-error-container px-3 py-2 text-sm text-on-error-container">
+            {error}
+          </p>
+        ) : null}
+      </Modal>
+    </>
   );
 }

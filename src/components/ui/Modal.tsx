@@ -20,6 +20,8 @@ interface ModalProps {
   /** Disables the confirm button — e.g. while an async onConfirm submit is in flight. */
   confirmDisabled?: boolean;
   onConfirm?: () => void;
+  /** When true, uses a wider max-width (e.g. for tables). */
+  wide?: boolean;
   children?: ReactNode;
 }
 
@@ -33,6 +35,7 @@ export function Modal({
   confirmLabel = "Confirm",
   confirmDisabled = false,
   onConfirm,
+  wide = false,
   children,
 }: ModalProps) {
   if (!open) return null;
@@ -46,7 +49,7 @@ export function Modal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-lg border border-outline-variant/20 bg-surface p-8 text-center shadow-md"
+        className={`w-full ${wide ? "max-w-3xl" : "max-w-md"} rounded-lg border border-outline-variant/20 bg-surface p-8 text-center shadow-md`}
         onClick={(e) => e.stopPropagation()}
       >
         {icon ? <div className="mb-4 flex justify-center text-primary">{icon}</div> : null}
@@ -59,14 +62,16 @@ export function Modal({
           <button type="button" onClick={onClose} className={`flex-1 ${buttonVariants("secondary")}`}>
             {cancelLabel}
           </button>
-          <button
-            type="button"
-            onClick={onConfirm ?? onClose}
-            disabled={confirmDisabled}
-            className={`flex-1 ${buttonVariants("primary")}`}
-          >
-            {confirmLabel}
-          </button>
+          {confirmLabel ? (
+            <button
+              type="button"
+              onClick={onConfirm ?? onClose}
+              disabled={confirmDisabled}
+              className={`flex-1 ${buttonVariants("primary")}`}
+            >
+              {confirmLabel}
+            </button>
+          ) : null}
         </div>
       </div>
     </div>
