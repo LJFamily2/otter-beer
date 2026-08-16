@@ -58,7 +58,22 @@ export class PermissionService {
     const matrix = emptyMatrix();
     for (const row of rows) {
       if ((MODULE_KEYS_LIST as readonly string[]).includes(row.moduleKey)) {
-        matrix[row.moduleKey as ModuleKey] = { ...row.actions };
+        // row.actions is a Mongoose subdocument, not a plain object — a
+        // shallow spread copies its internal bookkeeping (incl. a $__parent
+        // back-reference to this same row), producing a self-referential
+        // object. That's invisible to JSON.stringify (Mongoose documents
+        // define toJSON, which JSON.stringify calls automatically) but not
+        // to React's RSC flight serializer, which walks raw properties and
+        // recurses forever on the cycle. Picking the known fields keeps this
+        // a genuinely plain object.
+        const actions = row.actions;
+        matrix[row.moduleKey as ModuleKey] = {
+          access: actions.access,
+          view: actions.view,
+          add: actions.add,
+          edit: actions.edit,
+          delete: actions.delete,
+        };
       }
     }
     return matrix;
