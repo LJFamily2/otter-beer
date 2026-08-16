@@ -37,7 +37,12 @@ VI-only, session-gated by `src/proxy.ts`, permission-gated per-page via
 | — | `(protected)/users/AddUserModal.tsx` | Invite a user — `Modal` + `Input`/`Select`, `POST /api/users` |
 | — | `(protected)/users/EditUserModal.tsx` | Change a user's role/active state — `Modal` + `Select`, `PATCH /api/users/[id]` |
 | — | `(protected)/users/DeleteUserButton.tsx` | Revoke a user's access — `DELETE /api/users/[id]` (mirrors `blog/DeletePostButton.tsx`) |
-| `/admin/tai-khoan` | `(protected)/tai-khoan/page.tsx` | Account Settings — no Figma frame exists for this (self-designed): read-only profile (name/email/avatar synced from Google), role badge, permissions-matrix summary (`DataTable`), sign out |
+| `/admin/tai-khoan` | `(protected)/tai-khoan/page.tsx` | Account Settings — no Figma frame exists for this (self-designed): read-only profile (name/email/avatar synced from Google), role badge, permissions-matrix summary (`DataTable`, **superAdmin only** — everyone else's own grants aren't shown here), sign out |
+| `/admin/roles` | `(protected)/roles/page.tsx` | Roles & Permissions — role list (`?roleId=` query param switches selection), permission matrix editor per role. superAdmin's row is shown as a static "always full access" notice (matches the API's edit block) |
+| — | `(protected)/roles/PermissionMatrixEditor.tsx` | Client checkbox grid (module × action) + save — `PUT /api/permissions` |
+| — | `(protected)/roles/CreateRoleModal.tsx` | Create a custom role — `Modal` + `Input`, `POST /api/roles` |
+| — | `(protected)/roles/RenameRoleModal.tsx` | Rename a non-system role — `Modal` + `Input`, `PATCH /api/roles/[id]` |
+| — | `(protected)/roles/DeleteRoleButton.tsx` | Delete a non-system role — `DELETE /api/roles/[id]` (system roles can't be deleted; the button is hidden for them) |
 | — | `(protected)/layout.tsx` | Admin shell — `NavSidebar` (route-aware active state) + `Avatar`; footer profile block links to `/admin/tai-khoan`, trimmed to modules that actually have UI |
 
 **Reserved, not yet built** (empty `.gitkeep` scaffold folders — a future
@@ -71,8 +76,8 @@ Bilingual (vi default with no prefix, en under `/en`), public, SEO-tracked
 Full prop reference: `docs/component-library.md`. One-line summary of what
 exists, so you don't have to open every file to check:
 
-Button, BackButton, Input, Textarea, Select, Card, FeatureCard, Badge,
-StatusBadge, Avatar/AvatarGroup, DataTable, Accordion, ActivityList,
+Button, BackButton, Input, Textarea, Select, Checkbox, Card, FeatureCard,
+Badge, StatusBadge, Avatar/AvatarGroup, DataTable, Accordion, ActivityList,
 Breadcrumbs, Tabs, Pagination, NavSidebar, TopNavBar, DropdownMenu, Modal,
 Alert, Toast, Tooltip, Spinner, Skeleton, plus a shared generic icon set
 (`icons.tsx`).
@@ -86,7 +91,7 @@ the admin shell/session context.
 |---|---|---|
 | `RichTextEditor` | `RichTextEditor.tsx` | Tiptap WYSIWYG editor used by the blog post form |
 | `ImageUploadField` | `ImageUploadField.tsx` | R2 signed-upload image field (cover image, inline post images) |
-| `icons.tsx` | `icons.tsx` | Admin-specific icon set (news/blog, users, logout, plus, search, edit, trash) |
+| `icons.tsx` | `icons.tsx` | Admin-specific icon set (news/blog, users, shield, logout, plus, search, edit, trash) |
 | `classNames.ts` | `classNames.ts` | Shared Tailwind class strings reused across admin server/client component boundaries |
 
 **Retired**: `AdminNavLink.tsx` — superseded by `src/components/ui/NavSidebar.tsx`'s

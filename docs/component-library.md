@@ -41,6 +41,7 @@ Each component file repeats this rule in a short header comment.
 - **`Input`** (`Input.tsx`) — `label?`, `icon?` (leading icon node), `error?`, `hint?`, plus native `<input>` props.
 - **`Textarea`** (`Textarea.tsx`) — `label?`, `error?`, `hint?`, `rows?`, plus native `<textarea>` props.
 - **`Select`** (`Select.tsx`, client) — `label?`, `options: {value, label}[]`, `placeholder?`, `error?`, `value?`/`defaultValue?`, `onChange?: (value: string) => void`, `name?`, `required?`, `disabled?`. A custom-rendered listbox, not a native `<select>` — a native select's options popup is drawn by the browser/OS and can't be restyled via CSS at all, so this renders its own styled panel instead (closes on outside click/Escape/pick; Up/Down navigate while open). `onChange` receives the picked value directly, not a change event.
+- **`Checkbox`** (`Checkbox.tsx`) — `label?`, `error?`, plus native `<input type="checkbox">` props. Unlike `Select`, a checkbox's own rendering has no browser-drawn popup, so it's styled directly on the native input — no custom rebuild needed.
 
 ### Status & content
 - **`Badge`** (`Badge.tsx`) — `variant: "neutral" | "primary" | "outline" | "overlay"`. Plain text pill (post status, tags).

@@ -84,3 +84,12 @@ export function UsersIcon(props: SVGProps<SVGSVGElement>) {
     </IconBase>
   );
 }
+
+export function ShieldIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M10 2.5l6.5 2.4v4.6c0 4-2.7 7.2-6.5 8-3.8-.8-6.5-4-6.5-8V4.9L10 2.5z" strokeLinejoin="round" />
+      <path d="M7.2 10l2 2 3.6-4" />
+    </IconBase>
+  );
+}
