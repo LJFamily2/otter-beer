@@ -16,18 +16,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ]
   );
 
-  const { items: posts } = await blogPostService.listPublished({
-    page: 1,
-    pageSize: MAX_SITEMAP_POSTS,
-  });
+  try {
+    const { items: posts } = await blogPostService.listPublished({
+      page: 1,
+      pageSize: MAX_SITEMAP_POSTS,
+    });
 
-  const postEntries: MetadataRoute.Sitemap = posts.flatMap((post) =>
-    post.translations.map((translation) => ({
-      url: `${siteUrl}${localizedPath(translation.locale, `/blog/${translation.slug}`)}`,
-      lastModified: post.updatedAt,
-      priority: 0.6,
-    }))
-  );
+    const postEntries: MetadataRoute.Sitemap = posts.flatMap((post) =>
+      post.translations.map((translation) => ({
+        url: `${siteUrl}${localizedPath(translation.locale, `/blog/${translation.slug}`)}`,
+        lastModified: post.updatedAt,
+        priority: 0.6,
+      }))
+    );
 
-  return [...staticEntries, ...postEntries];
+    return [...staticEntries, ...postEntries];
+  } catch {
+    return staticEntries;
+  }
 }
