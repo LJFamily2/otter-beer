@@ -46,7 +46,7 @@ export function Select({
       <div className="relative">
         <select
           id={selectId}
-          className={`w-full appearance-none rounded-sm border bg-surface-container-lowest px-[17px] py-[13px] pr-10 text-base text-on-surface shadow-sm outline-none transition-colors focus:border-secondary-fixed-dim disabled:cursor-not-allowed disabled:opacity-60 ${
+          className={`w-full cursor-pointer appearance-none rounded-sm border bg-surface-container-lowest px-[17px] py-[13px] pr-10 text-base text-on-surface shadow-sm outline-none transition-colors focus:border-secondary-fixed-dim disabled:cursor-not-allowed disabled:opacity-60 ${
             error ? "border-error" : "border-outline-variant"
           } ${className}`}
           aria-invalid={Boolean(error)}

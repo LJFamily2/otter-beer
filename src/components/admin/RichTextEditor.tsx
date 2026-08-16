@@ -15,7 +15,7 @@ interface RichTextEditorProps {
 }
 
 const toolButtonClass = (active?: boolean) =>
-  `inline-flex h-[30px] min-w-[30px] items-center justify-center rounded-sm px-2 text-[13px] font-semibold ${
+  `inline-flex h-[30px] min-w-[30px] cursor-pointer items-center justify-center rounded-sm px-2 text-[13px] font-semibold ${
     active
       ? "bg-secondary-container text-on-secondary-container"
       : "text-on-surface-variant hover:bg-surface-container"

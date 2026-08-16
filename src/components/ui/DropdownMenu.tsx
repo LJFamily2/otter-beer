@@ -54,7 +54,13 @@ export function DropdownMenu({
 
   return (
     <div ref={rootRef} className={`relative inline-block ${className}`}>
-      <button type="button" onClick={() => setOpen((prev) => !prev)} aria-haspopup="menu" aria-expanded={open}>
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="cursor-pointer"
+      >
         {trigger}
       </button>
       {open ? (
@@ -90,7 +96,7 @@ export function DropdownMenu({
                     <button
                       type="button"
                       role="menuitem"
-                      className="block w-full text-left"
+                      className="block w-full cursor-pointer text-left"
                       onClick={() => {
                         item.onClick?.();
                         setOpen(false);

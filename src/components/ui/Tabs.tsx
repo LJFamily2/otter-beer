@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 export type TabsVariant = "underline" | "pill";
 
 export interface TabItem {
   value: string;
-  label: string;
+  label: ReactNode;
 }
 
 /**
@@ -47,7 +47,7 @@ export function Tabs({
             key={item.value}
             type="button"
             onClick={() => select(item.value)}
-            className={`rounded-sm px-6 py-2 text-xs font-medium ${
+            className={`cursor-pointer rounded-sm px-6 py-2 text-xs font-medium ${
               activeValue === item.value
                 ? "bg-surface-container-lowest text-primary shadow-sm"
                 : "text-on-surface-variant"
@@ -67,7 +67,7 @@ export function Tabs({
           key={item.value}
           type="button"
           onClick={() => select(item.value)}
-          className={`pb-3.5 text-sm font-bold tracking-wide ${
+          className={`cursor-pointer pb-3.5 text-sm font-bold tracking-wide ${
             activeValue === item.value
               ? "border-b-2 border-secondary-container text-primary"
               : "text-on-surface-variant"

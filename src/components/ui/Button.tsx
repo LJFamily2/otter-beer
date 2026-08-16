@@ -20,7 +20,7 @@ export function buttonVariants(
   variant: ButtonVariant = "primary",
   size: ButtonSize = "md"
 ): string {
-  return `inline-flex items-center justify-center gap-2 rounded font-bold uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${VARIANT_CLASSES[variant]} ${SIZE_CLASSES[size]}`;
+  return `inline-flex items-center justify-center gap-2 rounded font-bold uppercase tracking-wide transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${VARIANT_CLASSES[variant]} ${SIZE_CLASSES[size]}`;
 }
 
 /**

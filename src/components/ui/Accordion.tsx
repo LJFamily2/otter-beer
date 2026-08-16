@@ -38,7 +38,7 @@ export function Accordion({
             <button
               type="button"
               onClick={() => setOpenIndex(isOpen ? null : index)}
-              className="flex w-full items-center justify-between p-4 text-left"
+              className="flex w-full cursor-pointer items-center justify-between p-4 text-left"
               aria-expanded={isOpen}
             >
               <span className="text-sm font-bold uppercase tracking-wide text-primary">

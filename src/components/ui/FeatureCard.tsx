@@ -118,7 +118,7 @@ function FeatureCardLink({ cta, children }: { cta: FeatureCardCta; children: Rea
     );
   }
   return (
-    <button type="button" onClick={cta.onClick} className="text-left">
+    <button type="button" onClick={cta.onClick} className="cursor-pointer text-left">
       {children}
     </button>
   );

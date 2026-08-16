@@ -34,7 +34,7 @@ export function Toast({
           type="button"
           onClick={onClose}
           aria-label="Dismiss"
-          className="ml-2 shrink-0 text-inverse-on-surface/70 hover:text-inverse-on-surface"
+          className="ml-2 shrink-0 cursor-pointer text-inverse-on-surface/70 hover:text-inverse-on-surface"
         >
           <CloseIcon width={13} height={13} />
         </button>
