@@ -40,7 +40,7 @@ Each component file repeats this rule in a short header comment.
 - **`BackButton`** (`BackButton.tsx`, client) — `label`, `fallbackHref`, `variant?`, `size?`. Returns via browser history (`router.back()`), falling back to `fallbackHref` when there's no history (e.g. the tab's first navigation landed directly here). Used by the admin-context 404 (`src/app/not-found.tsx`) instead of a link back into the public site.
 - **`Input`** (`Input.tsx`) — `label?`, `icon?` (leading icon node), `error?`, `hint?`, plus native `<input>` props.
 - **`Textarea`** (`Textarea.tsx`) — `label?`, `error?`, `hint?`, `rows?`, plus native `<textarea>` props.
-- **`Select`** (`Select.tsx`) — `label?`, `options: {value, label}[]`, `placeholder?`, `error?`, plus native `<select>` props.
+- **`Select`** (`Select.tsx`, client) — `label?`, `options: {value, label}[]`, `placeholder?`, `error?`, `value?`/`defaultValue?`, `onChange?: (value: string) => void`, `name?`, `required?`, `disabled?`. A custom-rendered listbox, not a native `<select>` — a native select's options popup is drawn by the browser/OS and can't be restyled via CSS at all, so this renders its own styled panel instead (closes on outside click/Escape/pick; Up/Down navigate while open). `onChange` receives the picked value directly, not a change event.
 
 ### Status & content
 - **`Badge`** (`Badge.tsx`) — `variant: "neutral" | "primary" | "outline" | "overlay"`. Plain text pill (post status, tags).

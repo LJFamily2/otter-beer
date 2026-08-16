@@ -84,7 +84,7 @@ export function AddUserModal({ roles }: { roles: RoleOption[] }) {
             label="Vai trò"
             options={roles}
             value={roleId}
-            onChange={(e) => setRoleId(e.target.value)}
+            onChange={setRoleId}
           />
         </div>
       </Modal>

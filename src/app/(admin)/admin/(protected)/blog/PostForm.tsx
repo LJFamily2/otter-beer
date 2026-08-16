@@ -304,7 +304,7 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
           label="Trạng thái"
           id="status"
           value={status}
-          onChange={(e) => setStatus(e.target.value as "draft" | "published")}
+          onChange={(v) => setStatus(v as "draft" | "published")}
           options={STATUS_OPTIONS}
           wrapperClassName="w-56"
         />

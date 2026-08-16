@@ -84,12 +84,12 @@ export function EditUserModal({
             label="Vai trò"
             options={roleOptions}
             value={roleId}
-            onChange={(e) => setRoleId(e.target.value)}
+            onChange={setRoleId}
           />
           <Select
             label="Trạng thái"
             value={String(isActive)}
-            onChange={(e) => setIsActive(e.target.value === "true")}
+            onChange={(v) => setIsActive(v === "true")}
             options={[
               { value: "true", label: "Đang hoạt động" },
               { value: "false", label: "Đã vô hiệu hóa" },
