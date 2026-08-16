@@ -50,15 +50,15 @@ Each component file repeats this rule in a short header comment.
 - **`Card`** (`Card.tsx`) — bare bordered/shadowed surface primitive; compose your own padding/content inside it.
 
 ### Data & lists
-- **`DataTable<T>`** (`DataTable.tsx`) — `title?`, `action?`, `columns: {key, header, align?, render: (row: T) => ReactNode}[]`, `rows: T[]`, `rowKey`. Column rendering is entirely prop-driven.
+- **`DataTable<T>`** (`DataTable.tsx`) — `title?`, `action?`, `columns: {key, header, align?, render: (row: T) => ReactNode}[]`, `rows: T[]`, `rowKey`, `footer?` (e.g. a result-count summary + `Pagination`). Column rendering is entirely prop-driven. Used by the admin blog list (`src/app/(admin)/admin/(protected)/blog/page.tsx`).
 - **`Accordion`** (`Accordion.tsx`, client) — `items: {question, answer}[]`, `defaultOpenIndex?`. Single-open FAQ pattern.
 - **`ActivityList`** (`ActivityList.tsx`) — `items: {icon, iconBgClassName?, title, subtitle, timestamp}[]`, `footer?`.
 
 ### Navigation
-- **`Breadcrumbs`** (`Breadcrumbs.tsx`) — `items: {label, href?}[]`; the last item (no `href`) renders as the current page.
-- **`Tabs`** (`Tabs.tsx`, client) — `items: {value, label}[]`, `variant: "underline" | "pill"`, controlled (`value` + `onChange`) or uncontrolled (`defaultValue`).
+- **`Breadcrumbs`** (`Breadcrumbs.tsx`) — `items: {label, href?}[]`; the last item (no `href`) renders as the current page. Used on the admin blog list and post form.
+- **`Tabs`** (`Tabs.tsx`, client) — `items: {value, label: ReactNode}[]`, `variant: "underline" | "pill"`, controlled (`value` + `onChange`) or uncontrolled (`defaultValue`). `label` accepts a `ReactNode` (not just a string) so a tab can carry a marker like a required-field asterisk — see the admin post form's locale switcher.
 - **`Pagination`** (`Pagination.tsx`) — `page`, `totalPages`, `buildHref: (page) => string`, `variant: "compact" | "pill"`.
-- **`NavSidebar`** (`NavSidebar.tsx`) — `header?`, `items: {label, icon, href, active?}[]`, `footer?`.
+- **`NavSidebar`** (`NavSidebar.tsx`, client) — `header?`, `items: {label, icon, href, active?}[]`, `footer?`. Highlights the item matching the current route automatically (via `usePathname()` + `isNavItemActive()`); pass `active` on an item to override — used by the design-system demo, whose `href`s are `"#"` placeholders. Powers the real admin sidebar (`src/app/(admin)/admin/(protected)/layout.tsx`).
 - **`TopNavBar`** (`TopNavBar.tsx`) — `brand: {label, href}`, `links: {label, href, active?}[]`, `action?`. Distinct from the real marketing header (`src/app/[locale]/(marketing)/layout.tsx`), which stays hand-authored for that route group.
 - **`DropdownMenu`** (`DropdownMenu.tsx`, client) — `trigger`, `header?: {title, subtitle?}`, `items: {label, href?, onClick?, icon?, danger?, dividerBefore?}[]`. Closes on outside click / Escape.
 

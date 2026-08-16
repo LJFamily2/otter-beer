@@ -28,10 +28,11 @@ VI-only, session-gated by `src/proxy.ts`, permission-gated per-page via
 |---|---|---|
 | `/admin/dang-nhap` | `dang-nhap/page.tsx` | Login — Google OAuth sign-in, public (the one admin path proxy.ts exempts from the auth gate) |
 | `/admin` | `(protected)/page.tsx` | Redirects to `/admin/blog` |
-| `/admin/blog` | `(protected)/blog/page.tsx` | News & Blog list — KPIs, search, pagination |
-| `/admin/blog/moi` | `(protected)/blog/moi/page.tsx` | Create post (Tiptap editor) |
-| `/admin/blog/[id]/sua` | `(protected)/blog/[id]/sua/page.tsx` | Edit post (Tiptap editor) |
-| — | `(protected)/layout.tsx` | Admin shell — sidebar nav, trimmed to modules that actually have UI |
+| `/admin/blog` | `(protected)/blog/page.tsx` | News & Blog list — KPI cards, `Breadcrumbs`, `DataTable` (search action + pagination footer) |
+| `/admin/blog/moi` | `(protected)/blog/moi/page.tsx` | Create post — renders `PostForm` (Tiptap editor) |
+| `/admin/blog/[id]/sua` | `(protected)/blog/[id]/sua/page.tsx` | Edit post — renders `PostForm` (Tiptap editor) |
+| — | `(protected)/blog/PostForm.tsx` | Shared create/edit form — `Breadcrumbs`, `Tabs` (locale switcher), `Input`/`Textarea`/`Select` for every field |
+| — | `(protected)/layout.tsx` | Admin shell — `NavSidebar` (route-aware active state) + `Avatar`, trimmed to modules that actually have UI |
 
 **Reserved, not yet built** (empty `.gitkeep` scaffold folders — a future
 module, not a bug if you find nothing there): `admin/beers/`, `admin/events/`.
@@ -81,6 +82,9 @@ the admin shell/session context.
 | `ImageUploadField` | `ImageUploadField.tsx` | R2 signed-upload image field (cover image, inline post images) |
 | `icons.tsx` | `icons.tsx` | Admin-specific icon set (news/blog, logout, plus, search, edit, trash) |
 | `classNames.ts` | `classNames.ts` | Shared Tailwind class strings reused across admin server/client component boundaries |
+
+**Retired**: `AdminNavLink.tsx` — superseded by `src/components/ui/NavSidebar.tsx`'s
+own route-aware active-state detection (see the Navigation entry above).
 
 ---
 
