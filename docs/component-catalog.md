@@ -32,17 +32,17 @@ VI-only, session-gated by `src/proxy.ts`, permission-gated per-page via
 | `/admin/blog/moi` | `(protected)/blog/moi/page.tsx` | Create post — renders `PostForm` (Tiptap editor) |
 | `/admin/blog/[id]/sua` | `(protected)/blog/[id]/sua/page.tsx` | Edit post — renders `PostForm` (Tiptap editor) |
 | — | `(protected)/blog/PostForm.tsx` | Shared create/edit form — `Breadcrumbs`, `Tabs` (locale switcher), `Input`/`Textarea`/`Select` for every field |
-| `/admin/users` | `(protected)/users/page.tsx` | User Management — KPI cards (total/active/inactive), `Breadcrumbs`, role `Tabs` + search (client-side, `filterUsers()`), `DataTable` |
-| — | `(protected)/users/UsersDirectory.tsx` | Client filtering/table piece of the Users page |
+| `/admin/users` | `(protected)/users/page.tsx` | User Management — KPI cards (total/active/inactive), `Breadcrumbs`, role `Tabs` + search (client-side, `filterUsers()`), `DataTable`. Role dropdowns (invite/edit) are pre-filtered to roles the actor outranks — see `docs/rbac.md`'s "Role hierarchy" |
+| — | `(protected)/users/UsersDirectory.tsx` | Client filtering/table piece of the Users page — a row whose user currently holds a peer/superior role shows "Vai trò cao hơn" instead of edit/delete actions |
 | — | `(protected)/users/AddUserModal.tsx` | Invite a user — `Modal` + `Input`/`Select`, `POST /api/users` |
 | — | `(protected)/users/EditUserModal.tsx` | Change a user's role/active state — `Modal` + `Select`, `PATCH /api/users/[id]` |
 | — | `(protected)/users/DeleteUserButton.tsx` | Revoke a user's access — `DELETE /api/users/[id]` (mirrors `blog/DeletePostButton.tsx`) |
 | `/admin/tai-khoan` | `(protected)/tai-khoan/page.tsx` | Account Settings — no Figma frame exists for this (self-designed): read-only profile (name/email/avatar synced from Google), role badge, permissions-matrix summary (`DataTable`, **superAdmin only** — everyone else's own grants aren't shown here), sign out |
-| `/admin/roles` | `(protected)/roles/page.tsx` | Roles & Permissions — role list (`?roleId=` query param switches selection), permission matrix editor per role. superAdmin's row is shown as a static "always full access" notice (matches the API's edit block) |
+| `/admin/roles` | `(protected)/roles/page.tsx` | Roles & Permissions — role list (`?roleId=` query param switches selection), permission matrix editor per role. superAdmin's row is shown as a static "always full access" notice (matches the API's edit block); a peer/superior role's matrix renders read-only (see `docs/rbac.md`'s "Role hierarchy") |
 | — | `(protected)/roles/PermissionMatrixEditor.tsx` | Client checkbox grid (module × action) + save — `PUT /api/permissions` |
-| — | `(protected)/roles/CreateRoleModal.tsx` | Create a custom role — `Modal` + `Input`, `POST /api/roles` |
+| — | `(protected)/roles/CreateRoleModal.tsx` | Create a custom role — `Modal` + `Input`, `POST /api/roles` (new role's rank is always `actorLevel + 1`, computed server-side) |
 | — | `(protected)/roles/RenameRoleModal.tsx` | Rename a non-system role — `Modal` + `Input`, `PATCH /api/roles/[id]` |
-| — | `(protected)/roles/DeleteRoleButton.tsx` | Delete a non-system role — `DELETE /api/roles/[id]` (system roles can't be deleted; the button is hidden for them) |
+| — | `(protected)/roles/DeleteRoleButton.tsx` | Delete a non-system role — `DELETE /api/roles/[id]` (system roles can't be deleted; the button is hidden for them, and for any role at or above the actor's rank) |
 | — | `(protected)/layout.tsx` | Admin shell — `NavSidebar` (route-aware active state) + `Avatar`; footer profile block links to `/admin/tai-khoan`, trimmed to modules that actually have UI |
 
 **Reserved, not yet built** (empty `.gitkeep` scaffold folders — a future
