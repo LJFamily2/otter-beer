@@ -17,7 +17,9 @@ Welcome to the official technical documentation for the **OtterBeer** website (o
 | [Security](./security.md) | JWT/cookie storage, input validation, CSP, rate limiting |
 | [Testing](./testing.md) | Testing strategy, AI agent workflow rule, Playwright + Jest |
 | [Deployment](./deployment.md) | Vercel deployment guide |
-| [Design System](./design-system.md) | Colors, fonts, tokens, components |
+| [Design System](./DESIGN.md) | Coastal Premium colors, fonts, tokens |
+| [Component Library](./component-library.md) | Reusable UI kit — props, variants, the "customize via props" rule |
+| [Component Catalog](./component-catalog.md) | Sitewide inventory of every component and page — check before building, append when you add one |
 
 ---
 
