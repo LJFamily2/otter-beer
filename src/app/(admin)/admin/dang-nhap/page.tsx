@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { signIn } from "@/auth";
+import { getSafeCallbackUrl } from "@/lib/auth/getSafeCallbackUrl";
 
 export const metadata: Metadata = {
   title: "Đăng nhập",
@@ -14,6 +15,7 @@ export default async function AdminLoginPage({
   searchParams,
 }: AdminLoginPageProps) {
   const { callbackUrl, error } = await searchParams;
+  const safeCallbackUrl = getSafeCallbackUrl(callbackUrl);
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-surface px-5 py-20">
@@ -47,7 +49,7 @@ export default async function AdminLoginPage({
               className="w-full"
               action={async () => {
                 "use server";
-                await signIn("google", { redirectTo: callbackUrl || "/admin" });
+                await signIn("google", { redirectTo: safeCallbackUrl });
               }}
             >
               <button
