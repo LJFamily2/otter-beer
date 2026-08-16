@@ -14,7 +14,7 @@ import { buttonVariants } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { rowActionButtonClass } from "@/components/admin/classNames";
-import { DeletePostButton } from "./DeletePostButton";
+import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
 
 export const metadata: Metadata = {
   title: "Tin tức & Blog",
@@ -110,9 +110,14 @@ export default async function BlogListPage({
               </Link>
             ) : null}
             {grant.delete ? (
-              <DeletePostButton postId={postId}>
+              <ConfirmDeleteButton
+                title="Xác nhận xóa bài viết"
+                description="Xóa bài viết này? Hành động này không thể hoàn tác."
+                deleteUrl={`/api/news-blog/${postId}`}
+                useRowActionStyle
+              >
                 <TrashIcon width={15} height={15} />
-              </DeletePostButton>
+              </ConfirmDeleteButton>
             ) : null}
           </div>
         );

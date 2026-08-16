@@ -11,7 +11,7 @@ import { formatDate } from "@/lib/utils/formatDate";
 import { filterUsers } from "@/lib/utils/filterUsers";
 import { SearchIcon, TrashIcon } from "@/components/admin/icons";
 import { EditUserModal } from "./EditUserModal";
-import { DeleteUserButton } from "./DeleteUserButton";
+import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
 import { UserPermissionsModal } from "./UserPermissionsModal";
 
 export interface DirectoryUser {
@@ -143,9 +143,14 @@ export function UsersDirectory({
             />
             {canEdit ? <EditUserModal user={user} roleOptions={roleOptions} /> : null}
             {canDelete ? (
-              <DeleteUserButton userId={user.id}>
+              <ConfirmDeleteButton
+                title="Xác nhận xóa người dùng"
+                description="Xóa quyền truy cập của người dùng này? Hành động này không thể hoàn tác."
+                deleteUrl={`/api/users/${user.id}`}
+                useRowActionStyle
+              >
                 <TrashIcon width={15} height={15} />
-              </DeleteUserButton>
+              </ConfirmDeleteButton>
             ) : null}
           </div>
         );

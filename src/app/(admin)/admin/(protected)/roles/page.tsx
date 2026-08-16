@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { CreateRoleModal } from "./CreateRoleModal";
 import { RenameRoleModal } from "./RenameRoleModal";
-import { DeleteRoleButton } from "./DeleteRoleButton";
+import { ConfirmDeleteButton } from "@/components/admin/ConfirmDeleteButton";
 import { PermissionMatrixEditor } from "./PermissionMatrixEditor";
 
 export const metadata: Metadata = {
@@ -122,7 +122,12 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
                     />
                   ) : null}
                   {grant.delete ? (
-                    <DeleteRoleButton roleId={String(selectedRole._id)} />
+                    <ConfirmDeleteButton
+                      title="Xác nhận xóa vai trò"
+                      description="Xóa vai trò này? Hành động này không thể hoàn tác."
+                      deleteUrl={`/api/roles/${String(selectedRole._id)}`}
+                      redirectUrl="/admin/roles"
+                    />
                   ) : null}
                 </div>
               ) : null}
