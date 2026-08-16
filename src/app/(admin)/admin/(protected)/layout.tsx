@@ -76,7 +76,7 @@ export default async function ProtectedAdminLayout({
         />
       </aside>
 
-      <main className="max-w-[1280px] flex-1 min-w-0 p-16 max-[900px]:px-5 max-[900px]:py-8">
+      <main className="max-w-[1280px] flex-1 min-w-0 px-16 pb-16 pt-10 max-[900px]:px-5 max-[900px]:pb-8 max-[900px]:pt-6">
         {children}
       </main>
     </div>
