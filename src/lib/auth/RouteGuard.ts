@@ -38,7 +38,7 @@ export class RouteGuard {
       }
       const grant = session.user.permissions?.[moduleKey];
       if (!grant?.[action]) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        return NextResponse.json({ error: "Not found" }, { status: 404 });
       }
       return handler(request, context, session);
     };

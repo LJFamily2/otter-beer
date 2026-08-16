@@ -38,7 +38,7 @@ export const PATCH = withRateLimit(
         return NextResponse.json(role);
       } catch (err) {
         if (err instanceof RoleMutationError) {
-          return NextResponse.json({ error: err.message }, { status: 403 });
+          return NextResponse.json({ error: "Not found" }, { status: 404 });
         }
         throw err;
       }
@@ -59,7 +59,7 @@ export const DELETE = withRateLimit(
         return new NextResponse(null, { status: 204 });
       } catch (err) {
         if (err instanceof RoleMutationError) {
-          return NextResponse.json({ error: err.message }, { status: 403 });
+          return NextResponse.json({ error: "Not found" }, { status: 404 });
         }
         throw err;
       }

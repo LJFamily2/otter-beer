@@ -8,7 +8,7 @@ export const POST = RouteGuard.requireAuth(
   async (request: NextRequest, _context, session) => {
     const grant = session.user.permissions?.[MODULE_KEYS.NEWS_BLOG];
     if (!grant?.view) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     const body = await request.json();

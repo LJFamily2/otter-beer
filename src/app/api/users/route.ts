@@ -42,10 +42,8 @@ export const POST = withRateLimit(
         if (err instanceof UserMutationError) {
           const status = err.message.includes("already has access")
             ? 409
-            : err.message === "Role not found"
-              ? 404
-              : 403;
-          return NextResponse.json({ error: err.message }, { status });
+            : 404;
+          return NextResponse.json({ error: "Not found" }, { status });
         }
         throw err;
       }
