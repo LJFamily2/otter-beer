@@ -9,7 +9,8 @@ import {
 import { PERMISSION_ACTIONS, type ActionGrant } from "@/config/permissions";
 
 export interface IPermission extends Document {
-  roleId: Types.ObjectId;
+  roleId?: Types.ObjectId;
+  userId?: Types.ObjectId;
   moduleKey: string;
   actions: ActionGrant;
   createdAt: Date;
@@ -29,16 +30,36 @@ const ActionGrantSchema = new Schema<ActionGrant>(
 
 const PermissionSchema = new Schema<IPermission>(
   {
-    roleId: { type: Schema.Types.ObjectId, ref: "Role", required: true },
+    roleId: { type: Schema.Types.ObjectId, ref: "Role" },
+    userId: { type: Schema.Types.ObjectId, ref: "User" },
     moduleKey: { type: String, required: true, trim: true },
     actions: { type: ActionGrantSchema, required: true, default: () => ({}) },
   },
   { timestamps: true }
 );
 
-// One row per (role, module) — this is a row of the "Truy cập / Xem / Thêm /
-// Sửa / Xóa" matrix editable from the admin permission screen.
-PermissionSchema.index({ roleId: 1, moduleKey: 1 }, { unique: true });
+// Exactly one of roleId or userId must be specified
+PermissionSchema.pre("validate", function () {
+  if ((!this.roleId && !this.userId) || (this.roleId && this.userId)) {
+    throw new Error("Permission document must have exactly one of roleId or userId.");
+  }
+});
+
+// Indexes for fast lookup & uniqueness
+PermissionSchema.index(
+  { roleId: 1, moduleKey: 1 },
+  { unique: true, partialFilterExpression: { roleId: { $exists: true } } }
+);
+
+PermissionSchema.index(
+  { userId: 1, moduleKey: 1 },
+  { unique: true, partialFilterExpression: { userId: { $exists: true } } }
+);
+
+// Ensure Next.js HMR re-compiles the schema if cached Mongoose model is stale
+if (models.Permission && !models.Permission.schema.paths.userId) {
+  delete (models as Record<string, unknown>).Permission;
+}
 
 export const PermissionModel: Model<IPermission> =
   (models.Permission as Model<IPermission>) ||

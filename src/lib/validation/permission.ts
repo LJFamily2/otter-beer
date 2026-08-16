@@ -13,17 +13,20 @@ const actionGrantSchema = z.object({
   delete: z.boolean(),
 });
 
-export const UpdatePermissionMatrixSchema = z.object({
-  roleId: z.string().trim().min(1),
-  grants: z
-    .array(
-      z.object({
-        moduleKey: moduleKeyEnum,
-        actions: actionGrantSchema,
-      })
-    )
-    .min(1),
+const grantItemSchema = z.object({
+  moduleKey: moduleKeyEnum,
+  actions: actionGrantSchema,
 });
+
+export const UpdatePermissionMatrixSchema = z
+  .object({
+    roleId: z.string().trim().min(1).optional(),
+    userId: z.string().trim().min(1).optional(),
+    grants: z.array(grantItemSchema).min(1),
+  })
+  .refine((data) => (data.roleId && !data.userId) || (!data.roleId && data.userId), {
+    message: "Must specify exactly one of roleId or userId",
+  });
 
 export type UpdatePermissionMatrixInput = z.infer<
   typeof UpdatePermissionMatrixSchema

@@ -106,7 +106,7 @@ export abstract class BaseRepository<T extends Document> {
   async updateById(id: string, update: UpdateQuery<T>): Promise<T | null> {
     const model = await this.ready();
     return model
-      .findByIdAndUpdate(id, update, { new: true, runValidators: true })
+      .findByIdAndUpdate(id, update, { returnDocument: "after", runValidators: true })
       .exec();
   }
 

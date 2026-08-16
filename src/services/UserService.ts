@@ -2,6 +2,7 @@ import { Types } from "mongoose";
 import { UserRepository } from "@/repositories/UserRepository";
 import { RoleRepository } from "@/repositories/RoleRepository";
 import { canManageRole } from "@/config/roles";
+import { permissionService } from "@/services/PermissionService";
 import type { IUser } from "@/models/User";
 
 export class UserMutationError extends Error {}
@@ -20,9 +21,8 @@ export class UserService {
 
   /**
    * Adds an email to the login allowlist with an assigned role. actorLevel
-   * gates which role can be granted (see config/roles.ts's canManageRole())
-   * — without this, an admin could bypass the Roles page's hierarchy rule
-   * entirely by just inviting a new user straight into the admin role.
+   * gates which role can be granted (see config/roles.ts's canManageRole()).
+   * New users automatically inherit their assigned role's default permissions.
    */
   async invite(
     email: string,
@@ -66,11 +66,7 @@ export class UserService {
   }
 
   /**
-   * `isActive: false` revokes access without deleting the user (audit
-   * trail intact). Also hierarchy-gated on the user's CURRENT role — an
-   * activate/deactivate toggle isn't a role grant, but letting an admin
-   * flip a peer/superior user's access on or off would undermine the same
-   * rule just as much as granting them a role would.
+   * `isActive: false` revokes access without deleting the user.
    */
   async setActive(
     id: string,
@@ -97,6 +93,8 @@ export class UserService {
         "You cannot remove access for a user whose role is at or above your own rank."
       );
     }
+    // Clean up any custom user overrides
+    await permissionService.deleteForUser(id);
     const deleted = await this.userRepository.deleteById(id);
     return Boolean(deleted);
   }

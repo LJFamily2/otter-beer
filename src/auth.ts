@@ -85,11 +85,11 @@ export const {
         return session;
       }
 
-      const permissions = await permissionService.getMatrixForRoleKey(roleKey);
+      const { matrix } = await permissionService.getMatrixForUser(userId, roleKey);
       session.user.id = userId;
       session.user.roleKey = roleKey;
       session.user.roleLevel = roleLevel;
-      session.user.permissions = permissions;
+      session.user.permissions = matrix;
       return session;
     },
   },

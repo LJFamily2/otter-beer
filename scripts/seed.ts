@@ -1,5 +1,5 @@
 /**
- * Seeds the three system roles and their default permission matrix.
+ * Seeds the three system roles and their default permission matrices.
  * Safe to re-run — every write is an upsert.
  *
  *   pnpm run seed        (dev DB — .env.local + .env.development.local)
@@ -31,10 +31,6 @@ import {
 type DefaultMatrix = Partial<Record<ModuleKey, ActionGrant>>;
 
 const DEFAULT_MATRICES: Record<SystemRoleKey, DefaultMatrix> = {
-  // Seeded with explicit full-access rows even though PermissionService
-  // bypasses the DB for superAdmin at runtime — this keeps the admin
-  // permission-matrix screen (which reads rows by roleId) showing an
-  // accurate "everything checked" instead of looking empty.
   [SYSTEM_ROLE_KEYS.SUPER_ADMIN]: {
     [MODULE_KEYS.NEWS_BLOG]: fullAccessGrant(),
     [MODULE_KEYS.USERS]: fullAccessGrant(),
@@ -53,9 +49,6 @@ const DEFAULT_MATRICES: Record<SystemRoleKey, DefaultMatrix> = {
       view: true,
     },
   },
-  // office_member: can see and draft posts, but editing/publishing and
-  // deleting stays with admin/superAdmin. Adjustable later from the
-  // permission matrix screen — this is only the seeded starting point.
   [SYSTEM_ROLE_KEYS.OFFICE_MEMBER]: {
     [MODULE_KEYS.NEWS_BLOG]: {
       ...noAccessGrant(),
@@ -69,8 +62,6 @@ const DEFAULT_MATRICES: Record<SystemRoleKey, DefaultMatrix> = {
 };
 
 function redactedTarget(uri: string): string {
-  // Strip credentials, keep host + db name — dev and prod point at
-  // different clusters, so this is printed before any write happens.
   return uri.replace(/\/\/[^/@]+@/, "//<redacted>@");
 }
 
@@ -85,7 +76,7 @@ async function seed() {
     const role = await RoleModel.findOneAndUpdate(
       { key },
       { $set: { name: label, isSystem: true, level: SYSTEM_ROLE_LEVELS[key] } },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: "after" }
     );
 
     const matrix = DEFAULT_MATRICES[key];
@@ -100,11 +91,11 @@ async function seed() {
       );
     }
 
-    console.log(`Seeded role "${key}" (${label})`);
+    console.log(`Seeded role "${key}" (${label}) with default permission matrix`);
   }
 
   console.log(
-    "\nDone. Set FIRST_SUPER_ADMIN_EMAIL in .env.local and sign in with that Google account (against this same database) to create the first superAdmin."
+    "\nDone. Roles and default permissions seeded.\n\nSet FIRST_SUPER_ADMIN_EMAIL in .env.local and sign in with that Google account (against this same database) to create the first superAdmin."
   );
 }
 
