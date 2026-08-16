@@ -9,7 +9,10 @@ import { PlusIcon, SearchIcon, EditIcon, TrashIcon } from "@/components/admin/ic
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Pagination } from "@/components/ui/Pagination";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { buttonVariants } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { rowActionButtonClass } from "@/components/admin/classNames";
 import { DeletePostButton } from "./DeletePostButton";
 
@@ -52,8 +55,80 @@ export default async function BlogListPage({
     return `/admin/blog?${qs.toString()}`;
   };
 
+  type PostRow = (typeof result.items)[number];
+
+  const columns: DataTableColumn<PostRow>[] = [
+    {
+      key: "title",
+      header: "Tiêu đề bài viết",
+      render: (post) => {
+        const translation = pickTranslation(post, "vi");
+        return (
+          <Link
+            href={`/admin/blog/${String(post._id)}/sua`}
+            className="text-inherit no-underline hover:underline"
+          >
+            {translation?.title ?? "(Chưa có tiêu đề)"}
+          </Link>
+        );
+      },
+    },
+    {
+      key: "author",
+      header: "Tác giả",
+      render: (post) => (post.authorId as unknown as PopulatedAuthor)?.name ?? "—",
+    },
+    {
+      key: "date",
+      header: "Ngày",
+      render: (post) => formatDate(post.createdAt, "vi"),
+    },
+    {
+      key: "status",
+      header: "Trạng thái",
+      render: (post) => (
+        <Badge variant={post.status === "published" ? "primary" : "neutral"}>
+          {post.status === "published" ? "Đã xuất bản" : "Bản nháp"}
+        </Badge>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Thao tác",
+      align: "right",
+      render: (post) => {
+        const postId = String(post._id);
+        return (
+          <div className="inline-flex gap-1">
+            {grant.edit ? (
+              <Link
+                href={`/admin/blog/${postId}/sua`}
+                className={rowActionButtonClass}
+                aria-label="Sửa"
+              >
+                <EditIcon width={15} height={15} />
+              </Link>
+            ) : null}
+            {grant.delete ? (
+              <DeletePostButton postId={postId}>
+                <TrashIcon width={15} height={15} />
+              </DeletePostButton>
+            ) : null}
+          </div>
+        );
+      },
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-8">
+      <Breadcrumbs
+        items={[
+          { label: "Quản trị", href: "/admin" },
+          { label: "Tin tức & Blog" },
+        ]}
+      />
+
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[rgba(196,198,210,0.3)] pb-4">
         <div>
           <h1 className="text-4xl tracking-wide text-primary">
@@ -103,16 +178,25 @@ export default async function BlogListPage({
         </Card>
       </div>
 
-      <Card className="overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[rgba(196,198,210,0.3)] bg-[#fdf9f4] p-6">
-          <h2 className="text-xl tracking-wide text-primary">Bài viết gần đây</h2>
+      <DataTable
+        title="Bài viết gần đây"
+        rows={result.items}
+        columns={columns}
+        rowKey={(post) => String(post._id)}
+        emptyMessage={
+          search
+            ? `Không tìm thấy bài viết nào khớp với "${search}".`
+            : "Chưa có bài viết nào."
+        }
+        action={
           <form className="flex gap-2" action="/admin/blog" method="get">
-            <input
-              className="min-w-[220px] rounded border border-[rgba(196,198,210,0.5)] bg-surface-container-lowest px-3.5 py-2.5 text-sm focus:border-secondary-fixed-dim focus:outline-none"
+            <Input
               type="search"
               name="search"
               placeholder="Tìm kiếm bài viết..."
               defaultValue={search}
+              wrapperClassName="min-w-[220px]"
+              className="py-2.5"
             />
             <button
               type="submit"
@@ -122,100 +206,23 @@ export default async function BlogListPage({
               <SearchIcon width={16} height={16} />
             </button>
           </form>
-        </div>
-
-        <div className="w-full overflow-x-auto">
-          <table className="w-full min-w-[640px] border-collapse">
-            <thead>
-              <tr>
-                {["Tiêu đề bài viết", "Tác giả", "Ngày", "Trạng thái", "Thao tác"].map(
-                  (heading, i) => (
-                    <th
-                      key={heading}
-                      className={`border-b border-[rgba(196,198,210,0.3)] bg-surface px-4 py-4 text-left text-[13px] font-medium uppercase tracking-wide text-on-surface-variant ${
-                        i === 0 ? "pl-6" : ""
-                      } ${i === 4 ? "pr-6 text-right" : ""}`}
-                    >
-                      {heading}
-                    </th>
-                  )
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {result.items.map((post) => {
-                const translation = pickTranslation(post, "vi");
-                const author = post.authorId as unknown as PopulatedAuthor;
-                const postId = String(post._id);
-
-                return (
-                  <tr key={postId}>
-                    <td className="max-w-[340px] border-t border-[rgba(196,198,210,0.2)] py-5 pl-6 pr-4 font-medium text-primary">
-                      <Link
-                        href={`/admin/blog/${postId}/sua`}
-                        className="text-inherit no-underline hover:underline"
-                      >
-                        {translation?.title ?? "(Chưa có tiêu đề)"}
-                      </Link>
-                    </td>
-                    <td className="border-t border-[rgba(196,198,210,0.2)] px-4 py-5 text-base">
-                      {author?.name ?? "—"}
-                    </td>
-                    <td className="border-t border-[rgba(196,198,210,0.2)] px-4 py-5 text-base">
-                      {formatDate(post.createdAt, "vi")}
-                    </td>
-                    <td className="border-t border-[rgba(196,198,210,0.2)] px-4 py-5">
-                      <Badge variant={post.status === "published" ? "primary" : "neutral"}>
-                        {post.status === "published" ? "Đã xuất bản" : "Bản nháp"}
-                      </Badge>
-                    </td>
-                    <td className="border-t border-[rgba(196,198,210,0.2)] py-5 pl-4 pr-6 text-right">
-                      <div className="inline-flex gap-1">
-                        {grant.edit ? (
-                          <Link
-                            href={`/admin/blog/${postId}/sua`}
-                            className={rowActionButtonClass}
-                            aria-label="Sửa"
-                          >
-                            <EditIcon width={15} height={15} />
-                          </Link>
-                        ) : null}
-                        {grant.delete ? (
-                          <DeletePostButton postId={postId}>
-                            <TrashIcon width={15} height={15} />
-                          </DeletePostButton>
-                        ) : null}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
-          {result.items.length === 0 ? (
-            <div className="p-16 text-center text-on-surface-variant">
-              {search
-                ? `Không tìm thấy bài viết nào khớp với "${search}".`
-                : "Chưa có bài viết nào."}
-            </div>
-          ) : null}
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[rgba(196,198,210,0.3)] bg-[#fdf9f4] p-6 text-sm text-on-surface-variant">
-          <span>
-            Hiển thị {result.items.length === 0 ? 0 : (result.page - 1) * result.pageSize + 1}
-            {" "}đến {Math.min(result.page * result.pageSize, result.total)} trong tổng số{" "}
-            {result.total} bài viết
-          </span>
-          <Pagination
-            page={result.page}
-            totalPages={result.totalPages}
-            buildHref={buildPageHref}
-            variant="compact"
-          />
-        </div>
-      </Card>
+        }
+        footer={
+          <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-on-surface-variant">
+            <span>
+              Hiển thị {result.items.length === 0 ? 0 : (result.page - 1) * result.pageSize + 1}
+              {" "}đến {Math.min(result.page * result.pageSize, result.total)} trong tổng số{" "}
+              {result.total} bài viết
+            </span>
+            <Pagination
+              page={result.page}
+              totalPages={result.totalPages}
+              buildHref={buildPageHref}
+              variant="compact"
+            />
+          </div>
+        }
+      />
     </div>
   );
 }

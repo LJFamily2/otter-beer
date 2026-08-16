@@ -6,7 +6,12 @@ import { LOCALES, type LocaleCode } from "@/config/locales";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { Card } from "@/components/ui/Card";
-import { Button, buttonVariants } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
+import { Select } from "@/components/ui/Select";
+import { Tabs } from "@/components/ui/Tabs";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
 interface TranslationFormState {
   title: string;
@@ -45,15 +50,16 @@ interface PostFormProps {
   initialData?: PostFormInitialData;
 }
 
-const labelClass =
-  "text-xs font-medium uppercase tracking-wide text-on-surface";
-const inputClass =
-  "rounded border border-[rgba(196,198,210,0.5)] bg-surface-container-lowest px-3.5 py-3 text-[15px] text-on-surface focus:border-secondary-fixed-dim focus:outline-none";
-const textareaClass = `${inputClass} min-h-[72px] resize-y`;
+const labelClass = "text-xs font-medium uppercase tracking-wide text-on-surface";
 const fieldClass = "flex flex-col gap-1.5";
 const sectionClass =
   "flex flex-col gap-4 rounded-lg border border-[rgba(196,198,210,0.3)] bg-surface-container-lowest p-6 shadow-sm";
 const sectionTitleClass = "font-display text-lg tracking-wide text-primary";
+
+const STATUS_OPTIONS = [
+  { value: "draft", label: "Bản nháp" },
+  { value: "published", label: "Xuất bản" },
+];
 
 export function PostForm({ mode, postId, initialData }: PostFormProps) {
   const router = useRouter();
@@ -152,16 +158,22 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
   }
 
   const active = translations[activeLocale];
+  const pageTitle = mode === "create" ? "Tạo bài viết mới" : "Chỉnh sửa bài viết";
 
   return (
     <form
       className="flex max-w-[860px] flex-col gap-8"
       onSubmit={handleSubmit}
     >
-      <div className="border-b border-[rgba(196,198,210,0.3)] pb-4">
-        <h1 className="text-[32px] tracking-wide text-primary">
-          {mode === "create" ? "Tạo bài viết mới" : "Chỉnh sửa bài viết"}
-        </h1>
+      <div className="flex flex-col gap-3 border-b border-[rgba(196,198,210,0.3)] pb-4">
+        <Breadcrumbs
+          items={[
+            { label: "Quản trị", href: "/admin" },
+            { label: "Tin tức & Blog", href: "/admin/blog" },
+            { label: mode === "create" ? "Tạo bài viết" : "Chỉnh sửa bài viết" },
+          ]}
+        />
+        <h1 className="text-[32px] tracking-wide text-primary">{pageTitle}</h1>
       </div>
 
       {error ? (
@@ -172,72 +184,54 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
 
       <Card className={sectionClass}>
         <h2 className={sectionTitleClass}>Nội dung theo ngôn ngữ</h2>
-        <div className="flex gap-2">
-          {LOCALES.map((locale) => (
-            <button
-              key={locale.code}
-              type="button"
-              className={`rounded-full border px-4 py-2 text-[13px] font-bold ${
-                activeLocale === locale.code
-                  ? "border-primary bg-primary text-on-primary"
-                  : "border-[rgba(196,198,210,0.5)] bg-surface-container-lowest text-on-surface-variant"
-              } ${locale.required ? "after:ml-0.5 after:text-error after:content-['*']" : ""}`}
-              onClick={() => setActiveLocale(locale.code)}
-            >
-              {locale.label}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          variant="pill"
+          value={activeLocale}
+          onChange={(value) => setActiveLocale(value as LocaleCode)}
+          items={LOCALES.map((locale) => ({
+            value: locale.code,
+            label: locale.required ? (
+              <>
+                {locale.label} <span className="text-error">*</span>
+              </>
+            ) : (
+              locale.label
+            ),
+          }))}
+        />
 
-        <div className={fieldClass}>
-          <label className={labelClass} htmlFor="title">
-            Tiêu đề
-          </label>
-          <input
-            id="title"
-            className={inputClass}
-            value={active.title}
-            onChange={(e) =>
-              updateTranslation(activeLocale, { title: e.target.value })
-            }
-            required={
-              LOCALES.find((l) => l.code === activeLocale)?.required ?? false
-            }
-          />
-        </div>
+        <Input
+          label="Tiêu đề"
+          id="title"
+          value={active.title}
+          onChange={(e) =>
+            updateTranslation(activeLocale, { title: e.target.value })
+          }
+          required={
+            LOCALES.find((l) => l.code === activeLocale)?.required ?? false
+          }
+        />
 
-        <div className={fieldClass}>
-          <label className={labelClass} htmlFor="slug">
-            Đường dẫn (để trống để tự tạo)
-          </label>
-          <input
-            id="slug"
-            className={inputClass}
-            value={active.slug}
-            placeholder="vi-du-duong-dan-bai-viet"
-            onChange={(e) =>
-              updateTranslation(activeLocale, { slug: e.target.value })
-            }
-          />
-        </div>
+        <Input
+          label="Đường dẫn (để trống để tự tạo)"
+          id="slug"
+          value={active.slug}
+          placeholder="vi-du-duong-dan-bai-viet"
+          onChange={(e) =>
+            updateTranslation(activeLocale, { slug: e.target.value })
+          }
+        />
 
-        <div className={fieldClass}>
-          <label className={labelClass} htmlFor="excerpt">
-            Mô tả ngắn
-          </label>
-          <textarea
-            id="excerpt"
-            className={textareaClass}
-            maxLength={300}
-            value={active.excerpt}
-            onChange={(e) =>
-              updateTranslation(activeLocale, { excerpt: e.target.value })
-            }
-          />
-          <span className="text-xs text-on-surface-variant">
-            {active.excerpt.length}/300
-          </span>
-        </div>
+        <Textarea
+          label="Mô tả ngắn"
+          id="excerpt"
+          maxLength={300}
+          value={active.excerpt}
+          onChange={(e) =>
+            updateTranslation(activeLocale, { excerpt: e.target.value })
+          }
+          hint={`${active.excerpt.length}/300`}
+        />
 
         <div className={fieldClass}>
           <label className={labelClass}>Nội dung</label>
@@ -255,51 +249,36 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
         <h2 className={sectionTitleClass}>
           SEO ({LOCALES.find((l) => l.code === activeLocale)?.label})
         </h2>
-        <div className={fieldClass}>
-          <label className={labelClass} htmlFor="seoTitle">
-            Tiêu đề SEO
-          </label>
-          <input
-            id="seoTitle"
-            className={inputClass}
-            maxLength={70}
-            value={active.seoTitle}
-            onChange={(e) =>
-              updateTranslation(activeLocale, { seoTitle: e.target.value })
-            }
-          />
-        </div>
-        <div className={fieldClass}>
-          <label className={labelClass} htmlFor="seoDescription">
-            Mô tả SEO
-          </label>
-          <textarea
-            id="seoDescription"
-            className={textareaClass}
-            maxLength={160}
-            value={active.seoDescription}
-            onChange={(e) =>
-              updateTranslation(activeLocale, {
-                seoDescription: e.target.value,
-              })
-            }
-          />
-        </div>
-        <div className={fieldClass}>
-          <label className={labelClass} htmlFor="seoKeywords">
-            Từ khóa (phân cách bằng dấu phẩy)
-          </label>
-          <input
-            id="seoKeywords"
-            className={inputClass}
-            value={active.seoKeywords}
-            onChange={(e) =>
-              updateTranslation(activeLocale, {
-                seoKeywords: e.target.value,
-              })
-            }
-          />
-        </div>
+        <Input
+          label="Tiêu đề SEO"
+          id="seoTitle"
+          maxLength={70}
+          value={active.seoTitle}
+          onChange={(e) =>
+            updateTranslation(activeLocale, { seoTitle: e.target.value })
+          }
+        />
+        <Textarea
+          label="Mô tả SEO"
+          id="seoDescription"
+          maxLength={160}
+          value={active.seoDescription}
+          onChange={(e) =>
+            updateTranslation(activeLocale, {
+              seoDescription: e.target.value,
+            })
+          }
+        />
+        <Input
+          label="Từ khóa (phân cách bằng dấu phẩy)"
+          id="seoKeywords"
+          value={active.seoKeywords}
+          onChange={(e) =>
+            updateTranslation(activeLocale, {
+              seoKeywords: e.target.value,
+            })
+          }
+        />
       </Card>
 
       <Card className={sectionClass}>
@@ -311,45 +290,28 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
             onChange={setCoverImageKey}
           />
         </div>
-        <div className={fieldClass}>
-          <label className={labelClass} htmlFor="tags">
-            Thẻ (phân cách bằng dấu phẩy)
-          </label>
-          <input
-            id="tags"
-            className={inputClass}
-            value={tagsInput}
-            placeholder="brewing, ipa, taproom"
-            onChange={(e) => setTagsInput(e.target.value)}
-          />
-        </div>
+        <Input
+          label="Thẻ (phân cách bằng dấu phẩy)"
+          id="tags"
+          value={tagsInput}
+          placeholder="brewing, ipa, taproom"
+          onChange={(e) => setTagsInput(e.target.value)}
+        />
       </Card>
 
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <label className={labelClass} htmlFor="status">
-            Trạng thái
-          </label>
-          <select
-            id="status"
-            className={inputClass}
-            value={status}
-            onChange={(e) =>
-              setStatus(e.target.value as "draft" | "published")
-            }
-          >
-            <option value="draft">Bản nháp</option>
-            <option value="published">Xuất bản</option>
-          </select>
-        </div>
+        <Select
+          label="Trạng thái"
+          id="status"
+          value={status}
+          onChange={(e) => setStatus(e.target.value as "draft" | "published")}
+          options={STATUS_OPTIONS}
+          wrapperClassName="w-56"
+        />
         <div className="flex gap-2">
-          <button
-            type="button"
-            className={buttonVariants("secondary")}
-            onClick={() => router.push("/admin/blog")}
-          >
+          <Button type="button" variant="secondary" onClick={() => router.push("/admin/blog")}>
             Hủy
-          </button>
+          </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Đang lưu..." : "Lưu bài viết"}
           </Button>

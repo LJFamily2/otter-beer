@@ -1,8 +1,8 @@
-import Image from "next/image";
 import { auth, signOut } from "@/auth";
 import { MODULE_KEYS } from "@/config/permissions";
 import { NewsBlogIcon, LogoutIcon } from "@/components/admin/icons";
-import { AdminNavLink } from "../AdminNavLink";
+import { NavSidebar } from "@/components/ui/NavSidebar";
+import { Avatar } from "@/components/ui/Avatar";
 
 /**
  * Shell for every authenticated admin page (sidebar + user card + logout).
@@ -31,53 +31,49 @@ export default async function ProtectedAdminLayout({
 
   return (
     <div className="flex min-h-dvh bg-surface">
-      <aside className="sticky top-0 flex h-dvh w-64 shrink-0 flex-col justify-between border-r border-[rgba(196,198,210,0.2)] bg-surface-container-low py-8 shadow-[0px_4px_6px_-1px_rgba(0,40,103,0.05),0px_2px_4px_-2px_rgba(0,40,103,0.05)] max-[900px]:hidden">
-        <div>
-          <div className="px-6 pb-8">
-            <div className="text-2xl leading-[1.3] tracking-wide text-primary">
-              Otter Beer
+      <aside className="sticky top-0 h-dvh w-64 shrink-0 p-3 max-[900px]:hidden">
+        <NavSidebar
+          className="h-full"
+          header={
+            // NavSidebar's header slot wrapper applies font-display/uppercase
+            // for single-line brand marks; this admin brand block is two
+            // lines in the default body font/case, so both are reset here
+            // rather than fighting the wrapper's styles per line.
+            <div className="font-body normal-case">
+              <div className="text-2xl leading-[1.3] tracking-wide text-primary">
+                Otter Beer
+              </div>
+              <div className="mt-1 text-xs font-medium leading-[1.3] text-on-surface-variant">
+                Cổng quản trị nội dung
+              </div>
             </div>
-            <div className="mt-1 text-xs font-medium leading-[1.3] text-on-surface-variant">
-              Cổng quản trị nội dung
+          }
+          items={navItems}
+          footer={
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 px-1 pb-2 pt-1 text-xs text-on-surface-variant">
+                <Avatar src={session?.user?.image ?? undefined} initials={initial} size="sm" />
+                <span>{session?.user?.name ?? "Không xác định"}</span>
+              </div>
+              <form
+                action={async () => {
+                  "use server";
+                  await signOut({ redirectTo: "/admin/dang-nhap" });
+                }}
+              >
+                <button
+                  type="submit"
+                  className="flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-3 text-left text-sm font-bold tracking-wide text-on-surface-variant hover:bg-surface-container"
+                >
+                  <span className="h-[18px] w-[18px] shrink-0">
+                    <LogoutIcon />
+                  </span>
+                  Đăng xuất
+                </button>
+              </form>
             </div>
-          </div>
-          <nav className="flex flex-col gap-1 px-6 pt-1">
-            {navItems.map((item) => (
-              <AdminNavLink key={item.key} href={item.href} icon={item.icon}>
-                {item.label}
-              </AdminNavLink>
-            ))}
-          </nav>
-        </div>
-
-        <div className="flex flex-col gap-1 px-6">
-          <div className="flex items-center gap-2 px-4 pb-4 pt-2 text-xs text-on-surface-variant">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary font-display text-xs text-on-primary">
-              {session?.user?.image ? (
-                <Image src={session.user.image} alt="" width={28} height={28} />
-              ) : (
-                initial
-              )}
-            </span>
-            <span>{session?.user?.name ?? "Không xác định"}</span>
-          </div>
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/admin/dang-nhap" });
-            }}
-          >
-            <button
-              type="submit"
-              className="flex w-full items-center gap-3 rounded-md px-4 py-3 text-left text-sm font-bold tracking-wide text-on-surface-variant hover:bg-surface-container"
-            >
-              <span className="h-[18px] w-[18px] shrink-0">
-                <LogoutIcon />
-              </span>
-              Đăng xuất
-            </button>
-          </form>
-        </div>
+          }
+        />
       </aside>
 
       <main className="max-w-[1280px] flex-1 min-w-0 p-16 max-[900px]:px-5 max-[900px]:py-8">
