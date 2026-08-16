@@ -37,6 +37,7 @@ Each component file repeats this rule in a short header comment.
 
 ### Buttons & form fields
 - **`Button`** (`Button.tsx`) — `variant: "primary" | "secondary"`, `size: "sm" | "md" | "lg"`, plus all native `<button>` props. `buttonVariants(variant, size)` exports the class string for styling a `<Link>` identically to a button.
+- **`BackButton`** (`BackButton.tsx`, client) — `label`, `fallbackHref`, `variant?`, `size?`. Returns via browser history (`router.back()`), falling back to `fallbackHref` when there's no history (e.g. the tab's first navigation landed directly here). Used by the admin-context 404 (`src/app/not-found.tsx`) instead of a link back into the public site.
 - **`Input`** (`Input.tsx`) — `label?`, `icon?` (leading icon node), `error?`, `hint?`, plus native `<input>` props.
 - **`Textarea`** (`Textarea.tsx`) — `label?`, `error?`, `hint?`, `rows?`, plus native `<textarea>` props.
 - **`Select`** (`Select.tsx`) — `label?`, `options: {value, label}[]`, `placeholder?`, `error?`, plus native `<select>` props.

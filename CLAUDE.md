@@ -40,3 +40,11 @@ file** unless the change is a genuine bug fix or a new prop/variant that
 belongs to every consumer.
 
 → Full component reference (props, variants, the reasoning behind this rule): `docs/component-library.md`
+
+## MANDATORY: Check the component catalog before building something new
+
+Before creating a new page or component, check `docs/component-catalog.md`
+— a sitewide inventory of every existing page/route and component. A
+similar one may already exist. **When you add a new page, route, or
+reusable component, append one line to the matching table in that
+document in the same change** — it only stays useful if it stays current.
