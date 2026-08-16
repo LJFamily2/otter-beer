@@ -7,8 +7,13 @@ OtterBeer supports **two languages**: Vietnamese (VI) and English (EN).
 | Scope | Languages | Notes |
 |---|---|---|
 | Marketing site | VI + EN | Customer-facing pages |
-| Admin panel | VI only | Internal tool — no i18n needed |
+| Admin panel UI (chrome, labels, nav) | VI only | Internal tool — static Vietnamese strings, not driven by a dictionary system |
+| Content data entered in the admin (news & blog today) | VI + EN, extensible | Per-field "multi-language input" — see [Content Translations](#content-translations-multi-language-input-fields) below. This is a *separate* concern from the two rows above. |
 | API responses | English | Error messages and field names |
+
+**These are two unrelated i18n systems that happen to share the word "language":**
+1. **Site/UI language** (this section, above) — which strings a *human viewing a page* sees. Admin UI is always Vietnamese.
+2. **Content language** (below) — which languages a *piece of content* (a blog post) has been written in. This is what "make sure it has space for multi-language input in the admin side" refers to, and it's independent of what language the admin's own UI is in.
 
 ---
 
@@ -53,46 +58,39 @@ src/app/
 
 ---
 
-## Middleware
+## Proxy (formerly Middleware)
 
-The middleware intercepts all marketing routes and:
-1. Detects the user's preferred locale (from URL path → cookie → `Accept-Language` header)
-2. Redirects `/` traffic to the correct default (no prefix for VI)
-3. Sets a `NEXT_LOCALE` cookie for subsequent visits
+Next.js 16 renamed the `middleware.ts` file convention to `proxy.ts` (functionally identical — see `node_modules/next/dist/docs/.../file-conventions/proxy.md`). This project's `src/proxy.ts` is already implemented and combines two concerns: the locale rewrite described here, and the admin auth gate described in [authentication.md](./authentication.md).
+
+It:
+1. Serves `/admin/*` and `/api/*` untouched (no locale rewriting there)
+2. Passes through requests that already have a `/vi` or `/en` prefix
+3. Rewrites everything else to `/vi/...` internally, so the bare domain serves Vietnamese with no visible prefix
 
 ```typescript
-// src/middleware.ts (to be created)
-import { NextRequest, NextResponse } from "next/server";
+// src/proxy.ts (excerpt — see the real file for the auth-gate half)
+import { NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { SUPPORTED_LOCALE_CODES, DEFAULT_LOCALE } from "@/config/locales";
 
-const locales = ["vi", "en"] as const;
-export type Locale = (typeof locales)[number];
-export const defaultLocale: Locale = "vi";
-
-export function middleware(request: NextRequest) {
+export default auth((request) => {
   const { pathname } = request.nextUrl;
+  // ...admin auth gate omitted here, see src/proxy.ts...
 
-  // Skip admin and API routes
-  if (pathname.startsWith("/admin") || pathname.startsWith("/api")) {
-    return NextResponse.next();
-  }
-
-  // Check if path already has a locale prefix
-  const pathnameHasLocale = locales.some(
-    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+  const isLocalized = SUPPORTED_LOCALE_CODES.some(
+    (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)
   );
-  if (pathnameHasLocale) return NextResponse.next();
+  if (isLocalized) return NextResponse.next();
 
-  // Default locale (vi) — no prefix, serve as-is
-  // We rewrite internally to /vi/... so the [locale] param resolves
-  return NextResponse.rewrite(
-    new URL(`/vi${pathname}`, request.url)
-  );
-}
+  return NextResponse.rewrite(new URL(`/${DEFAULT_LOCALE}${pathname}`, request.url));
+});
 
 export const config = {
-  matcher: ["/((?!_next|favicon.ico|images|fonts).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
 ```
+
+`SUPPORTED_LOCALE_CODES` and `DEFAULT_LOCALE` are read from `src/config/locales.ts` — the same registry used for content translations below, so the marketing site's language list and the admin's content-language list never drift apart.
 
 ---
 
@@ -235,17 +233,54 @@ export const metadata: Metadata = {
 };
 ```
 
-The `buildSEO()` helper in `src/lib/seo.ts` will be extended to accept a `locale` parameter and generate these automatically.
+The `buildSEO()` helper in `src/lib/seo.ts` will be extended to accept a `locale` parameter and generate these automatically. Each `translations[]` entry on a `BlogPost` already carries its own `seoTitle`/`seoDescription`/`seoKeywords`/`ogImageKey`, so per-language SEO metadata is already modeled at the data layer — see [database-schema.md](./database-schema.md#blogposts).
+
+---
+
+## Content Translations (multi-language input fields)
+
+This is the system behind "make sure the admin has space for multi-language input, flexible for future languages." It's implemented and in use by the News & Blog module today.
+
+### The registry: `src/config/locales.ts`
+
+```typescript
+export const LOCALES = [
+  { code: "vi", label: "Tiếng Việt", required: true },
+  { code: "en", label: "Tiếng Anh", required: false },
+] as const;
+
+export const DEFAULT_LOCALE: LocaleCode = "vi";
+```
+
+**To add a third language later** (e.g. Japanese), add one entry to this array. Nothing else changes:
+- `BlogPost.translations` is an array of `{ locale, title, slug, ... }` subdocuments, not a fixed set of fields — a new locale is just a new array entry per post, no migration.
+- `BlogPostTranslationInputSchema` (`src/lib/validation/blogPost.ts`) validates `locale` against this same registry, so the new code is accepted automatically.
+- The admin content form (frontend work, not yet built) should render one input group per entry in `LOCALES`, so a new language shows up as a new tab/section automatically.
+
+### Required vs optional languages
+
+`required: true` (Vietnamese) means `BlogPostCreateSchema`'s `superRefine` rejects a post missing that language's content — see `validateTranslationSet` in `src/lib/validation/blogPost.ts`. English is optional: a post can be Vietnamese-only.
+
+### Per-language slugs
+
+Slugs are unique **per locale**, not globally — `translations.locale` + `translations.slug` is a compound unique index (see [database-schema.md](./database-schema.md#indexes)), so the Vietnamese and English versions of the same post can use unrelated slugs. `SlugGenerator` (`src/lib/utils/SlugGenerator.ts`) auto-generates one from the title when omitted, including stripping Vietnamese diacritics (`đ`/`Đ` and combining marks) into a clean ASCII slug.
 
 ---
 
 ## Implementation Checklist
 
-- [ ] Restructure `src/app/(marketing)/` to `src/app/[locale]/`
-- [ ] Create `src/middleware.ts` with locale detection
+Site/UI language routing (marketing pages):
+- [ ] Build out `src/app/[locale]/(marketing)/` pages (folder structure already scaffolded)
+- [x] Locale rewrite logic — implemented in `src/proxy.ts`
 - [ ] Create `src/i18n/vi.ts` (Vietnamese strings)
 - [ ] Create `src/i18n/en.ts` (English strings)
 - [ ] Create `src/i18n/index.ts` with `getDictionary()`
 - [ ] Update `src/lib/seo.ts` to generate `hreflang` alternates
 - [ ] Build `<LanguageSwitcher>` component
 - [ ] Add `lang` attribute to `<html>` in `[locale]/layout.tsx`
+
+Content translations (admin data entry):
+- [x] `src/config/locales.ts` locale registry
+- [x] `BlogPost.translations[]` schema + per-locale slug uniqueness
+- [x] `SlugGenerator` (Vietnamese-diacritic-aware)
+- [ ] Admin form UI: one input group per `LOCALES` entry (frontend work)

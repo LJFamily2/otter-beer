@@ -1,6 +1,11 @@
 import "@testing-library/jest-dom";
+import { TextDecoder, TextEncoder } from "node:util";
 
 // ─── Global test setup ─────────────────────────────────────────
+
+// jest-environment-jsdom doesn't expose these Node globals by default;
+// isomorphic-dompurify's jsdom fallback (used by HtmlSanitizer) needs them.
+Object.assign(globalThis, { TextDecoder, TextEncoder });
 
 // Silence console.error for expected error boundary tests
 // Remove this if you want to see all console output during tests
