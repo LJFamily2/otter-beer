@@ -7,7 +7,7 @@ import type { InputHTMLAttributes, ReactNode } from "react";
  * docs/component-library.md for the full prop reference.
  */
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
+  label?: ReactNode;
   icon?: ReactNode;
   error?: string;
   hint?: string;
@@ -24,7 +24,8 @@ export function Input({
   wrapperClassName = "",
   ...props
 }: InputProps) {
-  const inputId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
+  const inputId =
+    id ?? (typeof label === "string" ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
 
   return (
     <div className={`flex flex-col gap-2 ${wrapperClassName}`}>

@@ -9,15 +9,9 @@ interface SelectOption {
 }
 
 /**
- * Dropdown select — a custom-rendered listbox, NOT a native <select>. A
- * native <select>'s trigger can be styled with CSS, but its options popup
- * is drawn by the browser/OS and can't be restyled from HTML/CSS at all —
- * that's what showed up as the plain gray browser dropdown this replaces.
- * Closes on outside click, Escape, or picking an option; Up/Down + Enter
- * navigate while open.
- * AI agents: customize via props (label, options, placeholder, error,
- * value/defaultValue, onChange), not by editing this file's markup. See
- * docs/component-library.md for the full prop reference.
+ * Dropdown select — a custom-rendered listbox, NOT a native <select>.
+ * Closes on outside click, Escape, or picking an option.
+ * Automatically opens upward if near the bottom of the screen.
  */
 interface SelectProps {
   label?: string;
@@ -30,6 +24,7 @@ interface SelectProps {
   name?: string;
   required?: boolean;
   disabled?: boolean;
+  dropUp?: boolean;
   id?: string;
   className?: string;
   wrapperClassName?: string;
@@ -46,21 +41,33 @@ export function Select({
   name,
   required,
   disabled,
+  dropUp,
   id,
   className = "",
   wrapperClassName = "",
 }: SelectProps) {
   const [open, setOpen] = useState(false);
+  const [openAbove, setOpenAbove] = useState(false);
   const [internalValue, setInternalValue] = useState(defaultValue ?? "");
   const rootRef = useRef<HTMLDivElement>(null);
 
   const selectedValue = value ?? internalValue;
   const selectedIndex = options.findIndex((o) => o.value === selectedValue);
   const selectedOption = selectedIndex >= 0 ? options[selectedIndex] : undefined;
-  const selectId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
+  const selectId = id ?? (typeof label === "string" ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
+
+  const isDropUpSpecified = dropUp !== undefined;
+  const computedOpenAbove = isDropUpSpecified ? dropUp : openAbove;
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !rootRef.current) return;
+
+    if (!isDropUpSpecified) {
+      const rect = rootRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setOpenAbove(spaceBelow < 200);
+    }
+
     function handlePointerDown(event: MouseEvent) {
       if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
         setOpen(false);
@@ -68,7 +75,7 @@ export function Select({
     }
     document.addEventListener("mousedown", handlePointerDown);
     return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, [open]);
+  }, [open, isDropUpSpecified]);
 
   function selectValue(next: string) {
     if (value === undefined) setInternalValue(next);
@@ -136,7 +143,9 @@ export function Select({
             role="listbox"
             tabIndex={-1}
             aria-labelledby={selectId}
-            className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-sm border border-outline-variant/30 bg-surface-container-lowest py-1 shadow-md"
+            className={`absolute z-50 ${
+              computedOpenAbove ? "bottom-full mb-1" : "top-full mt-1"
+            } max-h-60 w-full overflow-auto rounded-sm border border-outline-variant/30 bg-surface-container-lowest py-1 shadow-lg`}
           >
             {options.map((option, index) => {
               const isSelected = option.value === selectedValue;

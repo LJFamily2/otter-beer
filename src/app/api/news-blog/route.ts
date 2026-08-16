@@ -42,7 +42,7 @@ export const POST = withRateLimit(
       const parsed = BlogPostCreateSchema.safeParse(body);
       if (!parsed.success) {
         return NextResponse.json(
-          { error: "Validation failed", details: parsed.error.flatten() },
+          { error: "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại các thông tin bắt buộc.", details: parsed.error.flatten() },
           { status: 400 }
         );
       }

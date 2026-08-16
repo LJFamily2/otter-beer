@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { LOCALES, type LocaleCode } from "@/config/locales";
+import { LOCALES, getRequiredLocales, type LocaleCode } from "@/config/locales";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import { Card } from "@/components/ui/Card";
@@ -86,12 +86,23 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
     return initial;
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   function updateTranslation(
     locale: LocaleCode,
     patch: Partial<TranslationFormState>
   ) {
+    // Clear field errors as user types
+    const patchKeys = Object.keys(patch);
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      for (const k of patchKeys) {
+        delete next[k];
+      }
+      return next;
+    });
+
     setTranslations((prev) => ({
       ...prev,
       [locale]: { ...prev[locale], ...patch },
@@ -100,7 +111,46 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setError(null);
+    setErrors([]);
+    setFieldErrors({});
+
+    const requiredLocales = getRequiredLocales();
+    const validationErrors: string[] = [];
+    const newFieldErrors: Record<string, string> = {};
+
+    for (const localeCode of requiredLocales) {
+      const localeConfig = LOCALES.find((l) => l.code === localeCode);
+      const localeLabel = localeConfig?.label ?? localeCode;
+      const t = translations[localeCode as LocaleCode];
+
+      if (!t.title.trim()) {
+        validationErrors.push(`Cần nhập tiêu đề bài viết (${localeLabel}).`);
+        if (localeCode === activeLocale) {
+          newFieldErrors.title = "Cần nhập tiêu đề bài viết";
+        }
+      }
+      if (!t.excerpt.trim()) {
+        validationErrors.push(`Cần nhập mô tả ngắn (${localeLabel}).`);
+        if (localeCode === activeLocale) {
+          newFieldErrors.excerpt = "Cần nhập mô tả ngắn bài viết";
+        }
+      }
+      const plainTextContent = t.content.replace(/<[^>]*>/g, "").trim();
+      if (!plainTextContent && !t.content.includes("<img")) {
+        validationErrors.push(`Cần nhập nội dung bài viết (${localeLabel}).`);
+        if (localeCode === activeLocale) {
+          newFieldErrors.content = "Cần nhập nội dung bài viết";
+        }
+      }
+    }
+
+    if (validationErrors.length > 0) {
+      setErrors(validationErrors);
+      setFieldErrors(newFieldErrors);
+      setActiveLocale(requiredLocales[0] as LocaleCode);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
 
     const activeTranslations = LOCALES.filter(
       (locale) => translations[locale.code].title.trim().length > 0
@@ -145,24 +195,48 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
 
       if (!response.ok) {
         const body = await response.json().catch(() => null);
-        throw new Error(body?.error ?? "Không thể lưu bài viết.");
+        if (response.status === 400 && body?.details) {
+          const serverErrors: string[] = [];
+          if (typeof body.error === "string" && !body.error.includes("Validation failed")) {
+            serverErrors.push(body.error);
+          } else {
+            serverErrors.push("Dữ liệu không hợp lệ. Vui lòng điền đầy đủ các thông tin bắt buộc.");
+          }
+          if (body.details.formErrors?.length) {
+            serverErrors.push(...body.details.formErrors);
+          }
+          if (body.details.fieldErrors) {
+            for (const [field, errs] of Object.entries(body.details.fieldErrors)) {
+              if (Array.isArray(errs)) {
+                serverErrors.push(...(errs as string[]));
+              }
+            }
+          }
+          setErrors(serverErrors);
+        } else {
+          setErrors([body?.error ?? "Không thể lưu bài viết. Vui lòng thử lại."]);
+        }
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
       }
 
       router.push("/admin/blog");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Đã xảy ra lỗi.");
+      setErrors([err instanceof Error ? err.message : "Đã xảy ra lỗi không xác định."]);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setIsSubmitting(false);
     }
   }
 
   const active = translations[activeLocale];
+  const isRequiredLocale = LOCALES.find((l) => l.code === activeLocale)?.required ?? false;
   const pageTitle = mode === "create" ? "Tạo bài viết mới" : "Chỉnh sửa bài viết";
 
   return (
     <form
-      className="flex max-w-[860px] flex-col gap-8"
+      className="flex max-w-[860px] flex-col gap-8 pb-12"
       onSubmit={handleSubmit}
     >
       <div className="flex flex-col gap-3 border-b border-[rgba(196,198,210,0.3)] pb-4">
@@ -176,10 +250,17 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
         <h1 className="text-[32px] tracking-wide text-primary">{pageTitle}</h1>
       </div>
 
-      {error ? (
-        <p className="rounded bg-error-container px-4 py-3 text-sm text-on-error-container">
-          {error}
-        </p>
+      {errors.length > 0 ? (
+        <div className="rounded-lg bg-error-container p-4 text-on-error-container shadow-sm">
+          <div className="font-semibold text-base">
+            Vui lòng kiểm tra và điền đầy đủ các thông tin sau:
+          </div>
+          <ul className="mt-2 list-inside list-disc flex flex-col gap-1 text-sm">
+            {errors.map((msg, index) => (
+              <li key={index}>{msg}</li>
+            ))}
+          </ul>
+        </div>
       ) : null}
 
       <Card className={sectionClass}>
@@ -192,7 +273,7 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
             value: locale.code,
             label: locale.required ? (
               <>
-                {locale.label} <span className="text-error">*</span>
+                {locale.label} <span className="text-error font-bold">*</span>
               </>
             ) : (
               locale.label
@@ -201,15 +282,19 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
         />
 
         <Input
-          label="Tiêu đề"
+          label={
+            <>
+              Tiêu đề {isRequiredLocale ? <span className="text-error font-bold">*</span> : null}
+            </>
+          }
           id="title"
+          placeholder="Nhập tiêu đề bài viết..."
           value={active.title}
+          error={fieldErrors.title}
           onChange={(e) =>
             updateTranslation(activeLocale, { title: e.target.value })
           }
-          required={
-            LOCALES.find((l) => l.code === activeLocale)?.required ?? false
-          }
+          required={isRequiredLocale}
         />
 
         <Input
@@ -223,10 +308,16 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
         />
 
         <Textarea
-          label="Mô tả ngắn"
+          label={
+            <>
+              Mô tả ngắn {isRequiredLocale ? <span className="text-error font-bold">*</span> : null}
+            </>
+          }
           id="excerpt"
+          placeholder="Nhập tóm tắt bài viết..."
           maxLength={300}
           value={active.excerpt}
+          error={fieldErrors.excerpt}
           onChange={(e) =>
             updateTranslation(activeLocale, { excerpt: e.target.value })
           }
@@ -234,9 +325,12 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
         />
 
         <div className={fieldClass}>
-          <label className={labelClass}>Nội dung</label>
+          <label className={labelClass}>
+            Nội dung {isRequiredLocale ? <span className="text-error font-bold">*</span> : null}
+          </label>
           <RichTextEditor
             value={active.content}
+            error={fieldErrors.content}
             onChange={(html) =>
               updateTranslation(activeLocale, { content: html })
             }
@@ -252,6 +346,7 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
         <Input
           label="Tiêu đề SEO"
           id="seoTitle"
+          placeholder="Tiêu đề hiển thị trên kết quả tìm kiếm..."
           maxLength={70}
           value={active.seoTitle}
           onChange={(e) =>
@@ -261,6 +356,7 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
         <Textarea
           label="Mô tả SEO"
           id="seoDescription"
+          placeholder="Mô tả tóm tắt hiển thị trên kết quả tìm kiếm..."
           maxLength={160}
           value={active.seoDescription}
           onChange={(e) =>
@@ -272,6 +368,7 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
         <Input
           label="Từ khóa (phân cách bằng dấu phẩy)"
           id="seoKeywords"
+          placeholder="bột bia, tin tức, sự kiện"
           value={active.seoKeywords}
           onChange={(e) =>
             updateTranslation(activeLocale, {

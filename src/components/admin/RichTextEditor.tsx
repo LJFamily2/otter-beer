@@ -12,6 +12,7 @@ interface RichTextEditorProps {
   value: string;
   onChange: (html: string) => void;
   placeholder?: string;
+  error?: string;
 }
 
 const toolButtonClass = (active?: boolean) =>
@@ -21,10 +22,6 @@ const toolButtonClass = (active?: boolean) =>
       : "text-on-surface-variant hover:bg-surface-container"
   }`;
 
-// Tiptap renders its own DOM (.ProseMirror) that we don't control via
-// className props directly, so its typography is styled through Tailwind's
-// arbitrary descendant-selector variants on the wrapping div instead of a
-// separate stylesheet.
 const proseMirrorStyles =
   "[&_.ProseMirror]:min-h-[240px] [&_.ProseMirror]:outline-none " +
   "[&_.ProseMirror_p]:mb-[0.9em] " +
@@ -40,6 +37,7 @@ export function RichTextEditor({
   value,
   onChange,
   placeholder,
+  error,
 }: RichTextEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -49,6 +47,7 @@ export function RichTextEditor({
     extensions: [
       StarterKit.configure({
         heading: { levels: [2, 3, 4] },
+        link: false,
       }),
       Link.configure({ openOnClick: false, autolink: true }),
       Image,
@@ -90,70 +89,83 @@ export function RichTextEditor({
   }
 
   return (
-    <div className="overflow-hidden rounded border border-[rgba(196,198,210,0.5)] bg-surface-container-lowest">
-      <div className="flex flex-wrap gap-0.5 border-b border-[rgba(196,198,210,0.5)] bg-surface p-1.5">
-        <ToolButton
-          label="B"
-          active={editor.isActive("bold")}
-          onClick={() => editor.chain().focus().toggleBold().run()}
-        />
-        <ToolButton
-          label="I"
-          active={editor.isActive("italic")}
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-        />
-        <div className="mx-1 my-1 w-px bg-[rgba(196,198,210,0.5)]" />
-        <ToolButton
-          label="H2"
-          active={editor.isActive("heading", { level: 2 })}
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 2 }).run()
-          }
-        />
-        <ToolButton
-          label="H3"
-          active={editor.isActive("heading", { level: 3 })}
-          onClick={() =>
-            editor.chain().focus().toggleHeading({ level: 3 }).run()
-          }
-        />
-        <div className="mx-1 my-1 w-px bg-[rgba(196,198,210,0.5)]" />
-        <ToolButton
-          label="• Danh sách"
-          active={editor.isActive("bulletList")}
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-        />
-        <ToolButton
-          label="1. Danh sách"
-          active={editor.isActive("orderedList")}
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        />
-        <ToolButton
-          label="Trích dẫn"
-          active={editor.isActive("blockquote")}
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        />
-        <div className="mx-1 my-1 w-px bg-[rgba(196,198,210,0.5)]" />
-        <ToolButton
-          label="Liên kết"
-          active={editor.isActive("link")}
-          onClick={setLink}
-        />
-        <ToolButton
-          label={isUploadingImage ? "Đang tải..." : "Ảnh"}
-          onClick={() => fileInputRef.current?.click()}
-        />
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          hidden
-          onChange={handleImagePick}
-        />
+    <div className="flex flex-col gap-1.5">
+      <div
+        className={`overflow-hidden rounded border transition-colors ${
+          error
+            ? "border-error bg-error-container/10"
+            : "border-[rgba(196,198,210,0.5)] bg-surface-container-lowest"
+        }`}
+      >
+        <div className="flex flex-wrap gap-0.5 border-b border-[rgba(196,198,210,0.5)] bg-surface p-1.5">
+          <ToolButton
+            label="B"
+            active={editor.isActive("bold")}
+            onClick={() => editor.chain().focus().toggleBold().run()}
+          />
+          <ToolButton
+            label="I"
+            active={editor.isActive("italic")}
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+          />
+          <div className="mx-1 my-1 w-px bg-[rgba(196,198,210,0.5)]" />
+          <ToolButton
+            label="H2"
+            active={editor.isActive("heading", { level: 2 })}
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 2 }).run()
+            }
+          />
+          <ToolButton
+            label="H3"
+            active={editor.isActive("heading", { level: 3 })}
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 3 }).run()
+            }
+          />
+          <div className="mx-1 my-1 w-px bg-[rgba(196,198,210,0.5)]" />
+          <ToolButton
+            label="• Danh sách"
+            active={editor.isActive("bulletList")}
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+          />
+          <ToolButton
+            label="1. Danh sách"
+            active={editor.isActive("orderedList")}
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          />
+          <ToolButton
+            label="Trích dẫn"
+            active={editor.isActive("blockquote")}
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          />
+          <div className="mx-1 my-1 w-px bg-[rgba(196,198,210,0.5)]" />
+          <ToolButton
+            label="Liên kết"
+            active={editor.isActive("link")}
+            onClick={setLink}
+          />
+          <ToolButton
+            label={isUploadingImage ? "Đang tải..." : "Ảnh"}
+            onClick={() => fileInputRef.current?.click()}
+          />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            hidden
+            onChange={handleImagePick}
+          />
+        </div>
+        <div className={`p-4 text-base leading-relaxed ${proseMirrorStyles}`}>
+          <EditorContent editor={editor} />
+        </div>
       </div>
-      <div className={`p-4 text-base leading-relaxed ${proseMirrorStyles}`}>
-        <EditorContent editor={editor} />
-      </div>
+      {error ? (
+        <p className="flex items-center gap-1 text-xs font-medium text-error">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }
