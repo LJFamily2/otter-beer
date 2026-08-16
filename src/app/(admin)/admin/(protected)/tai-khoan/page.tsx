@@ -8,7 +8,7 @@ import {
   PERMISSION_ACTION_LABELS_VI,
   type ModuleKey,
 } from "@/config/permissions";
-import { SYSTEM_ROLE_LABELS_VI, type SystemRoleKey } from "@/config/roles";
+import { SYSTEM_ROLE_LABELS_VI, isSuperAdminRoleKey, type SystemRoleKey } from "@/config/roles";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -53,7 +53,7 @@ export default async function AccountSettingsPage() {
   const columns: DataTableColumn<PermissionRow>[] = [
     {
       key: "module",
-      header: "Mô-đun",
+      header: "Trang",
       render: (row) => <span className="font-medium text-on-surface">{row.moduleLabel}</span>,
     },
     ...PERMISSION_ACTION_KEYS.map((action) => ({
@@ -103,17 +103,19 @@ export default async function AccountSettingsPage() {
         </div>
         <p className="rounded bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant">
           Hồ sơ này được đồng bộ tự động từ tài khoản Google của bạn khi đăng
-          nhập — để đổi tên hoặc ảnh đại diện, hãy cập nhật tài khoản Google
+          nhập để đổi tên hoặc ảnh đại diện, hãy cập nhật tài khoản Google
           của bạn.
         </p>
       </Card>
 
-      <div className="flex flex-col gap-3">
-        <h2 className="font-display text-xl tracking-wide text-primary">
-          Quyền truy cập của bạn
-        </h2>
-        <DataTable columns={columns} rows={rows} rowKey={(row) => row.moduleKey} />
-      </div>
+      {isSuperAdminRoleKey(user.roleKey) ? (
+        <div className="flex flex-col gap-3">
+          <h2 className="font-display text-xl tracking-wide text-primary">
+            Quyền truy cập của bạn
+          </h2>
+          <DataTable columns={columns} rows={rows} rowKey={(row) => row.moduleKey} />
+        </div>
+      ) : null}
 
       <form
         action={async () => {
