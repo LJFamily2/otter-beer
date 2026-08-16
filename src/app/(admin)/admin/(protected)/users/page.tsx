@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { userService } from "@/services/UserService";
 import { roleService } from "@/services/RoleService";
 import { MODULE_KEYS } from "@/config/permissions";
+import { canManageRole } from "@/config/roles";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Card } from "@/components/ui/Card";
 import type { PopulatedRole } from "@/types/user";
@@ -26,6 +27,8 @@ export default async function UsersPage() {
     );
   }
 
+  const actorLevel = session?.user?.roleLevel ?? Number.MAX_SAFE_INTEGER;
+
   const [users, roles] = await Promise.all([
     userService.list(),
     roleService.list(),
@@ -47,10 +50,24 @@ export default async function UsersPage() {
       roleId: String(role?._id ?? ""),
       roleKey: role?.key ?? "",
       roleName: role?.name ?? "—",
+      // Whether the acting user outranks this user's CURRENT role — gates
+      // showing edit/delete at all, not just which new role can be granted
+      // (see the filtered roleOptions below). Without this, opening the
+      // edit modal for a peer/superior user and saving without touching
+      // the role field would still fail server-side, since the PATCH
+      // always resubmits the current roleId.
+      canManage: canManageRole(actorLevel, role?.level ?? -1),
     };
   });
 
-  const roleOptions = roles.map((role) => ({
+  // Only roles the actor can actually grant — an admin must not be able to
+  // promote someone to admin-or-above via this dropdown even if the Roles
+  // & Permissions page correctly blocks it elsewhere (see config/roles.ts's
+  // canManageRole()).
+  const manageableRoles = roles.filter((role) =>
+    canManageRole(actorLevel, role.level)
+  );
+  const roleOptions = manageableRoles.map((role) => ({
     value: String(role._id),
     label: role.name,
   }));

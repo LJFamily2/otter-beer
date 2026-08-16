@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { roleService } from "@/services/RoleService";
 import { permissionService } from "@/services/PermissionService";
 import { MODULE_KEYS } from "@/config/permissions";
-import { isSuperAdminRoleKey } from "@/config/roles";
+import { isSuperAdminRoleKey, canManageRole } from "@/config/roles";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -34,6 +34,8 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
     );
   }
 
+  const actorLevel = session?.user?.roleLevel ?? Number.MAX_SAFE_INTEGER;
+
   const roles = await roleService.list();
   const { roleId: roleIdParam } = await searchParams;
   const selectedRole =
@@ -44,6 +46,10 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
   const isSuperAdminSelected = selectedRole
     ? isSuperAdminRoleKey(selectedRole.key)
     : false;
+  const canManageSelected =
+    !!selectedRole &&
+    !isSuperAdminSelected &&
+    canManageRole(actorLevel, selectedRole.level);
 
   const matrix =
     selectedRole && !isSuperAdminSelected
@@ -104,7 +110,7 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
                   Khóa: {selectedRole.key}
                 </p>
               </div>
-              {!selectedRole.isSystem ? (
+              {!selectedRole.isSystem && canManageSelected ? (
                 <div className="flex gap-2">
                   {grant.edit ? (
                     <RenameRoleModal
@@ -126,11 +132,19 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
                 hệ thống không bao giờ bị khóa hoàn toàn khỏi quyền quản trị.
               </Card>
             ) : matrix ? (
-              <PermissionMatrixEditor
-                roleId={String(selectedRole._id)}
-                initialMatrix={matrix}
-                canEdit={Boolean(grant.edit)}
-              />
+              <>
+                {!canManageSelected ? (
+                  <p className="rounded bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant">
+                    Vai trò này ngang cấp hoặc cao hơn vai trò của bạn — chỉ
+                    xem, không thể chỉnh sửa.
+                  </p>
+                ) : null}
+                <PermissionMatrixEditor
+                  roleId={String(selectedRole._id)}
+                  initialMatrix={matrix}
+                  canEdit={Boolean(grant.edit) && canManageSelected}
+                />
+              </>
             ) : null}
           </div>
         ) : (

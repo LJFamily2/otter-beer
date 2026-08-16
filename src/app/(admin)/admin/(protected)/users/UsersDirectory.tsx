@@ -23,6 +23,8 @@ export interface DirectoryUser {
   roleId: string;
   roleKey: string;
   roleName: string;
+  /** Whether the acting user outranks this user's current role — see config/roles.ts's canManageRole(). Gates showing edit/delete at all. */
+  canManage: boolean;
 }
 
 interface RoleOption {
@@ -110,6 +112,13 @@ export function UsersDirectory({
           return (
             <span className="text-xs uppercase tracking-wide text-on-surface-variant">
               Tài khoản của bạn
+            </span>
+          );
+        }
+        if (!user.canManage) {
+          return (
+            <span className="text-xs uppercase tracking-wide text-on-surface-variant">
+              Vai trò cao hơn
             </span>
           );
         }
