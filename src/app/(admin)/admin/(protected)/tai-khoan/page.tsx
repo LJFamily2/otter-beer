@@ -8,7 +8,7 @@ import {
   PERMISSION_ACTION_LABELS_VI,
   type ModuleKey,
 } from "@/config/permissions";
-import { SYSTEM_ROLE_LABELS_VI, isSuperAdminRoleKey, type SystemRoleKey } from "@/config/roles";
+import { SYSTEM_ROLE_LABELS_VI, type SystemRoleKey } from "@/config/roles";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -108,14 +108,12 @@ export default async function AccountSettingsPage() {
         </p>
       </Card>
 
-      {isSuperAdminRoleKey(user.roleKey) ? (
-        <div className="flex flex-col gap-3">
-          <h2 className="font-display text-xl tracking-wide text-primary">
-            Quyền truy cập của bạn
-          </h2>
-          <DataTable columns={columns} rows={rows} rowKey={(row) => row.moduleKey} />
-        </div>
-      ) : null}
+      <div className="flex flex-col gap-3">
+        <h2 className="font-display text-xl tracking-wide text-primary">
+          Quyền truy cập của bạn
+        </h2>
+        <DataTable columns={columns} rows={rows} rowKey={(row) => row.moduleKey} />
+      </div>
 
       <form
         action={async () => {

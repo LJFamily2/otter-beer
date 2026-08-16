@@ -12,6 +12,7 @@ import { filterUsers } from "@/lib/utils/filterUsers";
 import { SearchIcon, TrashIcon } from "@/components/admin/icons";
 import { EditUserModal } from "./EditUserModal";
 import { DeleteUserButton } from "./DeleteUserButton";
+import { UserPermissionsModal } from "./UserPermissionsModal";
 
 export interface DirectoryUser {
   id: string;
@@ -25,6 +26,8 @@ export interface DirectoryUser {
   roleName: string;
   /** Whether the acting user outranks this user's current role — see config/roles.ts's canManageRole(). Gates showing edit/delete at all. */
   canManage: boolean;
+  /** Whether this user holds the superAdmin role. */
+  isSuperAdmin: boolean;
 }
 
 interface RoleOption {
@@ -117,13 +120,27 @@ export function UsersDirectory({
         }
         if (!user.canManage) {
           return (
-            <span className="text-xs uppercase tracking-wide text-on-surface-variant">
-              Vai trò cao hơn
-            </span>
+            <div className="inline-flex items-center gap-2">
+              <UserPermissionsModal
+                userId={user.id}
+                userName={user.name}
+                canEdit={false}
+                isSuperAdmin={user.isSuperAdmin}
+              />
+              <span className="text-xs uppercase tracking-wide text-on-surface-variant">
+                Vai trò cao hơn
+              </span>
+            </div>
           );
         }
         return (
           <div className="inline-flex justify-end gap-1">
+            <UserPermissionsModal
+              userId={user.id}
+              userName={user.name}
+              canEdit={canEdit}
+              isSuperAdmin={user.isSuperAdmin}
+            />
             {canEdit ? <EditUserModal user={user} roleOptions={roleOptions} /> : null}
             {canDelete ? (
               <DeleteUserButton userId={user.id}>

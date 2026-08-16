@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { userService } from "@/services/UserService";
 import { roleService } from "@/services/RoleService";
 import { MODULE_KEYS } from "@/config/permissions";
-import { canManageRole } from "@/config/roles";
+import { canManageRole, isSuperAdminRoleKey } from "@/config/roles";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Card } from "@/components/ui/Card";
 import type { PopulatedRole } from "@/types/user";
@@ -57,6 +57,7 @@ export default async function UsersPage() {
       // the role field would still fail server-side, since the PATCH
       // always resubmits the current roleId.
       canManage: canManageRole(actorLevel, role?.level ?? -1),
+      isSuperAdmin: isSuperAdminRoleKey(role?.key ?? ""),
     };
   });
 

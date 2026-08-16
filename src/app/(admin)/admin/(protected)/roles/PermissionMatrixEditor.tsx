@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Button } from "@/components/ui/Button";
@@ -29,12 +29,41 @@ export function PermissionMatrixEditor({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
+  // Sync state if initialMatrix prop changes (e.g. on role tab navigation)
+  useEffect(() => {
+    setMatrix(initialMatrix);
+    setSaved(false);
+    setError(null);
+  }, [initialMatrix]);
+
   function toggle(moduleKey: ModuleKey, action: keyof ActionGrant) {
     setSaved(false);
-    setMatrix((prev) => ({
-      ...prev,
-      [moduleKey]: { ...prev[moduleKey], [action]: !prev[moduleKey][action] },
-    }));
+    setMatrix((prev) => {
+      const current = prev[moduleKey];
+      const newValue = !current[action];
+      const updated = { ...current, [action]: newValue };
+
+      // Smart dependency rules for intuitive UI:
+      if (action === "access" && !newValue) {
+        // Turning off access turns off all child permissions
+        updated.view = false;
+        updated.add = false;
+        updated.edit = false;
+        updated.delete = false;
+      } else if (
+        (action === "add" || action === "edit" || action === "delete" || action === "view") &&
+        newValue
+      ) {
+        // Turning on view/add/edit/delete automatically turns on access & view
+        updated.access = true;
+        updated.view = true;
+      }
+
+      return {
+        ...prev,
+        [moduleKey]: updated,
+      };
+    });
   }
 
   async function handleSave() {
@@ -54,7 +83,7 @@ export function PermissionMatrixEditor({
       });
       if (!response.ok) {
         const body = await response.json().catch(() => null);
-        throw new Error(body?.error ?? "Không thể lưu quyền truy cập.");
+        throw new Error(body?.error ?? "Không thể lưu quyền mặc định của vai trò.");
       }
       setSaved(true);
       router.refresh();
@@ -108,9 +137,9 @@ export function PermissionMatrixEditor({
       {canEdit ? (
         <div className="flex flex-wrap items-center gap-4 border-t border-outline-variant/20 bg-surface-container-low px-6 py-4">
           {error ? <p className="text-sm text-error">{error}</p> : null}
-          {saved && !error ? <p className="text-sm text-[#10b981]">Đã lưu.</p> : null}
+          {saved && !error ? <p className="text-sm text-[#10b981]">Đã lưu quyền mặc định.</p> : null}
           <Button type="button" onClick={handleSave} disabled={isSaving} className="ml-auto">
-            {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
+            {isSaving ? "Đang lưu..." : "Lưu quyền mặc định"}
           </Button>
         </div>
       ) : null}

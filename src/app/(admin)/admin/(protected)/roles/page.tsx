@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 interface RolesPageProps {
-  searchParams: Promise<{ roleId?: string }>;
+  searchParams: Promise<{ roleId?: string; role?: string }>;
 }
 
 export default async function RolesPage({ searchParams }: RolesPageProps) {
@@ -37,15 +37,18 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
   const actorLevel = session?.user?.roleLevel ?? Number.MAX_SAFE_INTEGER;
 
   const roles = await roleService.list();
-  const { roleId: roleIdParam } = await searchParams;
+  const { roleId: roleIdParam, role: roleKeyParam } = await searchParams;
+
   const selectedRole =
-    roles.find((role) => String(role._id) === roleIdParam) ??
-    roles.find((role) => !isSuperAdminRoleKey(role.key)) ??
+    roles.find((r) => r.key === roleKeyParam) ??
+    roles.find((r) => String(r._id) === roleIdParam) ??
+    roles.find((r) => !isSuperAdminRoleKey(r.key)) ??
     roles[0];
 
   const isSuperAdminSelected = selectedRole
     ? isSuperAdminRoleKey(selectedRole.key)
     : false;
+
   const canManageSelected =
     !!selectedRole &&
     !isSuperAdminSelected &&
@@ -71,7 +74,8 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
             Vai trò & Phân quyền
           </h1>
           <p className="mt-2 text-base text-on-surface-variant">
-            Quản lý vai trò và quyền truy cập từng mô-đun trong hệ thống.
+            Quản lý vai trò và quyền mặc định của từng vai trò trong hệ thống.
+            Người dùng mới sẽ tự động kế thừa quyền mặc định này.
           </p>
         </div>
         {grant.add ? <CreateRoleModal /> : null}
@@ -85,12 +89,11 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
             return (
               <Link
                 key={id}
-                href={`/admin/roles?roleId=${id}`}
-                className={`flex items-center justify-between gap-2 rounded px-4 py-3 text-sm no-underline ${
-                  active
-                    ? "bg-secondary-container font-bold text-primary"
-                    : "text-on-surface-variant hover:bg-surface-container"
-                }`}
+                href={`/admin/roles?role=${role.key}`}
+                className={`flex items-center justify-between gap-2 rounded px-4 py-3 text-sm no-underline ${active
+                  ? "bg-secondary-container font-bold text-primary"
+                  : "text-on-surface-variant hover:bg-surface-container"
+                  }`}
               >
                 {role.name}
                 {role.isSystem ? <Badge variant="outline">Hệ thống</Badge> : null}
@@ -128,7 +131,7 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
             {isSuperAdminSelected ? (
               <Card className="p-6 text-on-surface-variant">
                 Vai trò Quản trị viên cấp cao luôn có toàn quyền trên mọi
-                mô-đun và không thể chỉnh sửa — đây là biện pháp an toàn để
+                mô-đun và không thể chỉnh sửa đây là biện pháp an toàn để
                 hệ thống không bao giờ bị khóa hoàn toàn khỏi quyền quản trị.
               </Card>
             ) : matrix ? (
@@ -139,7 +142,11 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
                     xem, không thể chỉnh sửa.
                   </p>
                 ) : null}
+                <div className="mb-2 text-sm text-on-surface-variant">
+                  Quyền mặc định áp dụng cho tất cả người dùng thuộc vai trò này (trừ khi tài khoản có quyền tùy chỉnh riêng).
+                </div>
                 <PermissionMatrixEditor
+                  key={String(selectedRole._id)}
                   roleId={String(selectedRole._id)}
                   initialMatrix={matrix}
                   canEdit={Boolean(grant.edit) && canManageSelected}
