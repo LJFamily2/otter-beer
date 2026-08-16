@@ -57,7 +57,9 @@ export function NavSidebar({
                   : "text-on-surface-variant hover:bg-surface-container"
               }`}
             >
-              {item.icon}
+              <span className="flex size-[18px] shrink-0 items-center justify-center overflow-hidden">
+                {item.icon}
+              </span>
               {item.label}
             </Link>
           );

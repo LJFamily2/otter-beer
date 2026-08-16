@@ -7,6 +7,8 @@ import type { SVGProps } from "react";
 function IconBase(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
+      width={20}
+      height={20}
       viewBox="0 0 20 20"
       fill="none"
       stroke="currentColor"
