@@ -57,7 +57,11 @@ export class BlogPostService {
     locale: string,
     slug: string
   ): Promise<IBlogPost | null> {
-    return this.repository.findPublishedByLocaleSlug(locale, slug);
+    try {
+      return await this.repository.findPublishedByLocaleSlug(locale, slug);
+    } catch {
+      return null;
+    }
   }
 
   async getRecentPublished(
