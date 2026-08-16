@@ -18,6 +18,11 @@ export class UserRepository extends BaseRepository<IUser> {
       .exec();
   }
 
+  async findByIdWithRole(id: string): Promise<IUser | null> {
+    const model = await this.ready();
+    return model.findById(id).populate("roleId").exec();
+  }
+
   async touchLastLogin(id: string): Promise<void> {
     const model = await this.ready();
     await model.findByIdAndUpdate(id, { lastLoginAt: new Date() }).exec();

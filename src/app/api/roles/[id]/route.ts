@@ -15,7 +15,7 @@ export const PATCH = withRateLimit(
   RouteGuard.requirePermission<RouteParams>(
     MODULE_KEYS.ROLES_PERMISSIONS,
     "edit",
-    async (request: NextRequest, context) => {
+    async (request: NextRequest, context, session) => {
       const { id } = await context.params;
       const body = await request.json();
       const parsed = UpdateRoleSchema.safeParse(body);
@@ -26,11 +26,22 @@ export const PATCH = withRateLimit(
         );
       }
 
-      const role = await roleService.rename(id, parsed.data.name);
-      if (!role) {
-        return NextResponse.json({ error: "Not found" }, { status: 404 });
+      try {
+        const role = await roleService.rename(
+          id,
+          parsed.data.name,
+          session.user.roleLevel
+        );
+        if (!role) {
+          return NextResponse.json({ error: "Not found" }, { status: 404 });
+        }
+        return NextResponse.json(role);
+      } catch (err) {
+        if (err instanceof RoleMutationError) {
+          return NextResponse.json({ error: err.message }, { status: 403 });
+        }
+        throw err;
       }
-      return NextResponse.json(role);
     }
   ),
   "roles-write"
@@ -41,14 +52,14 @@ export const DELETE = withRateLimit(
   RouteGuard.requirePermission<RouteParams>(
     MODULE_KEYS.ROLES_PERMISSIONS,
     "delete",
-    async (_request, context) => {
+    async (_request, context, session) => {
       const { id } = await context.params;
       try {
-        await roleService.delete(id);
+        await roleService.delete(id, session.user.roleLevel);
         return new NextResponse(null, { status: 204 });
       } catch (err) {
         if (err instanceof RoleMutationError) {
-          return NextResponse.json({ error: err.message }, { status: 400 });
+          return NextResponse.json({ error: err.message }, { status: 403 });
         }
         throw err;
       }

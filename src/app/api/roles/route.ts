@@ -20,7 +20,7 @@ export const POST = withRateLimit(
   RouteGuard.requirePermission(
     MODULE_KEYS.ROLES_PERMISSIONS,
     "add",
-    async (request: NextRequest) => {
+    async (request: NextRequest, _context, session) => {
       const body = await request.json();
       const parsed = CreateRoleSchema.safeParse(body);
       if (!parsed.success) {
@@ -31,7 +31,11 @@ export const POST = withRateLimit(
       }
 
       try {
-        const role = await roleService.create(parsed.data.key, parsed.data.name);
+        const role = await roleService.create(
+          parsed.data.key,
+          parsed.data.name,
+          session.user.roleLevel
+        );
         return NextResponse.json(role, { status: 201 });
       } catch (err) {
         if (err instanceof RoleMutationError) {

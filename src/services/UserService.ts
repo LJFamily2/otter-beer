@@ -1,9 +1,12 @@
 import { Types } from "mongoose";
 import { UserRepository } from "@/repositories/UserRepository";
 import { RoleRepository } from "@/repositories/RoleRepository";
+import { canManageRole } from "@/config/roles";
 import type { IUser } from "@/models/User";
 
 export class UserMutationError extends Error {}
+
+const HIERARCHY_ERROR = "You cannot grant a role at or above your own rank.";
 
 export class UserService {
   constructor(
@@ -15,8 +18,18 @@ export class UserService {
     return this.userRepository.listAllWithRole();
   }
 
-  /** Adds an email to the login allowlist with an assigned role. */
-  async invite(email: string, name: string, roleId: string): Promise<IUser> {
+  /**
+   * Adds an email to the login allowlist with an assigned role. actorLevel
+   * gates which role can be granted (see config/roles.ts's canManageRole())
+   * — without this, an admin could bypass the Roles page's hierarchy rule
+   * entirely by just inviting a new user straight into the admin role.
+   */
+  async invite(
+    email: string,
+    name: string,
+    roleId: string,
+    actorLevel: number
+  ): Promise<IUser> {
     const normalizedEmail = email.trim().toLowerCase();
     const existing = await this.userRepository.findByEmail(normalizedEmail);
     if (existing) {
@@ -26,6 +39,9 @@ export class UserService {
     if (!role) {
       throw new UserMutationError("Role not found");
     }
+    if (!canManageRole(actorLevel, role.level)) {
+      throw new UserMutationError(HIERARCHY_ERROR);
+    }
     return this.userRepository.create({
       email: normalizedEmail,
       name,
@@ -34,20 +50,53 @@ export class UserService {
     });
   }
 
-  async updateRole(id: string, roleId: string): Promise<IUser | null> {
+  async updateRole(
+    id: string,
+    roleId: string,
+    actorLevel: number
+  ): Promise<IUser | null> {
     const role = await this.roleRepository.findById(roleId);
     if (!role) {
       throw new UserMutationError("Role not found");
     }
+    if (!canManageRole(actorLevel, role.level)) {
+      throw new UserMutationError(HIERARCHY_ERROR);
+    }
     return this.userRepository.updateById(id, { roleId });
   }
 
-  /** `isActive: false` revokes access without deleting the user (audit trail intact). */
-  async setActive(id: string, isActive: boolean): Promise<IUser | null> {
+  /**
+   * `isActive: false` revokes access without deleting the user (audit
+   * trail intact). Also hierarchy-gated on the user's CURRENT role — an
+   * activate/deactivate toggle isn't a role grant, but letting an admin
+   * flip a peer/superior user's access on or off would undermine the same
+   * rule just as much as granting them a role would.
+   */
+  async setActive(
+    id: string,
+    isActive: boolean,
+    actorLevel: number
+  ): Promise<IUser | null> {
+    const user = await this.userRepository.findByIdWithRole(id);
+    if (!user) return null;
+    const role = user.roleId as unknown as { level: number };
+    if (!canManageRole(actorLevel, role.level)) {
+      throw new UserMutationError(
+        "You cannot change access for a user whose role is at or above your own rank."
+      );
+    }
     return this.userRepository.updateById(id, { isActive });
   }
 
-  async delete(id: string): Promise<boolean> {
+  async delete(id: string, actorLevel: number): Promise<boolean> {
+    const user = await this.userRepository.findByIdWithRole(id);
+    if (!user) return false;
+    const role = user.roleId as unknown as { level: number };
+    if (!canManageRole(actorLevel, role.level)) {
+      throw new UserMutationError(
+        "You cannot remove access for a user whose role is at or above your own rank."
+      );
+    }
     const deleted = await this.userRepository.deleteById(id);
     return Boolean(deleted);
   }

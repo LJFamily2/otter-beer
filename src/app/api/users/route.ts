@@ -20,7 +20,7 @@ export const POST = withRateLimit(
   RouteGuard.requirePermission(
     MODULE_KEYS.USERS,
     "add",
-    async (request: NextRequest) => {
+    async (request: NextRequest, _context, session) => {
       const body = await request.json();
       const parsed = InviteUserSchema.safeParse(body);
       if (!parsed.success) {
@@ -34,12 +34,18 @@ export const POST = withRateLimit(
         const user = await userService.invite(
           parsed.data.email,
           parsed.data.name,
-          parsed.data.roleId
+          parsed.data.roleId,
+          session.user.roleLevel
         );
         return NextResponse.json(user, { status: 201 });
       } catch (err) {
         if (err instanceof UserMutationError) {
-          return NextResponse.json({ error: err.message }, { status: 409 });
+          const status = err.message.includes("already has access")
+            ? 409
+            : err.message === "Role not found"
+              ? 404
+              : 403;
+          return NextResponse.json({ error: err.message }, { status });
         }
         throw err;
       }

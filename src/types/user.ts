@@ -4,4 +4,5 @@ export interface PopulatedRole {
   key: string;
   name: string;
   isSystem: boolean;
+  level: number;
 }

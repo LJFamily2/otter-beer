@@ -6,11 +6,13 @@ import {
   type ModuleKey,
   type PermissionAction,
 } from "@/config/permissions";
-import { isSuperAdminRoleKey } from "@/config/roles";
+import { isSuperAdminRoleKey, canManageRole } from "@/config/roles";
 import { PermissionRepository } from "@/repositories/PermissionRepository";
 import { RoleRepository } from "@/repositories/RoleRepository";
 
 export type PermissionMatrix = Record<ModuleKey, ActionGrant>;
+
+export class PermissionMutationError extends Error {}
 
 function emptyMatrix(): PermissionMatrix {
   return MODULE_KEYS_LIST.reduce((acc, key) => {
@@ -70,6 +72,43 @@ export class PermissionService {
     if (isSuperAdminRoleKey(roleKey)) return true;
     const matrix = await this.getMatrixForRoleKey(roleKey);
     return Boolean(matrix[moduleKey]?.[action]);
+  }
+
+  /**
+   * Bulk-writes one role's full matrix, row by row. Guards mirror
+   * RoleService: superAdmin's matrix is never editable (it's hardcoded to
+   * full access regardless of stored rows — see getMatrixForRoleKey), and
+   * the actor must outrank the target role (see config/roles.ts's
+   * canManageRole()).
+   */
+  async setMatrixForRole(
+    roleId: string,
+    grants: { moduleKey: ModuleKey; actions: ActionGrant }[],
+    actorLevel: number
+  ): Promise<PermissionMatrix> {
+    const role = await this.roleRepository.findById(roleId);
+    if (!role) {
+      throw new PermissionMutationError("Role not found");
+    }
+    if (isSuperAdminRoleKey(role.key)) {
+      throw new PermissionMutationError(
+        "superAdmin always has full access and cannot be edited."
+      );
+    }
+    if (!canManageRole(actorLevel, role.level)) {
+      throw new PermissionMutationError(
+        "You cannot manage a role at or above your own rank."
+      );
+    }
+
+    for (const grant of grants) {
+      await this.permissionRepository.upsertGrant(
+        roleId,
+        grant.moduleKey,
+        grant.actions
+      );
+    }
+    return this.getMatrixForRoleId(roleId);
   }
 }
 

@@ -37,10 +37,18 @@ export const PATCH = withRateLimit(
       try {
         let user = null;
         if (parsed.data.roleId !== undefined) {
-          user = await userService.updateRole(id, parsed.data.roleId);
+          user = await userService.updateRole(
+            id,
+            parsed.data.roleId,
+            session.user.roleLevel
+          );
         }
         if (parsed.data.isActive !== undefined) {
-          user = await userService.setActive(id, parsed.data.isActive);
+          user = await userService.setActive(
+            id,
+            parsed.data.isActive,
+            session.user.roleLevel
+          );
         }
         if (!user) {
           return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -48,7 +56,8 @@ export const PATCH = withRateLimit(
         return NextResponse.json(user);
       } catch (err) {
         if (err instanceof UserMutationError) {
-          return NextResponse.json({ error: err.message }, { status: 400 });
+          const status = err.message === "Role not found" ? 404 : 403;
+          return NextResponse.json({ error: err.message }, { status });
         }
         throw err;
       }
@@ -72,11 +81,18 @@ export const DELETE = withRateLimit(
         );
       }
 
-      const deleted = await userService.delete(id);
-      if (!deleted) {
-        return NextResponse.json({ error: "Not found" }, { status: 404 });
+      try {
+        const deleted = await userService.delete(id, session.user.roleLevel);
+        if (!deleted) {
+          return NextResponse.json({ error: "Not found" }, { status: 404 });
+        }
+        return new NextResponse(null, { status: 204 });
+      } catch (err) {
+        if (err instanceof UserMutationError) {
+          return NextResponse.json({ error: err.message }, { status: 403 });
+        }
+        throw err;
       }
-      return new NextResponse(null, { status: 204 });
     }
   ),
   "users-write"
