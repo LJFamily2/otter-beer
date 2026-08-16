@@ -206,7 +206,7 @@ export function PostForm({ mode, postId, initialData }: PostFormProps) {
             serverErrors.push(...body.details.formErrors);
           }
           if (body.details.fieldErrors) {
-            for (const [field, errs] of Object.entries(body.details.fieldErrors)) {
+            for (const [, errs] of Object.entries(body.details.fieldErrors)) {
               if (Array.isArray(errs)) {
                 serverErrors.push(...(errs as string[]));
               }

@@ -19,8 +19,6 @@ import {
   MODULE_KEYS,
   noAccessGrant,
   fullAccessGrant,
-  type ActionGrant,
-  type ModuleKey,
 } from "@/config/permissions";
 import { Types } from "mongoose";
 import { PermissionModel } from "@/models/Permission";

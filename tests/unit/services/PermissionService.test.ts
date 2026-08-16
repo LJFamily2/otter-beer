@@ -5,12 +5,11 @@
  */
 import { Types } from "mongoose";
 import { PermissionModel } from "@/models/Permission";
-import { RoleModel } from "@/models/Role";
-import { PermissionService, PermissionMutationError } from "@/services/PermissionService";
+import { PermissionService } from "@/services/PermissionService";
 import { PermissionRepository } from "@/repositories/PermissionRepository";
 import { RoleRepository } from "@/repositories/RoleRepository";
 import { UserRepository } from "@/repositories/UserRepository";
-import { fullAccessGrant, noAccessGrant } from "@/config/permissions";
+import { fullAccessGrant } from "@/config/permissions";
 
 function assertNoRawCycle(value: unknown): void {
   const seen = new Set<unknown>();

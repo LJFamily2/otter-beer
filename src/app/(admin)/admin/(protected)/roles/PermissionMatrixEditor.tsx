@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Button } from "@/components/ui/Button";
@@ -29,12 +29,6 @@ export function PermissionMatrixEditor({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  // Sync state if initialMatrix prop changes (e.g. on role tab navigation)
-  useEffect(() => {
-    setMatrix(initialMatrix);
-    setSaved(false);
-    setError(null);
-  }, [initialMatrix]);
 
   function toggle(moduleKey: ModuleKey, action: keyof ActionGrant) {
     setSaved(false);
