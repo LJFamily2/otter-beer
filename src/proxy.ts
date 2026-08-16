@@ -36,6 +36,18 @@ function withLocaleHeader(request: Request, locale: string): Headers {
   return headers;
 }
 
+/**
+ * Marks a request as belonging to the admin section, so src/app/not-found.tsx
+ * (which sits above both route trees and can't tell them apart from its own
+ * segment) can render admin-appropriate recovery actions instead of links
+ * back into the public marketing site — see getServerAppSection.ts.
+ */
+function withAdminSectionHeader(request: Request): Headers {
+  const headers = new Headers(request.headers);
+  headers.set("x-app-section", "admin");
+  return headers;
+}
+
 // This only gates "is there a logged-in user" — it deliberately does not
 // check per-module permissions (which admin nav items to show, view/add/
 // edit/delete rights). That's a DB-backed, per-request decision made by the
@@ -48,7 +60,9 @@ export default auth((request) => {
 
   if (pathname.startsWith("/admin")) {
     if (isPublicAdminPath(pathname) || request.auth?.user?.id) {
-      return NextResponse.next();
+      return NextResponse.next({
+        request: { headers: withAdminSectionHeader(request) },
+      });
     }
     const signInUrl = new URL("/admin/dang-nhap", request.url);
     signInUrl.searchParams.set("callbackUrl", pathname);
