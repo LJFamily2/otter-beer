@@ -24,6 +24,7 @@ import {
   SearchIcon,
   CartIcon,
   ChevronDownIcon,
+  ChevronRightIcon,
   BoxIcon,
   UserIcon,
   BarChartIcon,
@@ -470,8 +471,25 @@ export default async function DesignSystemPage({ params }: DesignSystemPageProps
                 }
                 header={{ title: "John Doe", subtitle: "john@example.com" }}
                 items={[
-                  { label: isVi ? "Hồ sơ của tôi" : "My Profile", icon: <UserIcon width={16} height={16} />, href: "#" },
-                  { label: isVi ? "Lịch sử đơn hàng" : "Order History", icon: <ClipboardIcon width={16} height={16} />, href: "#" },
+                  {
+                    label: isVi ? "Hồ sơ của tôi" : "My Profile",
+                    description: isVi ? "Trang hiện tại" : "You're here",
+                    icon: <UserIcon width={16} height={16} />,
+                    href: "#",
+                    active: true,
+                  },
+                  {
+                    label: isVi ? "Lịch sử đơn hàng" : "Order History",
+                    icon: <ClipboardIcon width={16} height={16} />,
+                    href: "#",
+                  },
+                  {
+                    label: isVi ? "Nâng cấp gói" : "Upgrade Plan",
+                    description: isVi ? "Mở khoá tính năng cao cấp" : "Unlock premium features",
+                    trailing: <ChevronRightIcon width={12} height={12} />,
+                    featured: true,
+                    href: "#",
+                  },
                   { label: isVi ? "Cài đặt" : "Settings", icon: <SettingsIcon width={16} height={16} />, href: "#" },
                   { label: isVi ? "Đăng xuất" : "Logout", icon: <LogoutIcon width={16} height={16} />, danger: true, dividerBefore: true, href: "#" },
                 ]}
