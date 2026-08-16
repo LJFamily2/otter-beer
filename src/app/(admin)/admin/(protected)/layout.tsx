@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { auth, signOut } from "@/auth";
 import { MODULE_KEYS } from "@/config/permissions";
-import { NewsBlogIcon, LogoutIcon } from "@/components/admin/icons";
+import { SYSTEM_ROLE_LABELS_VI, type SystemRoleKey } from "@/config/roles";
+import { NewsBlogIcon, LogoutIcon, UsersIcon } from "@/components/admin/icons";
 import { NavSidebar } from "@/components/ui/NavSidebar";
 import { Avatar } from "@/components/ui/Avatar";
 
@@ -25,9 +27,19 @@ export default async function ProtectedAdminLayout({
       label: "Tin tức & Blog",
       icon: <NewsBlogIcon />,
     },
+    {
+      key: MODULE_KEYS.USERS,
+      href: "/admin/users",
+      label: "Người dùng",
+      icon: <UsersIcon />,
+    },
   ].filter((item) => permissions?.[item.key]?.access);
 
   const initial = session?.user?.name?.charAt(0).toUpperCase() ?? "?";
+  const roleKey = session?.user?.roleKey;
+  const roleLabel = roleKey
+    ? (SYSTEM_ROLE_LABELS_VI[roleKey as SystemRoleKey] ?? roleKey)
+    : undefined;
 
   return (
     <div className="flex min-h-dvh bg-surface">
@@ -51,10 +63,18 @@ export default async function ProtectedAdminLayout({
           items={navItems}
           footer={
             <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 px-1 pb-2 pt-1 text-xs text-on-surface-variant">
+              <Link
+                href="/admin/tai-khoan"
+                className="flex items-center gap-2 rounded-md px-1 pb-2 pt-1 text-xs text-on-surface-variant no-underline hover:bg-surface-container"
+              >
                 <Avatar src={session?.user?.image ?? undefined} initials={initial} size="sm" />
-                <span>{session?.user?.name ?? "Không xác định"}</span>
-              </div>
+                <div>
+                  <div className="text-sm font-bold text-on-surface">
+                    {session?.user?.name ?? "Không xác định"}
+                  </div>
+                  {roleLabel ? <div>{roleLabel}</div> : null}
+                </div>
+              </Link>
               <form
                 action={async () => {
                   "use server";
