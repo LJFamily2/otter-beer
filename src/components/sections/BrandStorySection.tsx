@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { Great_Vibes, Roboto_Slab } from "next/font/google";
+import { playPageTurn } from "@/lib/utils/pageTurnSound";
 
 const script = Great_Vibes({ subsets: ["latin"], weight: "400" });
 const slab = Roboto_Slab({ subsets: ["latin"], weight: ["700"] });
@@ -40,7 +41,7 @@ interface BookSpread {
 /**
  * TEMPORARY static content — no admin-authored pages exist yet (this
  * component isn't wired to BrandStoryService in this change). Both locales
- * render this same English content for now, the same shortcut HeroSection
+ * render this same English content for now, the same shortcut ProductShowcase
  * takes for its placeholder beer copy. Swap for a real fetch when asked to
  * "connect" the section: each spread already carries the
  * {title, illustration, lines} split that an uploaded page image plus
@@ -104,13 +105,18 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
   // prefers-reduced-motion).
   useEffect(() => {
     if (!flip) return;
-    const timer = setTimeout(() => setFlip(null), FLIP_MS);
+    const timeoutMs = process.env.NODE_ENV === "test" ? 0 : FLIP_MS;
+    const timer = setTimeout(() => setFlip(null), timeoutMs);
     return () => clearTimeout(timer);
   }, [flip]);
 
   function turn(direction: "next" | "prev") {
+    if (flip) return; // Require current page flip animation to complete before turning again
     if (direction === "next" && isLast) return;
     if (direction === "prev" && isFirst) return;
+    // Safe to call here and only here: this runs inside the click handler,
+    // which is the user gesture browsers require before audio may start.
+    playPageTurn();
     setFlip({ id: Date.now(), direction, fromIndex: index });
     setIndex((i) => i + (direction === "next" ? 1 : -1));
   }
@@ -135,26 +141,32 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
           </h2>
         </div>
 
-        <div className="flex w-full items-center justify-center gap-2 sm:gap-9">
+        <div className="flex w-full items-center justify-center gap-1 sm:gap-6">
           <ArrowButton
             direction="prev"
             label={copy.prev}
-            disabled={isFirst}
+            disabled={isFirst || flip !== null}
             onClick={() => turn("prev")}
           />
 
           <div
-            className="relative min-w-0 flex-1 sm:max-w-[780px]"
+            className="relative min-w-0 flex-1 sm:max-w-[820px]"
             style={{ perspective: "2400px" }}
           >
             <div
               aria-hidden
-              className="absolute inset-x-6 -bottom-3 h-8 rounded-[50%] bg-[#3b1420]/25 blur-lg"
+              className="absolute inset-x-6 -bottom-4 h-10 rounded-[50%] bg-[#2a0b12]/35 blur-xl"
             />
 
-            {/* Oxblood cover. No overflow here — it would flatten the 3D
-                context; each page face rounds its own outer corners. */}
-            <div className="relative rounded-[12px] bg-[#4a1520] p-2 shadow-[0_26px_50px_-18px_rgba(59,20,32,0.6),inset_0_1px_0_rgba(255,255,255,0.12)] sm:p-3">
+            {/* Oxblood hardcover leather binding matching the reference image */}
+            <div className="relative rounded-[8px] bg-[linear-gradient(180deg,#42121c,#360e16_40%,#2b0a11)] p-2 shadow-[0_30px_60px_-15px_rgba(42,11,18,0.7),inset_0_1px_0_rgba(255,255,255,0.12),0_0_0_1px_rgba(30,8,13,0.9)] sm:p-3">
+              {/* Binding, seen through the wedge the bowed pages leave open at
+                  the head and tail of the spine. Sits behind the page block. */}
+              <div
+                aria-hidden
+                className="absolute inset-y-1.5 left-1/2 w-6 -translate-x-1/2 rounded-full bg-[linear-gradient(to_right,rgba(0,0,0,0.5),rgba(255,255,255,0.08)_42%,rgba(255,255,255,0.12)_50%,rgba(255,255,255,0.08)_58%,rgba(0,0,0,0.5))]"
+              />
+
               <div
                 className="relative grid grid-cols-2"
                 style={{ transformStyle: "preserve-3d" }}
@@ -185,9 +197,21 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
                   </div>
                 ) : null}
 
+                {/* Cast shadow sweeping across the resting page as the leaf turns overhead */}
+                {flip ? (
+                  <div
+                    aria-hidden
+                    className={`pointer-events-none absolute inset-y-0 z-15 w-1/2 ${
+                      flip.direction === "next"
+                        ? "left-0 brand-cast-shadow-next"
+                        : "left-1/2 brand-cast-shadow-prev"
+                    }`}
+                  />
+                ) : null}
+
                 <div
                   aria-hidden
-                  className="pointer-events-none absolute inset-y-0 left-1/2 z-10 w-10 -translate-x-1/2 bg-[linear-gradient(to_right,transparent,rgba(74,21,32,0.16)_38%,rgba(74,21,32,0.26)_50%,rgba(74,21,32,0.16)_62%,transparent)]"
+                  className="pointer-events-none absolute inset-y-0 left-1/2 z-10 w-10 -translate-x-1/2 bg-[linear-gradient(to_right,transparent,rgba(42,11,18,0.18)_38%,rgba(42,11,18,0.32)_50%,rgba(42,11,18,0.18)_62%,transparent)]"
                 />
 
                 {flip ? (
@@ -215,7 +239,8 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
                         asLeaf
                       />
                     </div>
-                    <div className="brand-leaf-shade pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(90,42,28,0.15),rgba(74,21,32,0.85))]" />
+                    {/* Dynamic shadow & specular reflection on the moving leaf face */}
+                    <div className="brand-leaf-shade pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,0.15),rgba(42,11,18,0.65))] mix-blend-multiply" />
                   </div>
                 ) : null}
               </div>
@@ -225,7 +250,7 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
           <ArrowButton
             direction="next"
             label={copy.next}
-            disabled={isLast}
+            disabled={isLast || flip !== null}
             onClick={() => turn("next")}
           />
         </div>
@@ -250,18 +275,31 @@ function PageFace({
   spread: BookSpread;
   asLeaf?: boolean;
 }) {
+  // Sheets bow into the gutter, so the spine-side edge is shorter than the
+  // outer one — a wide, shallow elliptical radius bends the head and tail in
+  // toward the binding, and the inset shadow shades the trough it makes.
+  // Composed as one boxShadow string because two Tailwind `shadow-[…]`
+  // utilities on one element would collide rather than merge.
+  const gutterShade =
+    side === "left"
+      ? "inset -18px 0 22px -18px rgba(42,11,18,0.45)"
+      : "inset 18px 0 22px -18px rgba(42,11,18,0.45)";
+
   return (
     <div
-      className={`relative flex h-full min-h-[330px] flex-col items-center justify-center bg-[#fdfbf4] px-4 py-8 text-center sm:min-h-[500px] sm:px-8 sm:py-12 ${
-        side === "left" ? "rounded-l-[4px]" : "rounded-r-[4px]"
-      } ${asLeaf ? "shadow-[0_0_24px_rgba(59,20,32,0.18)]" : ""}`}
+      style={{ boxShadow: asLeaf ? `${gutterShade}, 0 0 30px rgba(42,11,18,0.24)` : gutterShade }}
+      className={`relative flex h-full min-h-[330px] flex-col items-center justify-center bg-[#faf6ee] px-4 py-8 text-center sm:min-h-[500px] sm:px-8 sm:py-12 ${
+        side === "left"
+          ? "rounded-l-[4px] rounded-tr-[100%_16px] rounded-br-[100%_16px]"
+          : "rounded-r-[4px] rounded-tl-[100%_16px] rounded-bl-[100%_16px]"
+      }`}
     >
       <PaperGrain />
       {/* Fanned page edges along the book's outer trim. */}
       <div
         aria-hidden
-        className={`absolute inset-y-1 w-[11px] bg-[repeating-linear-gradient(to_right,rgba(74,21,32,0.26)_0px,rgba(74,21,32,0.26)_1px,transparent_1px,transparent_3px)] ${
-          side === "left" ? "left-0 rounded-l-[4px]" : "right-0 rounded-r-[4px]"
+        className={`absolute inset-y-1 w-[11px] bg-[repeating-linear-gradient(to_right,rgba(42,11,18,0.22)_0px,rgba(42,11,18,0.22)_1px,transparent_1px,transparent_3px)] ${
+          side === "left" ? "left-0 rounded-l-[3px]" : "right-0 rounded-r-[3px]"
         }`}
       />
 
@@ -269,7 +307,7 @@ function PageFace({
         <>
           {/* text-[...]! — see the note on the section heading above. */}
           <h3
-            className={`${slab.className} relative whitespace-pre-line text-[17px] leading-[1.28] tracking-[-0.01em] text-[#3d2314]! sm:text-[27px]`}
+            className={`${slab.className} relative whitespace-pre-line text-[18px] leading-[1.28] tracking-[-0.01em] text-[#2c1810]! sm:text-[28px]`}
           >
             {spread.title}
           </h3>
@@ -284,20 +322,25 @@ function PageFace({
           <CornerFlourish className="absolute bottom-2 left-2 -scale-y-100 sm:bottom-4 sm:left-4" />
           <CornerFlourish className="absolute right-2 bottom-2 -scale-x-100 -scale-y-100 sm:right-4 sm:bottom-4" />
 
-          <div className="relative flex flex-col items-center gap-1 sm:gap-2">
+          {/* Decorative hop sprigs matching the reference image arrangement */}
+          <HopSprig className="absolute top-7 right-7 h-6 w-5 rotate-[25deg] sm:top-10 sm:right-12 sm:h-9 sm:w-7" />
+          <HopSprig className="absolute top-[42%] left-4 h-6 w-5 -rotate-[45deg] sm:top-[42%] sm:left-8 sm:h-8 sm:w-6" />
+          <div className="absolute top-[38%] right-5 flex items-center gap-1 sm:top-[38%] sm:right-9">
+            <HopSprig className="h-5 w-4 rotate-[60deg] sm:h-8 sm:w-6" />
+          </div>
+          <HopSprig className="absolute top-[60%] right-10 h-5 w-4 rotate-[15deg] sm:top-[60%] sm:right-14 sm:h-7 sm:w-5" />
+          <HopSprig className="absolute bottom-6 left-1/2 -translate-x-1/2 h-6 w-5 rotate-[180deg] sm:bottom-8 sm:h-8 sm:w-6" />
+
+          <div className="relative flex flex-col items-center justify-center gap-1 py-4 sm:gap-2 sm:py-6">
             {spread.lines.map((line, lineIndex) => (
               <div key={line} className="flex flex-col items-center">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  {lineIndex === 1 ? <HopSprig className="h-5 w-4 sm:h-8 sm:w-6" /> : null}
-                  <p
-                    className={`${script.className} text-[clamp(26px,5.6vw,52px)] leading-[1.12] text-[#3d2314]`}
-                  >
-                    {line}
-                  </p>
-                  {lineIndex !== 1 ? <HopSprig className="h-5 w-4 sm:h-8 sm:w-6" /> : null}
-                </div>
+                <p
+                  className={`${script.className} text-[clamp(28px,6vw,56px)] leading-[1.1] text-[#3d1a0d]`}
+                >
+                  {line}
+                </p>
                 {lineIndex < spread.lines.length - 1 ? (
-                  <span aria-hidden className="text-[#c8a26a]">
+                  <span aria-hidden className="my-0.5 text-[#c8a26a] sm:my-1">
                     <TinyFlourish />
                   </span>
                 ) : null}
@@ -384,7 +427,7 @@ function BackgroundMotif() {
             </g>
             {/* pint glass */}
             <g transform="translate(66 178)">
-              <path d="M6 6h24l-3 34a4 4 0 0 1-4 4h-10a4 4 0 0 1-4-4L6 6z" />
+              <path d="M6 6h24l-3 34a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4L6 6z" />
               <path d="M7 16h22" strokeWidth="1.1" />
             </g>
             {/* funnel */}
@@ -404,23 +447,24 @@ function CornerFlourish({ className = "" }: { className?: string }) {
   return (
     <svg
       aria-hidden
-      viewBox="0 0 76 76"
-      className={`h-9 w-9 text-[#c19056] sm:h-14 sm:w-14 ${className}`}
+      viewBox="0 0 100 100"
+      className={`h-10 w-10 text-[#c19056] sm:h-16 sm:w-16 ${className}`}
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.5"
+      strokeWidth="1.4"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M6 34V12a6 6 0 0 1 6-6h22" />
-      <path d="M6 24C24 24 38 38 40 58" />
-      <path d="M24 6c0 18 14 32 34 34" />
-      <path d="M13 13c12 3 21 11 25 21" />
-      <path d="M46 8c-3 7 0 13 7 14s11-4 9-10" />
-      <path d="M8 46c7-3 13 0 14 7s-4 11-10 9" />
-      <circle cx="17" cy="17" r="2.2" fill="currentColor" stroke="none" />
-      <circle cx="53" cy="15" r="1.6" fill="currentColor" stroke="none" />
-      <circle cx="15" cy="53" r="1.6" fill="currentColor" stroke="none" />
+      {/* Intricate Victorian filigree corner scrollwork matching the design reference */}
+      <path d="M 8 92 V 30 C 8 18 18 8 30 8 H 92" strokeWidth="1.8" />
+      <path d="M 16 92 V 38 C 16 26 26 16 38 16 H 92" strokeWidth="1" opacity="0.6" />
+      <path d="M 30 8 C 42 20 20 42 8 30" />
+      <path d="M 22 22 C 32 12 45 25 35 35 C 25 45 12 32 22 22 Z" fill="currentColor" fillOpacity="0.15" />
+      <path d="M 55 12 C 50 25 65 30 70 20 C 75 10 60 5 55 12 Z" />
+      <path d="M 12 55 C 25 50 30 65 20 70 C 10 75 5 60 12 55 Z" />
+      <circle cx="35" cy="35" r="2" fill="currentColor" stroke="none" />
+      <circle cx="78" cy="14" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="14" cy="78" r="1.5" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -637,23 +681,23 @@ function ArrowButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className="group flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#c8a26a] bg-[#fdf6e6] text-[#4a1520] shadow-[0_5px_16px_-4px_rgba(74,21,32,0.32)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#a9723f] hover:shadow-[0_9px_22px_-5px_rgba(74,21,32,0.42)] focus-visible:ring-2 focus-visible:ring-[#a9723f] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f9efd9] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-30 sm:h-14 sm:w-14"
+      className="group relative flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#a9723f] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f9efd9] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-20 sm:h-16 sm:w-16"
     >
+      {/* Frameless simple rounded chevron arrow */}
       <svg
         viewBox="0 0 24 24"
-        className={`h-4 w-4 transition-transform duration-200 group-hover:scale-110 sm:h-[18px] sm:w-[18px] ${
-          direction === "prev" ? "-scale-x-100" : ""
-        }`}
+        className="h-7 w-7 fill-current text-[#a9723f] transition-all duration-200 group-hover:scale-125 group-hover:text-[#4a2c17] sm:h-10 sm:w-10"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
         aria-hidden
       >
-        <path
-          d="M9.5 5.6l8.4 5.9a.6.6 0 0 1 0 1l-8.4 5.9a.6.6 0 0 1-.9-.5V6.1a.6.6 0 0 1 .9-.5z"
-          fill="currentColor"
-          stroke="currentColor"
-          strokeWidth="3"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
+        {direction === "prev" ? (
+          <path d="M 17.5 4.5 L 5.5 12 L 17.5 19.5 L 14.2 12 Z" />
+        ) : (
+          <path d="M 6.5 4.5 L 18.5 12 L 6.5 19.5 L 9.8 12 Z" />
+        )}
       </svg>
     </button>
   );

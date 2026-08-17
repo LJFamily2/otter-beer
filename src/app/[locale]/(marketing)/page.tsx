@@ -1,4 +1,4 @@
-import { HeroSection } from "@/components/sections/HeroSection";
+import { ProductShowcase } from "@/components/sections/ProductShowcase";
 import { BrandStorySection } from "@/components/sections/BrandStorySection";
 
 interface HomePageProps {
@@ -9,7 +9,7 @@ export default async function HomePage({ params }: HomePageProps) {
   const { locale } = await params;
   return (
     <>
-      <HeroSection locale={locale} />
+      <ProductShowcase locale={locale} />
       <BrandStorySection locale={locale} />
     </>
   );

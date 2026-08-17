@@ -116,18 +116,55 @@ h4 {
     transform: rotateY(180deg);
   }
 }
-/* Paper darkens as it lifts through the vertical, then flattens out again. */
+/* Paper darkens as it lifts through the vertical, with subtle specular shine. */
 @keyframes brand-leaf-shade {
   0% {
     opacity: 0;
   }
+  40% {
+    opacity: 0.38;
+  }
   50% {
-    opacity: 0.42;
+    opacity: 0.48;
+  }
+  60% {
+    opacity: 0.38;
   }
   100% {
     opacity: 0;
   }
 }
+
+/* Cast shadow sweeping across the resting page as the leaf turns overhead */
+@keyframes brand-cast-shadow-next {
+  0% {
+    opacity: 0;
+    background: linear-gradient(to left, rgba(42, 11, 18, 0.45), transparent 80%);
+  }
+  50% {
+    opacity: 0.55;
+    background: linear-gradient(to left, rgba(42, 11, 18, 0.5), rgba(42, 11, 18, 0.15));
+  }
+  100% {
+    opacity: 0;
+    background: linear-gradient(to right, rgba(42, 11, 18, 0.35), transparent 80%);
+  }
+}
+@keyframes brand-cast-shadow-prev {
+  0% {
+    opacity: 0;
+    background: linear-gradient(to right, rgba(42, 11, 18, 0.45), transparent 80%);
+  }
+  50% {
+    opacity: 0.55;
+    background: linear-gradient(to right, rgba(42, 11, 18, 0.5), rgba(42, 11, 18, 0.15));
+  }
+  100% {
+    opacity: 0;
+    background: linear-gradient(to left, rgba(42, 11, 18, 0.35), transparent 80%);
+  }
+}
+
 .brand-leaf-next {
   animation: brand-leaf-next 780ms cubic-bezier(0.42, 0, 0.28, 1) forwards;
 }
@@ -138,10 +175,18 @@ h4 {
   opacity: 0;
   animation: brand-leaf-shade 780ms ease-in-out forwards;
 }
+.brand-cast-shadow-next {
+  animation: brand-cast-shadow-next 780ms cubic-bezier(0.42, 0, 0.28, 1) forwards;
+}
+.brand-cast-shadow-prev {
+  animation: brand-cast-shadow-prev 780ms cubic-bezier(0.42, 0, 0.28, 1) forwards;
+}
 @media (prefers-reduced-motion: reduce) {
   .brand-leaf-next,
   .brand-leaf-prev,
-  .brand-leaf-shade {
+  .brand-leaf-shade,
+  .brand-cast-shadow-next,
+  .brand-cast-shadow-prev {
     animation-duration: 1ms;
   }
 }
