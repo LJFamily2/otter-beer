@@ -125,7 +125,7 @@ const cspHeader = `
   script-src 'self' 'nonce-{nonce}' https://accounts.google.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com;
-  img-src 'self' data: https://res.cloudinary.com https://lh3.googleusercontent.com;
+  img-src 'self' data: https://lh3.googleusercontent.com;
   connect-src 'self';
   frame-ancestors 'none';
 `;
@@ -193,7 +193,7 @@ Images go straight from the browser to Cloudinary via a short-lived **signed upl
 | File size | Maximum 5MB | **Not** enforced by Cloudinary before storing (no preset-level max-size option, and eval scripts can't reject uploads) — `uploadImage.ts` checks the `bytes` Cloudinary's own upload response reports and calls `POST /api/media/delete` to purge the object immediately if it's over the cap. Accept-then-verify-then-purge, not R2's true pre-write rejection — a small window exists where an oversized file transiently exists in Cloudinary. |
 | Authentication | `add` or `edit` on the `news_blog` module | `POST /api/media/upload-url` and `POST /api/media/delete` check `session.user.permissions` |
 | Object key | Random UUID + date prefix, server-generated | `StorageService.buildImageKey` — the client never chooses the storage path |
-| Storage | Cloudinary, **public CDN delivery** | Not a private bucket — `GET /api/media/public/[...key]` still gates *which* keys are disclosed (published content, or admin preview), but once a key is known its bytes are reachable directly from Cloudinary's CDN, not proxied. Deliberate tradeoff for real edge caching + `f_auto,q_auto` transforms; see the object-key entropy above as the actual secrecy boundary for unpublished drafts. |
+| Storage | Cloudinary | `GET /api/media/public/[...key]` gates *which* keys are disclosed (published content, or admin preview), then fetches the bytes from Cloudinary server-side and streams them — a direct redirect to Cloudinary's CDN was tried but broke every page using `next/image` (its built-in optimizer won't follow redirects, for SSRF-safety), so this route stays the only door rather than exposing raw Cloudinary URLs to the browser. |
 
 R2's presigned POST enforced type/size at the storage layer itself before ever accepting the bytes. Cloudinary only gets type enforcement that way (via the signed `upload_preset`) — size enforcement moved to an app-level post-upload check, the one guarantee this migration weakened rather than preserved.
 

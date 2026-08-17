@@ -18,13 +18,14 @@ export interface CloudinaryConfig {
 }
 
 /**
- * Cloudinary (S3-incompatible, unlike R2) — images are delivered straight
- * from Cloudinary's CDN via the media/public route's redirect, not proxied
- * through this app. The bucket-equivalent is public, so "privacy" for
- * unpublished drafts rests on the object key being an unguessable UUID
- * (StorageService.buildImageKey), same trust model most CDN-image setups
- * use — a deliberate tradeoff for real edge caching + f_auto/q_auto
- * transforms, see the discussion that picked this over proxying.
+ * Cloudinary (S3-incompatible, unlike R2) — the bucket-equivalent is
+ * public, but the media/public route proxies every read through this app
+ * rather than exposing res.cloudinary.com URLs to the browser (a direct
+ * redirect was tried and broke next/image, see that route's docstring).
+ * getObject() still fetches through createViewUrl()'s f_auto,q_auto
+ * delivery URL, so the app's own server gets Cloudinary's format/quality
+ * optimization on the origin fetch even though the browser no longer talks
+ * to Cloudinary directly.
  *
  * Cloudinary's public_id must not include the file extension (it appends
  * the detected format itself at delivery), but StorageService's key format
