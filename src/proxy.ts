@@ -83,5 +83,9 @@ export default auth((request) => {
 });
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  // `images` exempts plain files served straight from `public/` (e.g.
+  // /images/*.jpg) — without this they get rewritten to /vi/images/*.jpg
+  // by the locale-routing fallback below and 404, since that rewrite only
+  // makes sense for actual [locale]-segment page routes, not static assets.
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|images).*)"],
 };

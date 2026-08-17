@@ -93,3 +93,13 @@ export function ShieldIcon(props: SVGProps<SVGSVGElement>) {
     </IconBase>
   );
 }
+
+export function BeerIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <rect x="3.5" y="6" width="9.5" height="11.5" rx="1.2" />
+      <path d="M13 8.7h1.8a1.7 1.7 0 011.7 1.7v2a1.7 1.7 0 01-1.7 1.7H13" />
+      <path d="M3.5 9.7h9.5" />
+    </IconBase>
+  );
+}

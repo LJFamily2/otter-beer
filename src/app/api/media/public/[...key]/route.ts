@@ -3,8 +3,12 @@ import { auth } from "@/auth";
 import { MODULE_KEYS } from "@/config/permissions";
 import { storageService } from "@/lib/storage/StorageService";
 import { BlogPostRepository } from "@/repositories/BlogPostRepository";
+import { BeerRepository } from "@/repositories/BeerRepository";
+
+export const dynamic = "force-dynamic";
 
 const blogPostRepository = new BlogPostRepository();
+const beerRepository = new BeerRepository();
 
 interface RouteParams {
   params: Promise<{ key: string[] }>;
@@ -15,9 +19,10 @@ interface RouteParams {
  * (see docs/security.md), but this route needs to serve two different
  * audiences the same way:
  *  1. Public visitors: only images actually referenced by a *published*
- *     post (fast, cacheable, crawlable — required for SEO/social previews).
- *  2. Logged-in admins with news_blog view access: any key, so the Tiptap
- *     editor can preview inline/cover images on a post that isn't
+ *     post/beer (fast, cacheable, crawlable — required for SEO/social
+ *     previews).
+ *  2. Logged-in admins with news_blog or beers view access: any key, so
+ *     the Tiptap editor / BeerForm can preview images that aren't
  *     published yet.
  * Everything else (orphaned uploads, guesses) 404s either way.
  */
@@ -27,12 +32,16 @@ export async function GET(_request: NextRequest, context: RouteParams) {
 
   const session = await auth();
   const canPreviewAsAdmin = Boolean(
-    session?.user?.permissions?.[MODULE_KEYS.NEWS_BLOG]?.view
+    session?.user?.permissions?.[MODULE_KEYS.NEWS_BLOG]?.view ||
+      session?.user?.permissions?.[MODULE_KEYS.BEERS]?.view
   );
 
   if (!canPreviewAsAdmin) {
-    const visible = await blogPostRepository.isKeyPubliclyVisible(key);
-    if (!visible) {
+    const [visibleAsPost, visibleAsBeer] = await Promise.all([
+      blogPostRepository.isKeyPubliclyVisible(key),
+      beerRepository.isKeyPubliclyVisible(key),
+    ]);
+    if (!visibleAsPost && !visibleAsBeer) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
   }

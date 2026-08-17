@@ -1,7 +1,10 @@
-export default function HomePage() {
-  return (
-    <main>
-      <h1>Otter Beer 🦦</h1>
-    </main>
-  );
+import { HeroSection } from "@/components/sections/HeroSection";
+
+interface HomePageProps {
+  params: Promise<{ locale: string }>;
+}
+
+export default async function HomePage({ params }: HomePageProps) {
+  const { locale } = await params;
+  return <HeroSection locale={locale} />;
 }
