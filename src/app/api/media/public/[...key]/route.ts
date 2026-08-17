@@ -4,11 +4,13 @@ import { MODULE_KEYS } from "@/config/permissions";
 import { storageService } from "@/lib/storage/StorageService";
 import { BlogPostRepository } from "@/repositories/BlogPostRepository";
 import { BeerRepository } from "@/repositories/BeerRepository";
+import { BrandStoryRepository } from "@/repositories/BrandStoryRepository";
 
 export const dynamic = "force-dynamic";
 
 const blogPostRepository = new BlogPostRepository();
 const beerRepository = new BeerRepository();
+const brandStoryRepository = new BrandStoryRepository();
 
 interface RouteParams {
   params: Promise<{ key: string[] }>;
@@ -44,15 +46,17 @@ export async function GET(_request: NextRequest, context: RouteParams) {
   const session = await auth();
   const canPreviewAsAdmin = Boolean(
     session?.user?.permissions?.[MODULE_KEYS.NEWS_BLOG]?.view ||
-      session?.user?.permissions?.[MODULE_KEYS.BEERS]?.view
+      session?.user?.permissions?.[MODULE_KEYS.BEERS]?.view ||
+      session?.user?.permissions?.[MODULE_KEYS.BRAND_STORY]?.view
   );
 
   if (!canPreviewAsAdmin) {
-    const [visibleAsPost, visibleAsBeer] = await Promise.all([
+    const [visibleAsPost, visibleAsBeer, visibleAsBrandStoryPage] = await Promise.all([
       blogPostRepository.isKeyPubliclyVisible(key),
       beerRepository.isKeyPubliclyVisible(key),
+      brandStoryRepository.isKeyPubliclyVisible(key),
     ]);
-    if (!visibleAsPost && !visibleAsBeer) {
+    if (!visibleAsPost && !visibleAsBeer && !visibleAsBrandStoryPage) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
   }

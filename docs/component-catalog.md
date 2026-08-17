@@ -36,6 +36,8 @@ VI-only, session-gated by `src/proxy.ts`, permission-gated per-page via
 | `/admin/beers/moi` | `(protected)/beers/moi/page.tsx` | Create product — renders `BeerForm` |
 | `/admin/beers/[id]/sua` | `(protected)/beers/[id]/sua/page.tsx` | Edit product — renders `BeerForm` |
 | — | `(protected)/beers/BeerForm.tsx` | Shared create/edit form — `Breadcrumbs`, `Tabs` (locale switcher: dòng bia/tiêu đề/mô tả), ABV/IBU inputs, `ImageUploadField`, shop/find-locally links, `Checkbox` for "nổi bật" |
+| `/admin/brand-story` | `(protected)/brand-story/page.tsx` | Câu chuyện thương hiệu — singleton editor (not per-item CRUD) for the homepage flipbook's ordered page list; renders `BrandStoryForm` |
+| — | `(protected)/brand-story/BrandStoryForm.tsx` | Whole-list editor — `Tabs` (locale switcher), add/remove/reorder page cards, each with `ImageUploadField` + title/caption inputs; `PUT /api/brand-story` replaces the whole `pages` array in one save (mirrors `PermissionMatrixEditor`'s whole-resource-replace pattern, not Beer's per-item PATCH) |
 | `/admin/users` | `(protected)/users/page.tsx` | User Management — KPI cards (total/active/inactive), `Breadcrumbs`, role `Tabs` + search (client-side, `filterUsers()`), `DataTable`. Role dropdowns (invite/edit) are pre-filtered to roles the actor outranks — see `docs/rbac.md`'s "Role hierarchy" |
 | — | `(protected)/users/UsersDirectory.tsx` | Client filtering/table piece of the Users page — a row whose user currently holds a peer/superior role shows "Vai trò cao hơn" instead of edit/delete actions |
 | — | `(protected)/users/AddUserModal.tsx` | Invite a user — `Modal` + `Input`/`Select`, `POST /api/users` |
@@ -59,7 +61,7 @@ Bilingual (vi default with no prefix, en under `/en`), public, SEO-tracked
 
 | Route | File | Description |
 |---|---|---|
-| `/` | `page.tsx` | Homepage — renders `HeroSection` (ported from Figma node 28:877, "Main Hero Section" / the "Production List" section) |
+| `/` | `page.tsx` | Homepage — renders `HeroSection` (ported from Figma node 28:877, "Main Hero Section" / the "Production List" section), then `BrandStorySection` |
 | `/blog` | `blog/page.tsx` | Public blog list ("The Otter Chronicles" / "Biên Niên Sử Otter") — hero, featured post, tag filter, pagination |
 | `/blog/[slug]` | `blog/[slug]/page.tsx` | Public blog detail — article body, author card, recent posts, topics, JSON-LD |
 | `/design-system` | `design-system/page.tsx` | Live showcase of every `src/components/ui/*` component, grouped like the Figma "Coastal Premium UI Library" batches |
@@ -93,6 +95,7 @@ Homepage/public-page building blocks, one Figma frame per component.
 | Component | File | Description |
 |---|---|---|
 | `HeroSection` | `HeroSection.tsx` | Homepage hero ("Production List" section, Figma node 28:877) — fetches `beerService.getFeaturedPublished()` directly (Server Component, no API round trip); renders `null` until a beer is marked both `isFeatured` and `published` |
+| `BrandStorySection` | `BrandStorySection.tsx` | Homepage "brand story" flipbook — no Figma frame exists for this (self-designed, original SVG illustrations/decorative motifs, no source art files). Client Component (page-turn interaction); currently renders TEMPORARY hardcoded placeholder pages, not yet wired to `brandStoryService.getPublished()` — swap when asked to "connect" the section, same pattern as `HeroSection`'s pending Beer wiring |
 
 ## Admin-only components (`src/components/admin/`)
 

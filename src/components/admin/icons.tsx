@@ -94,6 +94,16 @@ export function ShieldIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function BrandStoryIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <IconBase {...props}>
+      <path d="M10 5.2C8.3 4 6 3.5 3.5 3.5v11.8c2.5 0 4.8.5 6.5 1.7" />
+      <path d="M10 5.2c1.7-1.2 4-1.7 6.5-1.7v11.8c-2.5 0-4.8.5-6.5 1.7" />
+      <path d="M10 5.2V17" />
+    </IconBase>
+  );
+}
+
 export function BeerIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <IconBase {...props}>
