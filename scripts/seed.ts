@@ -33,11 +33,13 @@ type DefaultMatrix = Partial<Record<ModuleKey, ActionGrant>>;
 const DEFAULT_MATRICES: Record<SystemRoleKey, DefaultMatrix> = {
   [SYSTEM_ROLE_KEYS.SUPER_ADMIN]: {
     [MODULE_KEYS.NEWS_BLOG]: fullAccessGrant(),
+    [MODULE_KEYS.BEERS]: fullAccessGrant(),
     [MODULE_KEYS.USERS]: fullAccessGrant(),
     [MODULE_KEYS.ROLES_PERMISSIONS]: fullAccessGrant(),
   },
   [SYSTEM_ROLE_KEYS.ADMIN]: {
     [MODULE_KEYS.NEWS_BLOG]: fullAccessGrant(),
+    [MODULE_KEYS.BEERS]: fullAccessGrant(),
     [MODULE_KEYS.USERS]: {
       ...noAccessGrant(),
       access: true,
@@ -51,6 +53,12 @@ const DEFAULT_MATRICES: Record<SystemRoleKey, DefaultMatrix> = {
   },
   [SYSTEM_ROLE_KEYS.OFFICE_MEMBER]: {
     [MODULE_KEYS.NEWS_BLOG]: {
+      ...noAccessGrant(),
+      access: true,
+      view: true,
+      add: true,
+    },
+    [MODULE_KEYS.BEERS]: {
       ...noAccessGrant(),
       access: true,
       view: true,

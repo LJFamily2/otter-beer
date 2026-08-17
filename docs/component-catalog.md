@@ -32,6 +32,10 @@ VI-only, session-gated by `src/proxy.ts`, permission-gated per-page via
 | `/admin/blog/moi` | `(protected)/blog/moi/page.tsx` | Create post — renders `PostForm` (Tiptap editor) |
 | `/admin/blog/[id]/sua` | `(protected)/blog/[id]/sua/page.tsx` | Edit post — renders `PostForm` (Tiptap editor) |
 | — | `(protected)/blog/PostForm.tsx` | Shared create/edit form — `Breadcrumbs`, `Tabs` (locale switcher), `Input`/`Textarea`/`Select` for every field |
+| `/admin/beers` | `(protected)/beers/page.tsx` | Sản phẩm bia (product) list — `DataTable` with dòng bia/thông số/nổi bật/trạng thái columns; at most one beer can be `isFeatured` (enforced in `BeerService`) — that one, if also `published`, is what renders on the public homepage hero |
+| `/admin/beers/moi` | `(protected)/beers/moi/page.tsx` | Create product — renders `BeerForm` |
+| `/admin/beers/[id]/sua` | `(protected)/beers/[id]/sua/page.tsx` | Edit product — renders `BeerForm` |
+| — | `(protected)/beers/BeerForm.tsx` | Shared create/edit form — `Breadcrumbs`, `Tabs` (locale switcher: dòng bia/tiêu đề/mô tả), ABV/IBU inputs, `ImageUploadField`, shop/find-locally links, `Checkbox` for "nổi bật" |
 | `/admin/users` | `(protected)/users/page.tsx` | User Management — KPI cards (total/active/inactive), `Breadcrumbs`, role `Tabs` + search (client-side, `filterUsers()`), `DataTable`. Role dropdowns (invite/edit) are pre-filtered to roles the actor outranks — see `docs/rbac.md`'s "Role hierarchy" |
 | — | `(protected)/users/UsersDirectory.tsx` | Client filtering/table piece of the Users page — a row whose user currently holds a peer/superior role shows "Vai trò cao hơn" instead of edit/delete actions |
 | — | `(protected)/users/AddUserModal.tsx` | Invite a user — `Modal` + `Input`/`Select`, `POST /api/users` |
@@ -45,8 +49,8 @@ VI-only, session-gated by `src/proxy.ts`, permission-gated per-page via
 | — | `(protected)/roles/DeleteRoleButton.tsx` | Delete a non-system role — `DELETE /api/roles/[id]` (system roles can't be deleted; the button is hidden for them, and for any role at or above the actor's rank) |
 | — | `(protected)/layout.tsx` | Admin shell — `NavSidebar` (route-aware active state) + `Avatar`; footer profile block links to `/admin/tai-khoan`, trimmed to modules that actually have UI |
 
-**Reserved, not yet built** (empty `.gitkeep` scaffold folders — a future
-module, not a bug if you find nothing there): `admin/beers/`, `admin/events/`.
+**Reserved, not yet built** (empty `.gitkeep` scaffold folder — a future
+module, not a bug if you find nothing there): `admin/events/`.
 
 ## Pages & routes — Marketing (`src/app/[locale]/(marketing)/`)
 
@@ -55,7 +59,7 @@ Bilingual (vi default with no prefix, en under `/en`), public, SEO-tracked
 
 | Route | File | Description |
 |---|---|---|
-| `/` | `page.tsx` | Homepage — stub, not yet designed |
+| `/` | `page.tsx` | Homepage — renders `HeroSection` (ported from Figma node 28:877, "Main Hero Section" / the "Production List" section) |
 | `/blog` | `blog/page.tsx` | Public blog list ("The Otter Chronicles" / "Biên Niên Sử Otter") — hero, featured post, tag filter, pagination |
 | `/blog/[slug]` | `blog/[slug]/page.tsx` | Public blog detail — article body, author card, recent posts, topics, JSON-LD |
 | `/design-system` | `design-system/page.tsx` | Live showcase of every `src/components/ui/*` component, grouped like the Figma "Coastal Premium UI Library" batches |
@@ -82,6 +86,14 @@ Breadcrumbs, Tabs, Pagination, NavSidebar, TopNavBar, DropdownMenu, Modal,
 Alert, Toast, Tooltip, Spinner, Skeleton, plus a shared generic icon set
 (`icons.tsx`).
 
+## Marketing section components (`src/components/sections/`)
+
+Homepage/public-page building blocks, one Figma frame per component.
+
+| Component | File | Description |
+|---|---|---|
+| `HeroSection` | `HeroSection.tsx` | Homepage hero ("Production List" section, Figma node 28:877) — fetches `beerService.getFeaturedPublished()` directly (Server Component, no API round trip); renders `null` until a beer is marked both `isFeatured` and `published` |
+
 ## Admin-only components (`src/components/admin/`)
 
 Not part of the general-purpose UI kit — admin-specific pieces that assume
@@ -91,7 +103,7 @@ the admin shell/session context.
 |---|---|---|
 | `RichTextEditor` | `RichTextEditor.tsx` | Tiptap WYSIWYG editor used by the blog post form |
 | `ImageUploadField` | `ImageUploadField.tsx` | R2 signed-upload image field (cover image, inline post images) |
-| `icons.tsx` | `icons.tsx` | Admin-specific icon set (news/blog, users, shield, logout, plus, search, edit, trash) |
+| `icons.tsx` | `icons.tsx` | Admin-specific icon set (news/blog, beer, users, shield, logout, plus, search, edit, trash) |
 | `classNames.ts` | `classNames.ts` | Shared Tailwind class strings reused across admin server/client component boundaries |
 
 **Retired**: `AdminNavLink.tsx` — superseded by `src/components/ui/NavSidebar.tsx`'s

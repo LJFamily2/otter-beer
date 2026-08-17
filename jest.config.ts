@@ -50,4 +50,27 @@ const config: Config = {
   coverageReporters: ["text", "lcov", "html"],
 };
 
-export default createJestConfig(config);
+// bson (a mongodb/mongoose dependency) ships an ESM-only build; Jest's
+// default ignores all of node_modules for transform, so `require()`-ing it
+// directly threw "Unexpected token 'export'" — but only in test files that
+// happened to be the first in their worker to touch the mongoose -> mongodb
+// -> bson chain, since a prior successful require in the same worker could
+// otherwise leave a transformed/cached copy behind. next/jest computes its
+// own pnpm-aware transformIgnorePatterns and fully overwrites whatever's
+// passed into `config` above (confirmed via `jest --showConfig`), so the fix
+// has to patch the already-resolved patterns after the fact — splicing
+// "bson" into the same whitelist next/jest already carves out for `geist`
+// rather than adding an independent pattern (transformIgnorePatterns entries
+// are OR'd for exclusion, so a second pattern can't "un-ignore" what the
+// first already matches).
+async function resolveJestConfig() {
+  const resolved = await createJestConfig(config)();
+  return {
+    ...resolved,
+    transformIgnorePatterns: (resolved.transformIgnorePatterns ?? []).map((pattern) =>
+      pattern.replace(/geist/g, "geist|bson")
+    ),
+  };
+}
+
+export default resolveJestConfig;

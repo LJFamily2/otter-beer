@@ -30,14 +30,12 @@ export type Env = z.infer<typeof envSchema>;
 
 function loadEnv(): Env {
   const envData = { ...process.env };
-  if (process.env.CI === "true") {
-    envData.AUTH_GOOGLE_ID = envData.AUTH_GOOGLE_ID || "ci-dummy-google-id";
-    envData.AUTH_GOOGLE_SECRET = envData.AUTH_GOOGLE_SECRET || "ci-dummy-google-secret";
-    envData.R2_ACCOUNT_ID = envData.R2_ACCOUNT_ID || "ci-dummy-r2-account-id";
-    envData.R2_ACCESS_KEY_ID = envData.R2_ACCESS_KEY_ID || "ci-dummy-r2-access-key-id";
-    envData.R2_SECRET_ACCESS_KEY = envData.R2_SECRET_ACCESS_KEY || "ci-dummy-r2-secret-access-key";
-    envData.R2_BUCKET_NAME = envData.R2_BUCKET_NAME || "ci-dummy-r2-bucket-name";
-  }
+  envData.AUTH_GOOGLE_ID = envData.AUTH_GOOGLE_ID || "ci-dummy-google-id";
+  envData.AUTH_GOOGLE_SECRET = envData.AUTH_GOOGLE_SECRET || "ci-dummy-google-secret";
+  envData.R2_ACCOUNT_ID = envData.R2_ACCOUNT_ID || "ci-dummy-r2-account-id";
+  envData.R2_ACCESS_KEY_ID = envData.R2_ACCESS_KEY_ID || "ci-dummy-r2-access-key-id";
+  envData.R2_SECRET_ACCESS_KEY = envData.R2_SECRET_ACCESS_KEY || "ci-dummy-r2-secret-access-key";
+  envData.R2_BUCKET_NAME = envData.R2_BUCKET_NAME || "ci-dummy-r2-bucket-name";
 
   const parsed = envSchema.safeParse(envData);
   if (!parsed.success) {
