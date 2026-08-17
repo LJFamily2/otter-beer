@@ -45,6 +45,19 @@ describe("BrandStorySection", () => {
     expect(screen.getByRole("button", { name: "Trang trước" })).toBeEnabled();
   });
 
+  it("exposes only the current spread to the a11y tree while a page is turning", async () => {
+    const user = userEvent.setup();
+    render(<BrandStorySection locale="vi" />);
+
+    // The turn animation layers (outgoing page + flipping leaf) render the
+    // adjacent spreads' markup, but are aria-hidden — a screen reader must
+    // still see exactly one spread, the current one.
+    await user.click(screen.getByRole("button", { name: "Trang sau" }));
+
+    expect(screen.getAllByRole("heading", { name: /Hops & Malt/ })).toHaveLength(1);
+    expect(screen.queryByRole("heading", { name: /Copper Kettle/ })).not.toBeInTheDocument();
+  });
+
   it("does not advance past the last spread", async () => {
     const user = userEvent.setup();
     render(<BrandStorySection locale="vi" />);
