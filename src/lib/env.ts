@@ -17,11 +17,19 @@ const envSchema = z.object({
   // since the user allowlist starts empty. Safe to unset after first login.
   FIRST_SUPER_ADMIN_EMAIL: z.string().email().optional(),
 
-  // Cloudflare R2 (S3-compatible, private bucket + signed URLs)
-  R2_ACCOUNT_ID: z.string().min(1),
-  R2_ACCESS_KEY_ID: z.string().min(1),
-  R2_SECRET_ACCESS_KEY: z.string().min(1),
-  R2_BUCKET_NAME: z.string().min(1),
+  // Cloudinary (image storage — see src/lib/storage/CloudinaryStorageProvider.ts)
+  CLOUDINARY_CLOUD_NAME: z.string().min(1),
+  CLOUDINARY_API_KEY: z.string().min(1),
+  CLOUDINARY_API_SECRET: z.string().min(1),
+  CLOUDINARY_UPLOAD_PRESET: z.string().min(1),
+
+  // Cloudflare R2 (S3-compatible) — not the active provider (see
+  // StorageService.ts), kept optional so R2StorageProvider stays available
+  // to switch back to without every env var below suddenly being required.
+  R2_ACCOUNT_ID: z.string().optional(),
+  R2_ACCESS_KEY_ID: z.string().optional(),
+  R2_SECRET_ACCESS_KEY: z.string().optional(),
+  R2_BUCKET_NAME: z.string().optional(),
 
   NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:3000"),
 });
@@ -32,10 +40,10 @@ function loadEnv(): Env {
   const envData = { ...process.env };
   envData.AUTH_GOOGLE_ID = envData.AUTH_GOOGLE_ID || "ci-dummy-google-id";
   envData.AUTH_GOOGLE_SECRET = envData.AUTH_GOOGLE_SECRET || "ci-dummy-google-secret";
-  envData.R2_ACCOUNT_ID = envData.R2_ACCOUNT_ID || "ci-dummy-r2-account-id";
-  envData.R2_ACCESS_KEY_ID = envData.R2_ACCESS_KEY_ID || "ci-dummy-r2-access-key-id";
-  envData.R2_SECRET_ACCESS_KEY = envData.R2_SECRET_ACCESS_KEY || "ci-dummy-r2-secret-access-key";
-  envData.R2_BUCKET_NAME = envData.R2_BUCKET_NAME || "ci-dummy-r2-bucket-name";
+  envData.CLOUDINARY_CLOUD_NAME = envData.CLOUDINARY_CLOUD_NAME || "ci-dummy-cloudinary-cloud-name";
+  envData.CLOUDINARY_API_KEY = envData.CLOUDINARY_API_KEY || "ci-dummy-cloudinary-api-key";
+  envData.CLOUDINARY_API_SECRET = envData.CLOUDINARY_API_SECRET || "ci-dummy-cloudinary-api-secret";
+  envData.CLOUDINARY_UPLOAD_PRESET = envData.CLOUDINARY_UPLOAD_PRESET || "ci-dummy-cloudinary-upload-preset";
 
   const parsed = envSchema.safeParse(envData);
   if (!parsed.success) {

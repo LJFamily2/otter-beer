@@ -4,7 +4,7 @@ import type {
   PresignedUpload,
   StoredObject,
 } from "./IStorageProvider";
-import { R2StorageProvider } from "./R2StorageProvider";
+import { CloudinaryStorageProvider } from "./CloudinaryStorageProvider";
 
 import {
   AllowedImageContentType,
@@ -61,4 +61,6 @@ export class StorageService {
   }
 }
 
-export const storageService = new StorageService(new R2StorageProvider());
+// Swapping providers later (or reverting to R2StorageProvider) means
+// changing only this line — see IStorageProvider.
+export const storageService = new StorageService(new CloudinaryStorageProvider());
