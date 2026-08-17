@@ -93,40 +93,55 @@ h4 {
   color: var(--color-primary);
 }
 
-/* Brand Story flipbook page-turn — see src/components/sections/BrandStorySection.tsx.
-   Each nav re-mounts the spread (React `key` change), which restarts the
-   keyframe animation automatically — no JS animation-end bookkeeping needed. */
-@keyframes page-flip-next {
+/* Brand Story page turn — see src/components/sections/BrandStorySection.tsx.
+   A single half-width leaf hinged at the gutter swings a full 180°, carrying
+   the outgoing page on its front face and the incoming one (pre-rotated) on
+   its back. Each nav re-mounts the leaf via a React `key` change, which
+   restarts these keyframes; the component clears the leaf on a timer, so
+   nothing here needs an animationend listener. Keep the 780ms in sync with
+   FLIP_MS in that file. */
+@keyframes brand-leaf-next {
   from {
-    transform: rotateY(-38deg);
-    opacity: 0.4;
+    transform: rotateY(0deg);
   }
   to {
-    transform: rotateY(0deg);
-    opacity: 1;
+    transform: rotateY(-180deg);
   }
 }
-@keyframes page-flip-prev {
+@keyframes brand-leaf-prev {
   from {
-    transform: rotateY(38deg);
-    opacity: 0.4;
+    transform: rotateY(0deg);
   }
   to {
-    transform: rotateY(0deg);
-    opacity: 1;
+    transform: rotateY(180deg);
   }
 }
-.animate-page-flip-next {
-  transform-origin: left center;
-  animation: page-flip-next 550ms cubic-bezier(0.4, 0.15, 0.2, 1);
+/* Paper darkens as it lifts through the vertical, then flattens out again. */
+@keyframes brand-leaf-shade {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.42;
+  }
+  100% {
+    opacity: 0;
+  }
 }
-.animate-page-flip-prev {
-  transform-origin: right center;
-  animation: page-flip-prev 550ms cubic-bezier(0.4, 0.15, 0.2, 1);
+.brand-leaf-next {
+  animation: brand-leaf-next 780ms cubic-bezier(0.42, 0, 0.28, 1) forwards;
+}
+.brand-leaf-prev {
+  animation: brand-leaf-prev 780ms cubic-bezier(0.42, 0, 0.28, 1) forwards;
+}
+.brand-leaf-shade {
+  opacity: 0;
+  animation: brand-leaf-shade 780ms ease-in-out forwards;
 }
 @media (prefers-reduced-motion: reduce) {
-  .animate-page-flip-next,
-  .animate-page-flip-prev {
-    animation: none;
+  .brand-leaf-next,
+  .brand-leaf-prev,
+  .brand-leaf-shade {
+    animation-duration: 1ms;
   }
 }
