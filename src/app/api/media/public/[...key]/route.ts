@@ -15,9 +15,9 @@ interface RouteParams {
 }
 
 /**
- * Image endpoint behind a dual gate — the R2 bucket itself stays private
- * (see docs/security.md), but this route needs to serve two different
- * audiences the same way:
+ * Image endpoint behind a dual gate — access control needs to serve two
+ * different audiences the same way regardless of which storage provider is
+ * active:
  *  1. Public visitors: only images actually referenced by a *published*
  *     post/beer (fast, cacheable, crawlable — required for SEO/social
  *     previews).
@@ -25,6 +25,12 @@ interface RouteParams {
  *     the Tiptap editor / BeerForm can preview images that aren't
  *     published yet.
  * Everything else (orphaned uploads, guesses) 404s either way.
+ *
+ * Once past the gate, this redirects to the provider's own view URL rather
+ * than fetching + streaming the bytes itself — with Cloudinary that means
+ * the browser's actual image request goes straight to Cloudinary's CDN
+ * (edge caching, f_auto/q_auto transforms) instead of round-tripping
+ * through this server on every load.
  */
 export async function GET(_request: NextRequest, context: RouteParams) {
   const { key: keyParts } = await context.params;
@@ -46,18 +52,16 @@ export async function GET(_request: NextRequest, context: RouteParams) {
     }
   }
 
-  const object = await storageService.getObject(key);
-  if (!object) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-
-  return new NextResponse(Buffer.from(object.body), {
+  const url = await storageService.getViewUrl(key);
+  return NextResponse.redirect(url, {
+    status: 302,
     headers: {
-      "Content-Type": object.contentType,
       // Object keys are per-upload random UUIDs (see StorageService.buildImageKey)
-      // and never overwritten, so a key's content never changes — safe to
-      // cache aggressively at the browser and any CDN in front of this route.
-      "Cache-Control": "public, max-age=31536000, immutable",
+      // and never overwritten, so a key's content never changes — but the
+      // redirect target itself could (e.g. a provider that hands back
+      // short-lived signed URLs), so this caches the *gate decision* for an
+      // hour rather than claiming the target is immutable.
+      "Cache-Control": "public, max-age=3600",
     },
   });
 }
