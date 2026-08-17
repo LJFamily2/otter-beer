@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { Great_Vibes, Roboto_Slab } from "next/font/google";
+import { playPageTurn } from "@/lib/utils/pageTurnSound";
 
 const script = Great_Vibes({ subsets: ["latin"], weight: "400" });
 const slab = Roboto_Slab({ subsets: ["latin"], weight: ["700"] });
@@ -111,6 +112,9 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
   function turn(direction: "next" | "prev") {
     if (direction === "next" && isLast) return;
     if (direction === "prev" && isFirst) return;
+    // Safe to call here and only here: this runs inside the click handler,
+    // which is the user gesture browsers require before audio may start.
+    playPageTurn();
     setFlip({ id: Date.now(), direction, fromIndex: index });
     setIndex((i) => i + (direction === "next" ? 1 : -1));
   }
@@ -152,9 +156,16 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
               className="absolute inset-x-6 -bottom-3 h-8 rounded-[50%] bg-[#3b1420]/25 blur-lg"
             />
 
-            {/* Oxblood cover. No overflow here — it would flatten the 3D
+            {/* Oxblood hardcover. No overflow here — it would flatten the 3D
                 context; each page face rounds its own outer corners. */}
-            <div className="relative rounded-[12px] bg-[#4a1520] p-2 shadow-[0_26px_50px_-18px_rgba(59,20,32,0.6),inset_0_1px_0_rgba(255,255,255,0.12)] sm:p-3">
+            <div className="relative rounded-[13px] bg-[linear-gradient(180deg,#5c1b28,#4a1520_38%,#3b1119)] p-2.5 shadow-[0_28px_54px_-18px_rgba(59,20,32,0.62),inset_0_1px_0_rgba(255,255,255,0.16),inset_0_0_0_1px_rgba(255,255,255,0.07)] sm:p-3.5">
+              {/* Binding, seen through the wedge the bowed pages leave open at
+                  the head and tail of the spine. Sits behind the page block. */}
+              <div
+                aria-hidden
+                className="absolute inset-y-2 left-1/2 w-7 -translate-x-1/2 rounded-full bg-[linear-gradient(to_right,rgba(0,0,0,0.45),rgba(255,255,255,0.09)_42%,rgba(255,255,255,0.13)_50%,rgba(255,255,255,0.09)_58%,rgba(0,0,0,0.45))]"
+              />
+
               <div
                 className="relative grid grid-cols-2"
                 style={{ transformStyle: "preserve-3d" }}
@@ -250,11 +261,24 @@ function PageFace({
   spread: BookSpread;
   asLeaf?: boolean;
 }) {
+  // Sheets bow into the gutter, so the spine-side edge is shorter than the
+  // outer one — a wide, shallow elliptical radius bends the head and tail in
+  // toward the binding, and the inset shadow shades the trough it makes.
+  // Composed as one boxShadow string because two Tailwind `shadow-[…]`
+  // utilities on one element would collide rather than merge.
+  const gutterShade =
+    side === "left"
+      ? "inset -18px 0 22px -18px rgba(74,21,32,0.5)"
+      : "inset 18px 0 22px -18px rgba(74,21,32,0.5)";
+
   return (
     <div
+      style={{ boxShadow: asLeaf ? `${gutterShade}, 0 0 30px rgba(59,20,32,0.24)` : gutterShade }}
       className={`relative flex h-full min-h-[330px] flex-col items-center justify-center bg-[#fdfbf4] px-4 py-8 text-center sm:min-h-[500px] sm:px-8 sm:py-12 ${
-        side === "left" ? "rounded-l-[4px]" : "rounded-r-[4px]"
-      } ${asLeaf ? "shadow-[0_0_24px_rgba(59,20,32,0.18)]" : ""}`}
+        side === "left"
+          ? "rounded-l-[5px] rounded-tr-[100%_16px] rounded-br-[100%_16px]"
+          : "rounded-r-[5px] rounded-tl-[100%_16px] rounded-bl-[100%_16px]"
+      }`}
     >
       <PaperGrain />
       {/* Fanned page edges along the book's outer trim. */}

@@ -40,6 +40,54 @@ test.describe("Public homepage — Brand Story flipbook", () => {
     await expect(page.getByRole("button", { name: "Next page" })).toBeVisible();
   });
 
+  test("plays a page-turn sound on arrow click, but not on page load", async ({ page }) => {
+    // Stub the Web Audio API before any app code runs. Real audio can't be
+    // observed from Playwright, but the graph being built and started can.
+    await page.addInitScript(() => {
+      const w = window as unknown as Record<string, unknown>;
+      w.__audioStarts = 0;
+      const param = () => ({ setValueAtTime() {}, exponentialRampToValueAtTime() {}, value: 0 });
+      w.AudioContext = class {
+        state = "running";
+        currentTime = 0;
+        sampleRate = 44100;
+        destination = {};
+        resume() {}
+        createBuffer() {
+          return { getChannelData: () => new Float32Array(1024) };
+        }
+        createBufferSource() {
+          return {
+            buffer: null,
+            connect() {},
+            stop() {},
+            start() {
+              (window as unknown as Record<string, number>).__audioStarts += 1;
+            },
+          };
+        }
+        createBiquadFilter() {
+          return { type: "", Q: { value: 0 }, frequency: param(), connect() {} };
+        }
+        createGain() {
+          return { gain: param(), connect() {} };
+        }
+      };
+    });
+
+    await page.goto("/");
+    const startsBefore = await page.evaluate(
+      () => (window as unknown as Record<string, number>).__audioStarts
+    );
+    expect(startsBefore).toBe(0);
+
+    await page.getByRole("button", { name: "Trang sau" }).click();
+
+    await expect
+      .poll(() => page.evaluate(() => (window as unknown as Record<string, number>).__audioStarts))
+      .toBeGreaterThan(0);
+  });
+
   test("has no horizontal overflow at this viewport", async ({ page }) => {
     await page.goto("/");
     const hasOverflow = await page.evaluate(
