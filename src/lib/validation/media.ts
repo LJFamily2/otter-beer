@@ -11,5 +11,10 @@ export const RequestViewUrlSchema = z.object({
   key: z.string().trim().min(1),
 });
 
+export const RequestDeleteSchema = z.object({
+  key: z.string().trim().min(1),
+});
+
 export type RequestUploadInput = z.infer<typeof RequestUploadSchema>;
 export type RequestViewUrlInput = z.infer<typeof RequestViewUrlSchema>;
+export type RequestDeleteInput = z.infer<typeof RequestDeleteSchema>;

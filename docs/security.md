@@ -125,7 +125,7 @@ const cspHeader = `
   script-src 'self' 'nonce-{nonce}' https://accounts.google.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com;
-  img-src 'self' data: https://*.r2.cloudflarestorage.com https://lh3.googleusercontent.com;
+  img-src 'self' data: https://res.cloudinary.com https://lh3.googleusercontent.com;
   connect-src 'self';
   frame-ancestors 'none';
 `;
@@ -185,17 +185,17 @@ Every repository (`src/repositories/`) builds queries from typed, validated inpu
 
 ## 6. File Upload Security
 
-Images go straight from the browser to Cloudflare R2 via a short-lived **presigned POST**, never through the Next.js server as a request body — see `src/lib/storage/`.
+Images go straight from the browser to Cloudinary via a short-lived **signed upload**, never through the Next.js server as a request body — see `src/lib/storage/`. (Cloudflare R2 was the original provider and `R2StorageProvider` still works as a drop-in swap — see `StorageService.ts` — but the guarantees below describe the active Cloudinary path.)
 
 | Check | Rule | Where enforced |
 |---|---|---|
-| File type | Only `image/jpeg`, `image/png`, `image/webp`, `image/gif` | `StorageService.isAllowedImageContentType` + baked into the R2 presigned POST policy (`Content-Type` condition) |
-| File size | Maximum 5MB | Baked into the R2 presigned POST policy (`content-length-range` condition) — R2 rejects an oversized upload itself, not just our server |
-| Authentication | `add` or `edit` on the `news_blog` module | `POST /api/media/upload-url` checks `session.user.permissions` |
+| File type | Only `image/jpeg`, `image/png`, `image/webp`, `image/gif` | `StorageService.isAllowedImageContentType` + the named Cloudinary upload preset's `Allowed formats`, applied server-side because `upload_preset` is itself part of the signed payload |
+| File size | Maximum 5MB | **Not** enforced by Cloudinary before storing (no preset-level max-size option, and eval scripts can't reject uploads) — `uploadImage.ts` checks the `bytes` Cloudinary's own upload response reports and calls `POST /api/media/delete` to purge the object immediately if it's over the cap. Accept-then-verify-then-purge, not R2's true pre-write rejection — a small window exists where an oversized file transiently exists in Cloudinary. |
+| Authentication | `add` or `edit` on the `news_blog` module | `POST /api/media/upload-url` and `POST /api/media/delete` check `session.user.permissions` |
 | Object key | Random UUID + date prefix, server-generated | `StorageService.buildImageKey` — the client never chooses the storage path |
-| Storage | Cloudflare R2, **private bucket** | Every read goes through a signed `GET` URL (`POST /api/media/view-url`), never a public bucket URL |
+| Storage | Cloudinary, **public CDN delivery** | Not a private bucket — `GET /api/media/public/[...key]` still gates *which* keys are disclosed (published content, or admin preview), but once a key is known its bytes are reachable directly from Cloudinary's CDN, not proxied. Deliberate tradeoff for real edge caching + `f_auto,q_auto` transforms; see the object-key entropy above as the actual secrecy boundary for unpublished drafts. |
 
-Presigned POST enforces type/size at the storage layer itself (not just app-layer trust), which is the R2/S3-compatible way to get the guarantee `file-type` magic-byte sniffing would otherwise provide for a plain PUT.
+R2's presigned POST enforced type/size at the storage layer itself before ever accepting the bytes. Cloudinary only gets type enforcement that way (via the signed `upload_preset`) — size enforcement moved to an app-level post-upload check, the one guarantee this migration weakened rather than preserved.
 
 ---
 
@@ -241,9 +241,9 @@ const securityHeaders = [
 | Rule | Detail |
 |---|---|
 | Never commit `.env.local`, `.env.development.local`, `.env.production.local` | Already enforced in `.gitignore` |
-| Keep dev and prod credentials in separate files | `MONGODB_URI` and `R2_BUCKET_NAME` are dev-only in `.env.development.local`, prod-only in `.env.production.local` — never the same cluster/bucket. R2 account credentials (`R2_ACCOUNT_ID`/`R2_ACCESS_KEY_ID`/`R2_SECRET_ACCESS_KEY`) are shared in `.env.local` since dev and prod use one Cloudflare account. See [database-schema.md](./database-schema.md#per-environment-database--storage) |
+| Keep dev and prod credentials in separate files | `MONGODB_URI` is dev-only in `.env.development.local`, prod-only in `.env.production.local` — never the same cluster. See [database-schema.md](./database-schema.md#per-environment-database--storage) |
 | No secrets in client code | Only `NEXT_PUBLIC_*` vars reach the browser |
-| Rotate secrets regularly | `AUTH_SECRET`, R2 access keys, DB password |
+| Rotate secrets regularly | `AUTH_SECRET`, `CLOUDINARY_API_SECRET`, DB password |
 | Validate on startup | `src/lib/env.ts` — Zod-parsed, throws on first access if anything required is missing/malformed |
 
 **Server-only validation (already implemented):**
@@ -254,10 +254,11 @@ const envSchema = z.object({
   AUTH_SECRET: z.string().min(32),
   AUTH_GOOGLE_ID: z.string().min(1),
   AUTH_GOOGLE_SECRET: z.string().min(1),
-  R2_ACCOUNT_ID: z.string().min(1),
-  R2_ACCESS_KEY_ID: z.string().min(1),
-  R2_SECRET_ACCESS_KEY: z.string().min(1),
-  R2_BUCKET_NAME: z.string().min(1),
+  CLOUDINARY_CLOUD_NAME: z.string().min(1),
+  CLOUDINARY_API_KEY: z.string().min(1),
+  CLOUDINARY_API_SECRET: z.string().min(1),
+  CLOUDINARY_UPLOAD_PRESET: z.string().min(1),
+  // R2_* stayed but is now optional — R2StorageProvider is an inactive fallback
   // ...
 });
 ```
