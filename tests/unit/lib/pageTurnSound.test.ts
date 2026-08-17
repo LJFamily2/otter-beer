@@ -57,19 +57,30 @@ describe("playPageTurn", () => {
     expect(() => playPageTurn()).not.toThrow();
   });
 
-  it("builds and starts a noise burst through a band-pass and a gain envelope", () => {
-    const { context, source, filter, gain } = installAudioContext();
+  it("builds and starts a multi-layer beer fizz sound with filters and gain envelopes", () => {
+    const filters: { type: string }[] = [];
+    const { context, source, gain } = installAudioContext({
+      createBiquadFilter: jest.fn(() => {
+        const f = {
+          type: "",
+          Q: { value: 0 },
+          frequency: { setValueAtTime: jest.fn(), exponentialRampToValueAtTime: jest.fn() },
+          connect: jest.fn(),
+        };
+        filters.push(f);
+        return f;
+      }),
+    });
 
     playPageTurn();
 
-    expect(context.createBufferSource).toHaveBeenCalled();
-    expect(filter.type).toBe("bandpass");
-    // Swept up then back down — that sweep is what reads as paper.
-    expect(filter.frequency.exponentialRampToValueAtTime).toHaveBeenCalledTimes(2);
-    expect(gain.gain.exponentialRampToValueAtTime).toHaveBeenCalledTimes(2);
-    expect(source.connect).toHaveBeenCalledWith(filter);
-    expect(filter.connect).toHaveBeenCalledWith(gain);
-    expect(gain.connect).toHaveBeenCalledWith(context.destination);
+    // Three buffer sources: liquid body, carbonation fizz, and pop transient
+    expect(context.createBufferSource).toHaveBeenCalledTimes(3);
+    // Two filters: lowpass for liquid body, bandpass for carbonation fizz
+    expect(context.createBiquadFilter).toHaveBeenCalledTimes(2);
+    expect(filters.map((f) => f.type)).toEqual(["lowpass", "bandpass"]);
+    // Three gain envelopes — one per layer
+    expect(context.createGain).toHaveBeenCalledTimes(3);
     expect(source.start).toHaveBeenCalled();
     expect(source.stop).toHaveBeenCalled();
   });

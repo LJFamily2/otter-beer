@@ -1,10 +1,15 @@
 /**
- * Synthesised page-turn rustle for the Brand Story flipbook.
+ * Synthesised beer-themed sound for the Brand Story flipbook.
  *
- * Generated with the Web Audio API rather than shipped as an audio file: a
- * paper rustle is just broadband noise shaped by an amplitude envelope and
- * a sweeping band-pass, which costs a few lines of code and keeps a binary
- * asset (plus its network request) out of the repo.
+ * Instead of a generic paper rustle, this plays a short, satisfying
+ * beer-fizz / carbonation-bubble sound — two layered noise sources:
+ *   1. A low-mid "liquid body" layer (lowpass-filtered noise)
+ *   2. A crisp high "carbonation fizz" layer (bandpass around 3–5 kHz)
+ *
+ * The result sounds like a quick pour/fizz burst that fits the beer
+ * branding while still feeling snappy enough for page turns.
+ *
+ * Generated entirely with the Web Audio API — no audio files needed.
  *
  * Only ever call this from a user gesture — browsers create an AudioContext
  * in the "suspended" state otherwise and the sound is silently dropped.
@@ -39,40 +44,109 @@ export function playPageTurn(): void {
     if (context.state === "suspended") void context.resume();
 
     const now = context.currentTime;
-    const duration = 0.34;
+    const duration = 0.42;
 
-    // White noise — the raw material of a paper rustle.
-    const frameCount = Math.floor(context.sampleRate * duration);
-    const buffer = context.createBuffer(1, frameCount, context.sampleRate);
-    const samples = buffer.getChannelData(0);
-    for (let i = 0; i < frameCount; i += 1) {
-      samples[i] = Math.random() * 2 - 1;
+    // ── Layer 1: Liquid body (low-mid rumble) ────────────────────────
+    // A lowpass-filtered white noise burst that gives the "weight" of
+    // liquid — the thick, muffled quality of a beer pour.
+    {
+      const frameCount = Math.floor(context.sampleRate * duration);
+      const buffer = context.createBuffer(1, frameCount, context.sampleRate);
+      const samples = buffer.getChannelData(0);
+      for (let i = 0; i < frameCount; i += 1) {
+        samples[i] = Math.random() * 2 - 1;
+      }
+
+      const source = context.createBufferSource();
+      source.buffer = buffer;
+
+      const filter = context.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(400, now);
+      filter.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+      filter.frequency.exponentialRampToValueAtTime(350, now + duration);
+      filter.Q.value = 1.2;
+
+      const gain = context.createGain();
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.08, now + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.04, now + duration * 0.5);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(context.destination);
+
+      source.start(now);
+      source.stop(now + duration);
     }
 
-    const source = context.createBufferSource();
-    source.buffer = buffer;
+    // ── Layer 2: Carbonation fizz (high hiss + bubble texture) ───────
+    // A bandpass-filtered noise burst centred around 3–5 kHz with a
+    // sweeping Q to simulate bubbles rising and popping.
+    {
+      const frameCount = Math.floor(context.sampleRate * duration);
+      const buffer = context.createBuffer(1, frameCount, context.sampleRate);
+      const samples = buffer.getChannelData(0);
+      for (let i = 0; i < frameCount; i += 1) {
+        // Slight amplitude modulation at ~18 Hz gives a subtle
+        // "bubbling" texture rather than a flat, static hiss.
+        const bubbleModulation = 1 - 0.3 * Math.sin((i / context.sampleRate) * 2 * Math.PI * 18);
+        samples[i] = (Math.random() * 2 - 1) * bubbleModulation;
+      }
 
-    // Sweeping the band up then back down is what reads as a sheet passing
-    // through the air rather than an undifferentiated hiss.
-    const filter = context.createBiquadFilter();
-    filter.type = "bandpass";
-    filter.Q.value = 0.7;
-    filter.frequency.setValueAtTime(620, now);
-    filter.frequency.exponentialRampToValueAtTime(2800, now + 0.13);
-    filter.frequency.exponentialRampToValueAtTime(780, now + duration);
+      const source = context.createBufferSource();
+      source.buffer = buffer;
 
-    // Fast attack, long tail — paper snaps then settles.
-    const gain = context.createGain();
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.16, now + 0.06);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      const filter = context.createBiquadFilter();
+      filter.type = "bandpass";
+      filter.Q.value = 0.9;
+      filter.frequency.setValueAtTime(3200, now);
+      filter.frequency.exponentialRampToValueAtTime(5200, now + 0.1);
+      filter.frequency.exponentialRampToValueAtTime(2800, now + duration);
 
-    source.connect(filter);
-    filter.connect(gain);
-    gain.connect(context.destination);
+      const gain = context.createGain();
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.13, now + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.06, now + duration * 0.6);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
-    source.start(now);
-    source.stop(now + duration);
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(context.destination);
+
+      source.start(now);
+      source.stop(now + duration);
+    }
+
+    // ── Layer 3: Tiny "pop" transient ────────────────────────────────
+    // A very short, punchy click at the start that sells the moment the
+    // page lifts — like a bottle cap flick or a single bubble popping.
+    {
+      const popDuration = 0.06;
+      const frameCount = Math.floor(context.sampleRate * popDuration);
+      const buffer = context.createBuffer(1, frameCount, context.sampleRate);
+      const samples = buffer.getChannelData(0);
+      for (let i = 0; i < frameCount; i += 1) {
+        // Decaying sine at ~900 Hz with noise — a soft, organic "pop".
+        const t = i / context.sampleRate;
+        const decay = Math.exp(-t * 60);
+        samples[i] = (Math.sin(t * 2 * Math.PI * 900) * 0.7 + (Math.random() * 2 - 1) * 0.3) * decay;
+      }
+
+      const source = context.createBufferSource();
+      source.buffer = buffer;
+
+      const gain = context.createGain();
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + popDuration);
+
+      source.connect(gain);
+      gain.connect(context.destination);
+
+      source.start(now);
+      source.stop(now + popDuration);
+    }
   } catch {
     // Autoplay policy, a missing codec, a hostile embedding context — none
     // of it should stop the page from turning.
