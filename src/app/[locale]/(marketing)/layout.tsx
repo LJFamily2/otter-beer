@@ -31,7 +31,7 @@ export default async function MarketingLayout({
     <div className="flex min-h-dvh flex-col">
       <Header
         links={navigationLinks}
-        contactHref={`${prefix}#contact`}
+        contactHref={`${prefix}/contact`}
         locale={isVi ? "VIE" : "ENG"}
         locales={["VIE", "ENG"]}
       />
