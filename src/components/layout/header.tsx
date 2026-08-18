@@ -43,12 +43,12 @@ export function Header({
   };
 
   return (
-    <header className="relative h-[100px] w-full bg-transparent">
+    <header className="relative h-[90px] w-full bg-transparent">
       {/* Navigation Link - "Giới thiệu" */}
       {links[0] && (
         <Link
           href={links[0].href}
-          className="absolute left-[65px] top-[38px] text-[21px] font-normal uppercase tracking-[0.9px] text-primary transition-colors hover:text-primary-container"
+          className="absolute left-[65px] top-1/2 -translate-y-1/2 text-[21px] font-normal uppercase tracking-[0.9px] text-primary transition-colors hover:text-primary-container"
           style={{ fontFamily: "Hanken Grotesk, sans-serif" }}
         >
           {links[0].label}
@@ -59,7 +59,7 @@ export function Header({
       {links[1] && (
         <Link
           href={links[1].href}
-          className="absolute left-[233px] top-[38px] text-[21px] font-normal uppercase tracking-[0.9px] text-primary transition-colors hover:text-primary-container"
+          className="absolute left-[233px] top-1/2 -translate-y-1/2 text-[21px] font-normal uppercase tracking-[0.9px] text-primary transition-colors hover:text-primary-container"
           style={{ fontFamily: "Hanken Grotesk, sans-serif" }}
         >
           {links[1].label}
@@ -70,7 +70,7 @@ export function Header({
       {links[2] && (
         <Link
           href={links[2].href}
-          className="absolute left-[397px] top-[38px] text-[21px] font-normal uppercase tracking-[0.9px] text-primary transition-colors hover:text-primary-container"
+          className="absolute left-[397px] top-1/2 -translate-y-1/2 text-[21px] font-normal uppercase tracking-[0.9px] text-primary transition-colors hover:text-primary-container"
           style={{ fontFamily: "Hanken Grotesk, sans-serif" }}
         >
           {links[2].label}
@@ -78,8 +78,11 @@ export function Header({
       )}
 
       {/* Centered Logo */}
-      <Link href="/" className="absolute left-1/2 top-[5px] -translate-x-1/2">
-        <div className="relative h-[90px] w-[110px]">
+      <Link
+        href="/"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+      >
+        <div className="relative h-[90px] w-[150px]">
           <Image
             src="/images/header/logo.png"
             alt="Otter Beer Logo"
@@ -91,7 +94,7 @@ export function Header({
       </Link>
 
       {/* Right-side group: Social icons, Language selector, Contact button */}
-      <div className="absolute right-[41px] top-[25px] flex items-center gap-4">
+      <div className="absolute right-[41px] top-1/2 flex -translate-y-1/2 items-center gap-4">
         {/* Social Icon - Facebook */}
         <a
           href="https://facebook.com/otterbeer"
