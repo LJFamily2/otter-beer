@@ -95,34 +95,34 @@ export function Header({
 
       {/* Right-side group: Social icons, Language selector, Contact button */}
       <div className="absolute right-[41px] top-1/2 flex -translate-y-1/2 items-center gap-4">
-        {/* Social Icon - Facebook */}
+        {/* Social Icon - Instagram */}
         <a
-          href="https://facebook.com/otterbeer"
+          href="https://instagram.com/otterbeer"
           target="_blank"
           rel="noopener noreferrer"
           className="flex h-[40px] w-[30px] items-center justify-center transition-opacity hover:opacity-80"
-          aria-label="Facebook"
+          aria-label="Instagram"
         >
           <Image
-            src="/images/header/social-facebook.png"
-            alt="Facebook"
+            src="/images/header/social-instagram.png"
+            alt="Instagram"
             width={40}
             height={40}
             className="object-contain"
           />
         </a>
 
-        {/* Social Icon - Instagram */}
+        {/* Social Icon - Facebook */}
         <a
-          href="https://instagram.com/otterbeer"
+          href="https://facebook.com/otterbeer"
           target="_blank"
           rel="noopener noreferrer"
           className="flex h-[29px] w-[29px] items-center justify-center transition-opacity hover:opacity-80"
-          aria-label="Instagram"
+          aria-label="Facebook"
         >
           <Image
-            src="/images/header/social-instagram.png"
-            alt="Instagram"
+            src="/images/header/social-facebook.png"
+            alt="Facebook"
             width={39}
             height={39}
             className="object-contain"
