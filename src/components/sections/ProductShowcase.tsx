@@ -82,14 +82,14 @@ export function ProductShowcase({ locale }: ProductShowcaseProps) {
   };
 
   return (
-    <section className="relative flex min-h-[75vh] flex-col items-center justify-center overflow-hidden bg-[#fdf9f4] px-5 py-12 sm:py-16 lg:py-20">
+    <section className="relative flex min-h-[75vh] flex-col items-center justify-center overflow-hidden bg-background px-5 py-12 sm:py-16 lg:py-20">
       {/* Dynamic Ambient Glow Background */}
       <div aria-hidden className="pointer-events-none absolute inset-0 select-none overflow-hidden">
         {/* Soft Gold Radial Glow Center */}
-        <div className="absolute top-1/2 left-1/2 h-[480px] w-[480px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-radial from-[#fed65b]/30 via-[#fed65b]/5 to-transparent blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 h-[480px] w-[480px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-radial from-secondary-container/30 via-secondary-container/5 to-transparent blur-3xl" />
         
         {/* Subtle Coastal Blue Vignette Accent */}
-        <div className="absolute top-0 right-0 h-[400px] w-[400px] rounded-full bg-radial from-[#002867]/5 to-transparent blur-2xl" />
+        <div className="absolute top-0 right-0 h-[400px] w-[400px] rounded-full bg-radial from-primary/5 to-transparent blur-2xl" />
 
         {/* Top-Shifted Editorial Background Watermark */}
         <div className="absolute top-2 sm:top-6 inset-x-0 flex items-start justify-center overflow-hidden pointer-events-none select-none">
@@ -104,9 +104,9 @@ export function ProductShowcase({ locale }: ProductShowcaseProps) {
         {/* Left Column: Glassmorphic Spec Cards (Luxury Glass & Dials) */}
         <div className="hidden flex-col gap-6 lg:flex">
           {/* Card 1: Beer Style (Glassmorphism) */}
-          <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/40 p-6 shadow-[0_8px_32px_0_rgba(0,40,103,0.06)] backdrop-blur-xl">
+          <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/40 p-6 shadow-sm backdrop-blur-xl">
             <div className="flex items-center gap-3">
-              <p className="text-xs font-bold tracking-[0.15em] text-[#735c00] uppercase">
+              <p className="text-xs font-bold tracking-[0.15em] text-secondary uppercase">
                 {copy.style}
               </p>
             </div>
@@ -119,7 +119,7 @@ export function ProductShowcase({ locale }: ProductShowcaseProps) {
           </div>
 
           {/* Card 2: ABV & IBU Specs (Dials) */}
-          <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/40 p-6 shadow-[0_8px_32px_0_rgba(0,40,103,0.06)] backdrop-blur-xl">
+          <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/40 p-6 shadow-sm backdrop-blur-xl">
             <div className="flex items-center justify-between gap-4">
               
               {/* ABV Drop Icon & Stat */}
@@ -162,7 +162,7 @@ export function ProductShowcase({ locale }: ProductShowcaseProps) {
         <div className="order-first flex flex-col items-center justify-center lg:order-none">
           <div className="group relative flex h-[320px] w-full max-w-[320px] items-center justify-center sm:h-[380px] lg:h-[400px]">
             {/* Soft Ambient Light Halo */}
-            <div className="absolute size-[85%] rounded-full bg-radial from-[#fed65b]/50 via-[#1d3f82]/20 to-transparent blur-3xl transition-transform duration-700 group-hover:scale-110" />
+            <div className="absolute size-[85%] rounded-full bg-radial from-secondary-container/50 via-primary-container/20 to-transparent blur-3xl transition-transform duration-700 group-hover:scale-110" />
             
             {/* Perfectly Proportioned Can Image with Hover Float */}
             <div key={currentBeer.id} className="relative h-full w-full transform-gpu transition-all duration-500 ease-out group-hover:-translate-y-2 group-hover:scale-105">
@@ -178,7 +178,7 @@ export function ProductShowcase({ locale }: ProductShowcaseProps) {
           </div>
 
           {/* Realistic 3D Ground Reflection Shadow */}
-          <div className="h-4 w-48 rounded-full bg-gradient-to-r from-transparent via-[#002867]/30 to-transparent blur-md transition-all duration-500 group-hover:w-56 group-hover:opacity-80" />
+          <div className="h-4 w-48 rounded-full bg-gradient-to-r from-transparent via-primary/30 to-transparent blur-md transition-all duration-500 group-hover:w-56 group-hover:opacity-80" />
 
           {/* Mobile Spec Pill */}
           <div className="mt-6 flex items-center justify-center gap-4 border border-primary/20 bg-white/90 px-6 py-2.5 shadow-sm backdrop-blur-md lg:hidden">

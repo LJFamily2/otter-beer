@@ -37,30 +37,30 @@ export function ContactCtaSection({
   return (
     <section
       aria-label="Contact Call to Action"
-      className="w-full bg-[#fde9c9] text-[#002867]"
+      className="w-full bg-background text-primary"
     >
       <div className="mx-auto max-w-[1280px] px-6 py-14 sm:px-10 sm:py-18 lg:px-16 lg:py-20">
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-20">
           {/* Left Column: Heading & Description */}
           <div className="flex flex-col items-start lg:col-span-7">
-            <span className="font-sans text-xs font-bold uppercase tracking-widest text-[#1d3f82] sm:text-sm">
+            <span className="font-sans text-xs font-bold uppercase tracking-widest text-primary-container sm:text-sm">
               {content.kicker}
             </span>
 
-            <h2 className="mt-3 font-display text-4xl uppercase leading-[1.15] tracking-wide text-[#002867] sm:text-5xl sm:leading-[1.15] md:text-6xl md:leading-[1.12] lg:text-[62px] lg:leading-[1.1]">
+            <h2 className="mt-3 font-display text-4xl uppercase leading-[1.15] tracking-wide text-primary sm:text-5xl sm:leading-[1.15] md:text-6xl md:leading-[1.12] lg:text-[62px] lg:leading-[1.1]">
               {content.headingLine1}
               <br />
               {content.headingLine2}
             </h2>
 
-            <p className="mt-5 max-w-lg text-sm font-medium leading-relaxed text-[#1d3f82]/85 sm:text-base md:text-lg">
+            <p className="mt-5 max-w-lg text-sm font-medium leading-relaxed text-primary-container/85 sm:text-base md:text-lg">
               {content.subtext}
             </p>
           </div>
 
           {/* Right Column: Interactive Card */}
           <div className="lg:col-span-5">
-            <div className="relative overflow-hidden rounded-2xl bg-[#163a78] p-8 !text-white shadow-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl sm:rounded-3xl sm:p-10">
+            <div className="relative overflow-hidden rounded-2xl bg-primary-container p-8 !text-white shadow-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl sm:rounded-3xl sm:p-10">
               {/* Logo Badge in top right corner */}
               <div className="absolute top-6 right-6 h-16 w-16 sm:top-8 sm:right-8 sm:h-20 sm:w-20">
                 <Image

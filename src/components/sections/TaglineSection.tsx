@@ -31,15 +31,15 @@ export function TaglineSection({ locale = DEFAULT_LOCALE }: TaglineSectionProps)
   return (
     <section
       aria-label="Brand Tagline"
-      className="w-full bg-[#fde9c9] text-[#002867]"
+      className="w-full bg-background text-primary"
     >
       <div className="mx-auto max-w-[1280px] px-6 py-10 sm:px-10 sm:py-14 lg:px-16 lg:py-16">
         <h2
-          className={`${playfair.className} text-3xl font-bold italic tracking-tight text-[#002867] sm:text-4xl md:text-5xl lg:text-[54px] lg:leading-[1.15]`}
+          className={`${playfair.className} text-3xl font-bold italic tracking-tight text-primary sm:text-4xl md:text-5xl lg:text-[54px] lg:leading-[1.15]`}
         >
           {content.heading}
         </h2>
-        <p className="mt-3 max-w-4xl text-sm font-medium leading-relaxed text-[#1d3f82] sm:mt-4 sm:text-base md:text-lg">
+        <p className="mt-3 max-w-4xl text-sm font-medium leading-relaxed text-primary-container sm:mt-4 sm:text-base md:text-lg">
           {content.subtext}
         </p>
       </div>

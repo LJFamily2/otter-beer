@@ -88,18 +88,17 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
   };
 
   return (
-    <section className="relative overflow-hidden bg-[#f9efd9] px-4 py-20 sm:px-6 lg:py-28">
-      <BackgroundMotif />
+    <section className="relative overflow-hidden bg-background px-4 py-20 sm:px-6 lg:py-28">
 
       <div className="relative mx-auto flex max-w-[1120px] flex-col items-center gap-10">
         <div className="flex flex-col items-center gap-3 text-center">
-          <span className="text-[11px] font-bold tracking-[0.32em] text-[#a9723f]">
+          <span className="text-[11px] font-bold tracking-[0.32em] text-primary-container">
             {copy.kicker}
           </span>
-          <span aria-hidden className="text-[#c8a26a]">
+          <span aria-hidden className="text-secondary-fixed-dim">
             <FlourishRule />
           </span>
-          <h2 className="font-display text-[clamp(26px,4vw,42px)] tracking-[0.08em] text-[#4a2c17]! uppercase">
+          <h2 className="font-display text-[clamp(26px,4vw,42px)] tracking-[0.08em] text-primary! uppercase">
             {copy.heading}
           </h2>
         </div>
@@ -120,7 +119,7 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
               className="absolute inset-x-6 -bottom-4 h-10 rounded-[50%] bg-[#2a0b12]/35 blur-xl"
             />
 
-            <div className="relative mx-auto w-full max-w-[960px] rounded-[8px] bg-[linear-gradient(180deg,#42121c,#360e16_40%,#2b0a11)] p-1 shadow-[0_30px_60px_-15px_rgba(42,11,18,0.7),inset_0_1px_0_rgba(255,255,255,0.12),0_0_0_1px_rgba(30,8,13,0.9)] sm:p-1.5">
+            <div className="relative mx-auto w-full max-w-[960px] rounded-[8px] bg-primary p-1 shadow-md sm:p-1.5">
               <div
                 aria-hidden
                 className="absolute inset-y-0.5 left-1/2 w-6 -translate-x-1/2 rounded-full bg-[linear-gradient(to_right,rgba(0,0,0,0.5),rgba(255,255,255,0.08)_42%,rgba(255,255,255,0.12)_50%,rgba(255,255,255,0.08)_58%,rgba(0,0,0,0.5))] sm:inset-y-1"
@@ -172,7 +171,7 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
           </div>
           <p
             aria-live="polite"
-            className="text-[11px] font-bold tracking-[0.28em] text-[#a9723f] uppercase"
+            className="text-[11px] font-bold tracking-[0.28em] text-primary-container uppercase"
           >
             {copy.pageOf(Math.floor(pageIndex / 2) + 1, Math.ceil(PAGES.length / 2))}
           </p>
@@ -194,32 +193,37 @@ const PageFace = React.forwardRef<HTMLDivElement, {
   side: "left" | "right";
   src: string;
 }>(({ side, src }, ref) => {
-  const gutterShade =
-    side === "left"
-      ? "inset -18px 0 22px -18px rgba(42,11,18,0.45)"
-      : "inset 18px 0 22px -18px rgba(42,11,18,0.45)";
-
   return (
     <div
       ref={ref}
-      style={{ boxShadow: gutterShade }}
-      className={`relative flex h-full w-full flex-col items-center justify-center bg-[#faf6ee] overflow-hidden ${
-        side === "left"
+      className={`relative flex h-full w-full flex-col items-center justify-center bg-background overflow-hidden ${side === "left"
           ? "rounded-l-[4px]"
           : "rounded-r-[4px]"
-      }`}
-    >
-      <PaperGrain />
-      <div
-        aria-hidden
-        className={`absolute inset-y-1 z-10 w-[11px] bg-[repeating-linear-gradient(to_right,rgba(42,11,18,0.22)_0px,rgba(42,11,18,0.22)_1px,transparent_1px,transparent_3px)] ${
-          side === "left" ? "left-0 rounded-l-[3px]" : "right-0 rounded-r-[3px]"
         }`}
-      />
+    >
       <img
         src={src}
         alt="Brand Story Page"
         className="absolute inset-0 h-full w-full object-cover"
+      />
+
+      <PaperGrain />
+
+      <div
+        aria-hidden
+        className={`pointer-events-none absolute inset-y-1 z-10 w-[11px] opacity-30 bg-[repeating-linear-gradient(to_right,rgba(42,11,18,0.22)_0px,rgba(42,11,18,0.22)_1px,transparent_1px,transparent_3px)] ${side === "left" ? "left-0 rounded-l-[3px]" : "right-0 rounded-r-[3px]"
+          }`}
+      />
+
+      {/* Book spine gutter shadow */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-20"
+        style={{
+          background: side === "left"
+            ? "linear-gradient(to right, transparent 82%, rgba(255,255,255,0.1) 92%, rgba(0,0,0,0.55) 100%)"
+            : "linear-gradient(to left, transparent 82%, rgba(255,255,255,0.1) 92%, rgba(0,0,0,0.55) 100%)"
+        }}
       />
     </div>
   );
@@ -245,7 +249,7 @@ function BackgroundMotif() {
   return (
     <svg
       aria-hidden
-      className="pointer-events-none absolute inset-0 h-full w-full text-[#c9a06a] opacity-[0.22]"
+      className="pointer-events-none absolute inset-0 h-full w-full text-secondary-fixed-dim opacity-[0.22]"
     >
       <defs>
         <pattern id="brand-story-motif" width="230" height="230" patternUnits="userSpaceOnUse">
@@ -312,7 +316,7 @@ function CornerFlourish({ className = "" }: { className?: string }) {
     <svg
       aria-hidden
       viewBox="0 0 100 100"
-      className={`h-10 w-10 text-[#c19056] sm:h-16 sm:w-16 ${className}`}
+      className={`h-10 w-10 text-secondary-fixed-dim sm:h-16 sm:w-16 ${className}`}
       fill="none"
       stroke="currentColor"
       strokeWidth="1.4"
@@ -355,7 +359,7 @@ function HopSprig({ className = "" }: { className?: string }) {
     <svg
       aria-hidden
       viewBox="0 0 32 44"
-      className={`text-[#b5714a] ${className}`}
+      className={`text-secondary-fixed-dim ${className}`}
       fill="none"
       stroke="currentColor"
       strokeWidth="1.5"
@@ -513,11 +517,11 @@ function ArrowButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className="group relative flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#a9723f] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f9efd9] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-20 sm:h-16 sm:w-16"
+      className="group relative flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none disabled:pointer-events-none disabled:opacity-20 sm:h-16 sm:w-16"
     >
       <svg
         viewBox="0 0 24 24"
-        className="h-7 w-7 fill-current text-[#a9723f] transition-all duration-200 group-hover:scale-125 group-hover:text-[#4a2c17] sm:h-10 sm:w-10"
+        className="h-7 w-7 fill-current text-primary-container transition-all duration-200 group-hover:scale-125 group-hover:text-primary sm:h-10 sm:w-10"
         stroke="currentColor"
         strokeWidth="2.5"
         strokeLinecap="round"
