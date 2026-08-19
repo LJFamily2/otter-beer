@@ -8,6 +8,12 @@ export default defineConfig({
   testDir: "./tests/e2e",
   testMatch: "**/*.spec.ts",
 
+  // Timeout for each test in milliseconds (60s for cold compile overhead)
+  timeout: 60_000,
+  expect: {
+    timeout: 10_000,
+  },
+
   // Run tests in parallel
   fullyParallel: true,
 
@@ -17,8 +23,8 @@ export default defineConfig({
   // Retry on CI only
   retries: process.env.CI ? 2 : 0,
 
-  // Parallel workers — fewer on CI to avoid resource issues
-  workers: process.env.CI ? 2 : undefined,
+  // Parallel workers — control concurrency to prevent Next dev server timeouts
+  workers: process.env.CI ? 2 : 4,
 
   // Reporter
   reporter: process.env.CI
@@ -42,6 +48,52 @@ export default defineConfig({
     // Locale for Vietnamese default
     locale: "vi-VN",
     timezoneId: "Asia/Ho_Chi_Minh",
+
+    // Pre-set age verification cookie and localStorage for all E2E tests so tests are not blocked by the Age Gate
+    storageState: {
+      cookies: [
+        {
+          name: "otter_age_verified",
+          value: "true",
+          domain: "localhost",
+          path: "/",
+          expires: Math.round(Date.now() / 1000) + 86400 * 30, // 30 days
+          httpOnly: false,
+          secure: false,
+          sameSite: "Lax",
+        },
+        {
+          name: "otter_age_verified",
+          value: "true",
+          domain: "127.0.0.1",
+          path: "/",
+          expires: Math.round(Date.now() / 1000) + 86400 * 30, // 30 days
+          httpOnly: false,
+          secure: false,
+          sameSite: "Lax",
+        },
+      ],
+      origins: [
+        {
+          origin: "http://localhost:3000",
+          localStorage: [
+            {
+              name: "otter_age_verified",
+              value: "true",
+            },
+          ],
+        },
+        {
+          origin: "http://127.0.0.1:3000",
+          localStorage: [
+            {
+              name: "otter_age_verified",
+              value: "true",
+            },
+          ],
+        },
+      ],
+    },
   },
 
   // Test projects — browser configurations

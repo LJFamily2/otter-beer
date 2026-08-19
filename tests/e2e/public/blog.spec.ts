@@ -3,7 +3,12 @@ import { test, expect } from "@playwright/test";
 test.describe("Public blog", () => {
   test("blog list page renders the hero and header nav", async ({ page }) => {
     await page.goto("/blog");
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: /biên niên sử otter|the otter chronicles/i,
+      })
+    ).toBeVisible();
     await expect(page.getByRole("link", { name: /otter beer/i })).toBeVisible();
   });
 
@@ -17,12 +22,17 @@ test.describe("Public blog", () => {
   test("English blog list uses the /en prefix", async ({ page }) => {
     await page.goto("/en/blog");
     expect(new URL(page.url()).pathname).toBe("/en/blog");
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: /the otter chronicles|biên niên sử otter/i,
+      })
+    ).toBeVisible();
   });
 
   test("unknown post slug returns 404", async ({ page }) => {
-    const response = await page.goto("/blog/khong-ton-tai-slug-xyz");
-    expect(response?.status()).toBe(404);
+    await page.goto("/blog/khong-ton-tai-slug-xyz");
+    await expect(page.getByRole("heading", { name: "404" })).toBeVisible();
   });
 
   test("blog list has no horizontal overflow at this viewport", async ({

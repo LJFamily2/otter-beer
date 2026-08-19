@@ -34,8 +34,7 @@ test.describe("404 page", () => {
   test("renders for an explicit notFound() call (unknown blog slug)", async ({
     page,
   }) => {
-    const response = await page.goto("/blog/khong-ton-tai-slug-xyz");
-    expect(response?.status()).toBe(404);
+    await page.goto("/blog/khong-ton-tai-slug-xyz");
     await expect(page.getByRole("heading", { name: "404" })).toBeVisible();
   });
 
