@@ -36,8 +36,25 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
+function isValidUrl(url: string | undefined): boolean {
+  if (!url) return false;
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function loadEnv(): Env {
   const envData = { ...process.env };
+  envData.MONGODB_URI = isValidUrl(envData.MONGODB_URI)
+    ? envData.MONGODB_URI
+    : "mongodb://localhost:27017/otter-beer";
+  envData.AUTH_SECRET =
+    envData.AUTH_SECRET && envData.AUTH_SECRET.length >= 32
+      ? envData.AUTH_SECRET
+      : "ci-dummy-auth-secret-32-characters-minimum!!";
   envData.AUTH_GOOGLE_ID = envData.AUTH_GOOGLE_ID || "ci-dummy-google-id";
   envData.AUTH_GOOGLE_SECRET = envData.AUTH_GOOGLE_SECRET || "ci-dummy-google-secret";
   envData.CLOUDINARY_CLOUD_NAME = envData.CLOUDINARY_CLOUD_NAME || "ci-dummy-cloudinary-cloud-name";
