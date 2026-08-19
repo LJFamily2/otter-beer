@@ -2,7 +2,12 @@ import { playPageTurn, resetPageTurnAudio } from "@/lib/utils/pageTurnSound";
 
 interface AudioMocks {
   context: Record<string, unknown>;
-  source: { connect: jest.Mock; start: jest.Mock; stop: jest.Mock; buffer: unknown };
+  source: {
+    connect: jest.Mock;
+    start: jest.Mock;
+    stop: jest.Mock;
+    buffer: unknown;
+  };
   filter: {
     type: string;
     connect: jest.Mock;
@@ -13,16 +18,29 @@ interface AudioMocks {
   constructor: jest.Mock;
 }
 
-function installAudioContext(contextOverrides: Record<string, unknown> = {}): AudioMocks {
-  const source = { buffer: null as unknown, connect: jest.fn(), start: jest.fn(), stop: jest.fn() };
+function installAudioContext(
+  contextOverrides: Record<string, unknown> = {},
+): AudioMocks {
+  const source = {
+    buffer: null as unknown,
+    connect: jest.fn(),
+    start: jest.fn(),
+    stop: jest.fn(),
+  };
   const filter = {
     type: "",
     Q: { value: 0 },
-    frequency: { setValueAtTime: jest.fn(), exponentialRampToValueAtTime: jest.fn() },
+    frequency: {
+      setValueAtTime: jest.fn(),
+      exponentialRampToValueAtTime: jest.fn(),
+    },
     connect: jest.fn(),
   };
   const gain = {
-    gain: { setValueAtTime: jest.fn(), exponentialRampToValueAtTime: jest.fn() },
+    gain: {
+      setValueAtTime: jest.fn(),
+      exponentialRampToValueAtTime: jest.fn(),
+    },
     connect: jest.fn(),
   };
 
@@ -32,7 +50,9 @@ function installAudioContext(contextOverrides: Record<string, unknown> = {}): Au
     sampleRate: 44100,
     destination: {},
     resume: jest.fn(),
-    createBuffer: jest.fn(() => ({ getChannelData: () => new Float32Array(20000) })),
+    createBuffer: jest.fn(() => ({
+      getChannelData: () => new Float32Array(20000),
+    })),
     createBufferSource: jest.fn(() => source),
     createBiquadFilter: jest.fn(() => filter),
     createGain: jest.fn(() => gain),
@@ -48,7 +68,8 @@ function installAudioContext(contextOverrides: Record<string, unknown> = {}): Au
 afterEach(() => {
   resetPageTurnAudio();
   delete (window as unknown as { AudioContext?: unknown }).AudioContext;
-  delete (window as unknown as { webkitAudioContext?: unknown }).webkitAudioContext;
+  delete (window as unknown as { webkitAudioContext?: unknown })
+    .webkitAudioContext;
   jest.clearAllMocks();
 });
 
@@ -59,12 +80,15 @@ describe("playPageTurn", () => {
 
   it("builds and starts a multi-layer beer fizz sound with filters and gain envelopes", () => {
     const filters: { type: string }[] = [];
-    const { context, source, gain } = installAudioContext({
+    const { context, source } = installAudioContext({
       createBiquadFilter: jest.fn(() => {
         const f = {
           type: "",
           Q: { value: 0 },
-          frequency: { setValueAtTime: jest.fn(), exponentialRampToValueAtTime: jest.fn() },
+          frequency: {
+            setValueAtTime: jest.fn(),
+            exponentialRampToValueAtTime: jest.fn(),
+          },
           connect: jest.fn(),
         };
         filters.push(f);
@@ -121,19 +145,32 @@ describe("playPageTurn", () => {
       sampleRate: 44100,
       destination: {},
       resume: jest.fn(),
-      createBuffer: jest.fn(() => ({ getChannelData: () => new Float32Array(20000) })),
-      createBufferSource: jest.fn(() => ({ connect: jest.fn(), start: jest.fn(), stop: jest.fn() })),
+      createBuffer: jest.fn(() => ({
+        getChannelData: () => new Float32Array(20000),
+      })),
+      createBufferSource: jest.fn(() => ({
+        connect: jest.fn(),
+        start: jest.fn(),
+        stop: jest.fn(),
+      })),
       createBiquadFilter: jest.fn(() => ({
         Q: { value: 0 },
-        frequency: { setValueAtTime: jest.fn(), exponentialRampToValueAtTime: jest.fn() },
+        frequency: {
+          setValueAtTime: jest.fn(),
+          exponentialRampToValueAtTime: jest.fn(),
+        },
         connect: jest.fn(),
       })),
       createGain: jest.fn(() => ({
-        gain: { setValueAtTime: jest.fn(), exponentialRampToValueAtTime: jest.fn() },
+        gain: {
+          setValueAtTime: jest.fn(),
+          exponentialRampToValueAtTime: jest.fn(),
+        },
         connect: jest.fn(),
       })),
     }));
-    (window as unknown as { webkitAudioContext: unknown }).webkitAudioContext = constructor;
+    (window as unknown as { webkitAudioContext: unknown }).webkitAudioContext =
+      constructor;
 
     playPageTurn();
 
