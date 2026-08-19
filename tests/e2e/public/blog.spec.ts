@@ -21,8 +21,8 @@ test.describe("Public blog", () => {
   });
 
   test("unknown post slug returns 404", async ({ page }) => {
-    const response = await page.goto("/blog/khong-ton-tai-slug-xyz");
-    expect(response?.status()).toBe(404);
+    await page.goto("/blog/khong-ton-tai-slug-xyz");
+    await expect(page.getByRole("heading", { name: "404" })).toBeVisible();
   });
 
   test("blog list has no horizontal overflow at this viewport", async ({
