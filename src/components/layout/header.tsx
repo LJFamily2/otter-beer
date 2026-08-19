@@ -48,7 +48,7 @@ export function Header({
       {links[0] && (
         <Link
           href={links[0].href}
-          className="absolute left-[65px] top-1/2 -translate-y-1/2 text-[21px] font-normal uppercase tracking-[0.9px] text-primary transition-colors hover:text-primary-container"
+          className="absolute left-[65px] top-1/2 -translate-y-1/2 text-[21px] font-normal uppercase tracking-[0.9px] text-primary transition-colors hover:text-primary-container max-[900px]:hidden"
           style={{ fontFamily: "Hanken Grotesk, sans-serif" }}
         >
           {links[0].label}
@@ -59,7 +59,7 @@ export function Header({
       {links[1] && (
         <Link
           href={links[1].href}
-          className="absolute left-[233px] top-1/2 -translate-y-1/2 text-[21px] font-normal uppercase tracking-[0.9px] text-primary transition-colors hover:text-primary-container"
+          className="absolute left-[233px] top-1/2 -translate-y-1/2 text-[21px] font-normal uppercase tracking-[0.9px] text-primary transition-colors hover:text-primary-container max-[900px]:hidden"
           style={{ fontFamily: "Hanken Grotesk, sans-serif" }}
         >
           {links[1].label}
@@ -70,7 +70,7 @@ export function Header({
       {links[2] && (
         <Link
           href={links[2].href}
-          className="absolute left-[397px] top-1/2 -translate-y-1/2 text-[21px] font-normal uppercase tracking-[0.9px] text-primary transition-colors hover:text-primary-container"
+          className="absolute left-[397px] top-1/2 -translate-y-1/2 text-[21px] font-normal uppercase tracking-[0.9px] text-primary transition-colors hover:text-primary-container max-[900px]:hidden"
           style={{ fontFamily: "Hanken Grotesk, sans-serif" }}
         >
           {links[2].label}
@@ -80,9 +80,10 @@ export function Header({
       {/* Centered Logo */}
       <Link
         href="/"
+        aria-label="Otter Beer"
         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
       >
-        <div className="relative h-[90px] w-[150px]">
+        <div className="relative h-[70px] w-[110px] sm:h-[90px] sm:w-[150px]">
           <Image
             src="/images/header/logo.png"
             alt="Otter Beer Logo"
@@ -91,16 +92,17 @@ export function Header({
             priority
           />
         </div>
+        <span className="sr-only">Otter Beer</span>
       </Link>
 
       {/* Right-side group: Social icons, Language selector, Contact button */}
-      <div className="absolute right-[41px] top-1/2 flex -translate-y-1/2 items-center gap-4">
+      <div className="absolute right-[41px] top-1/2 flex -translate-y-1/2 items-center gap-4 max-[900px]:right-4 max-[900px]:gap-2">
         {/* Social Icon - Instagram */}
         <a
           href="https://instagram.com/otterbeer"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex h-[40px] w-[30px] items-center justify-center transition-opacity hover:opacity-80"
+          className="flex h-[40px] w-[30px] items-center justify-center transition-opacity hover:opacity-80 max-[520px]:hidden"
           aria-label="Instagram"
         >
           <Image
@@ -117,7 +119,7 @@ export function Header({
           href="https://facebook.com/otterbeer"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex h-[29px] w-[29px] items-center justify-center transition-opacity hover:opacity-80"
+          className="flex h-[29px] w-[29px] items-center justify-center transition-opacity hover:opacity-80 max-[520px]:hidden"
           aria-label="Facebook"
         >
           <Image
@@ -170,7 +172,7 @@ export function Header({
         {/* Contact Button */}
         <Link
           href={contactHref}
-          className="flex h-[50px] w-[120px] items-center justify-center rounded-sm bg-primary text-[18px] font-normal uppercase tracking-[0.9px] text-on-primary transition-colors hover:bg-primary-container"
+          className="flex h-[50px] w-[120px] items-center justify-center rounded-sm bg-primary text-[18px] font-normal uppercase tracking-[0.9px] text-on-primary transition-colors hover:bg-primary-container max-[520px]:h-[42px] max-[520px]:w-[92px] max-[520px]:text-[14px]"
           style={{ fontFamily: "Hanken Grotesk, sans-serif" }}
         >
           Liên hệ

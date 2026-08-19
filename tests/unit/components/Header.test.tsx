@@ -1,3 +1,4 @@
+import { createElement, type ComponentProps } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Header } from "@/components/layout/header";
@@ -5,9 +6,8 @@ import { Header } from "@/components/layout/header";
 // Mock Next.js Image component
 jest.mock("next/image", () => ({
   __esModule: true,
-  default: (props: any) => {
-    // eslint-disable-next-line jsx-a11y/alt-text
-    return <img {...props} />;
+  default: (props: ComponentProps<"img">) => {
+    return createElement("img", props);
   },
 }));
 
@@ -91,6 +91,7 @@ describe("Header", () => {
     expect(logo).toBeInTheDocument();
 
     const logoLink = logo.closest("a");
+    expect(logoLink).toHaveAttribute("aria-label", "Otter Beer");
     expect(logoLink).toHaveAttribute("href", "/");
   });
 
