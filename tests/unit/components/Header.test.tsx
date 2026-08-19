@@ -7,7 +7,10 @@ import { Header } from "@/components/layout/header";
 jest.mock("next/image", () => ({
   __esModule: true,
   default: (props: ComponentProps<"img">) => {
-    return createElement("img", props);
+    // Filter out Next.js Image-specific props to prevent React 19 boolean DOM attribute warnings
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { fill, priority, placeholder, blurDataURL, ...rest } = props as Record<string, unknown>;
+    return createElement("img", rest);
   },
 }));
 
