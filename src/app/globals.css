@@ -55,6 +55,7 @@
   --color-tertiary-fixed-dim: #c9c6c1;
   --color-on-tertiary-fixed: #1c1c19;
   --color-on-tertiary-fixed-variant: #484743;
+  --color-mahogany: #341012;
 
   --color-background: #f4fafd;
   --color-on-background: #161d1f;
@@ -190,3 +191,14 @@ h4 {
     animation-duration: 1ms;
   }
 }
+
+.heritage-pattern {
+  background-image: radial-gradient(var(--color-primary-container) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.03;
+}
+
+.gold-border-top {
+  border-top: 2px solid var(--color-secondary-fixed-dim);
+}
+
