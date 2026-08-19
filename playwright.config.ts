@@ -55,12 +55,7 @@ export default defineConfig({
         {
           name: "otter_age_verified",
           value: "true",
-          domain: "localhost",
-          path: "/",
-          expires: -1,
-          httpOnly: false,
-          secure: false,
-          sameSite: "Lax",
+          url: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",
         },
       ],
       origins: [],
