@@ -49,7 +49,7 @@ export default defineConfig({
     locale: "vi-VN",
     timezoneId: "Asia/Ho_Chi_Minh",
 
-    // Pre-set age verification cookie for all E2E tests so tests are not blocked by the Age Gate
+    // Pre-set age verification cookie and localStorage for all E2E tests so tests are not blocked by the Age Gate
     storageState: {
       cookies: [
         {
@@ -62,8 +62,37 @@ export default defineConfig({
           secure: false,
           sameSite: "Lax",
         },
+        {
+          name: "otter_age_verified",
+          value: "true",
+          domain: "127.0.0.1",
+          path: "/",
+          expires: Math.round(Date.now() / 1000) + 86400 * 30, // 30 days
+          httpOnly: false,
+          secure: false,
+          sameSite: "Lax",
+        },
       ],
-      origins: [],
+      origins: [
+        {
+          origin: "http://localhost:3000",
+          localStorage: [
+            {
+              name: "otter_age_verified",
+              value: "true",
+            },
+          ],
+        },
+        {
+          origin: "http://127.0.0.1:3000",
+          localStorage: [
+            {
+              name: "otter_age_verified",
+              value: "true",
+            },
+          ],
+        },
+      ],
     },
   },
 
