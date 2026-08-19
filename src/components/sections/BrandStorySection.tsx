@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import React, { useState, useRef, type ReactNode } from "react";
 import { Great_Vibes, Roboto_Slab } from "next/font/google";
 import { playPageTurn } from "@/lib/utils/pageTurnSound";
+import HTMLFlipBook from "react-pageflip";
 
 const script = Great_Vibes({ subsets: ["latin"], weight: "400" });
 const slab = Roboto_Slab({ subsets: ["latin"], weight: ["700"] });
-
-/** Keep in sync with the --flip-ms custom property set on the leaf below. */
-const FLIP_MS = 780;
 
 interface BrandStorySectionProps {
   locale: string;
@@ -38,88 +36,56 @@ interface BookSpread {
   lines: string[];
 }
 
-/**
- * TEMPORARY static content — no admin-authored pages exist yet (this
- * component isn't wired to BrandStoryService in this change). Both locales
- * render this same English content for now, the same shortcut ProductShowcase
- * takes for its placeholder beer copy. Swap for a real fetch when asked to
- * "connect" the section: each spread already carries the
- * {title, illustration, lines} split that an uploaded page image plus
- * admin-authored title/caption would fill in.
- */
-const SPREADS: BookSpread[] = [
-  {
-    id: "kettle",
-    title: "Copper Kettle\nBrewing History",
-    illustration: <CopperKettleEngraving />,
-    lines: ["Mashing", "Boiling", "Fermenting"],
-  },
-  {
-    id: "hops",
-    title: "Hand-Selected\nHops & Malt",
-    illustration: <HopBineEngraving />,
-    lines: ["Harvesting", "Milling", "Blending"],
-  },
-  {
-    id: "cellar",
-    title: "Patient\nFermentation",
-    illustration: <FermentationTankEngraving />,
-    lines: ["Yeast", "Time", "Otter Beer"],
-  },
+const PAGES = [
+  "/images/otter-beer-premium-lager.jpg",
+  "/images/contact-hero.jpeg",
+  "/images/otter-beer-hero.png",
+  "/images/otter-beer-single-3d.png",
+  "/images/otter-beer-single-can.png",
+  "/images/otter-beer-premium-lager-transparent.png",
 ];
 
-interface FlipState {
-  /** Bumped every flip so React re-mounts the leaf and restarts its keyframes. */
-  id: number;
-  direction: "next" | "prev";
-  /** Spread index the book was showing when this flip started. */
-  fromIndex: number;
+interface PageFlipInstance {
+  pageFlip: () => {
+    flipNext: () => void;
+    flipPrev: () => void;
+  };
 }
 
-/**
- * Homepage "Brand Story" flipbook — a bound book the visitor pages through
- * with the two arrow controls.
- *
- * The page turn is a real leaf hinged at the spine, not a whole-spread
- * rotation: a single half-width element rotates 180° around the gutter with
- * `backface-visibility: hidden` on both faces, so the outgoing page's front
- * and the incoming page's back are two sides of one sheet. Nothing between
- * the `perspective` wrapper and the leaf may set `overflow` — that would
- * flatten the 3D context and collapse the turn back into a flat wipe.
- *
- * Deliberately breaks from the site's "Coastal Premium" tokens
- * (docs/DESIGN.md) for a warm heritage-brewing mood; every illustration and
- * texture here is original SVG (no source art files exist for this section).
- */
+interface PageFlipEvent {
+  data: number;
+}
+
+// Cast HTMLFlipBook to allow optional props instead of the library's strict required ones
+const FlipBook = HTMLFlipBook as unknown as React.ComponentType<
+  Partial<Omit<React.ComponentProps<typeof HTMLFlipBook>, "children">> & {
+    children: React.ReactNode;
+  }
+>;
+
 export function BrandStorySection({ locale }: BrandStorySectionProps) {
   const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
-  const [index, setIndex] = useState(0);
-  const [flip, setFlip] = useState<FlipState | null>(null);
+  const [pageIndex, setPageIndex] = useState(0);
+  const bookRef = useRef<PageFlipInstance | null>(null);
 
-  const isFirst = index === 0;
-  const isLast = index === SPREADS.length - 1;
-
-  // The leaf is decorative only — `index` commits on click, so the spread
-  // under it is already correct and nav never depends on the animation
-  // actually running (it doesn't in jsdom, and it's skipped under
-  // prefers-reduced-motion).
-  useEffect(() => {
-    if (!flip) return;
-    const timeoutMs = process.env.NODE_ENV === "test" ? 0 : FLIP_MS;
-    const timer = setTimeout(() => setFlip(null), timeoutMs);
-    return () => clearTimeout(timer);
-  }, [flip]);
+  // Math.floor(pageIndex / 2) is the current spread (0, 1, 2).
+  const isFirst = pageIndex === 0;
+  const isLast = pageIndex >= PAGES.length - 2; // Can't flip next if we're on the last spread
 
   function turn(direction: "next" | "prev") {
-    if (flip) return; // Require current page flip animation to complete before turning again
-    if (direction === "next" && isLast) return;
-    if (direction === "prev" && isFirst) return;
-    // Safe to call here and only here: this runs inside the click handler,
-    // which is the user gesture browsers require before audio may start.
-    playPageTurn();
-    setFlip({ id: Date.now(), direction, fromIndex: index });
-    setIndex((i) => i + (direction === "next" ? 1 : -1));
+    if (!bookRef.current) return;
+    if (direction === "next" && !isLast) {
+      bookRef.current.pageFlip().flipNext();
+      playPageTurn();
+    } else if (direction === "prev" && !isFirst) {
+      bookRef.current.pageFlip().flipPrev();
+      playPageTurn();
+    }
   }
+
+  const onPageFlip = (e: PageFlipEvent) => {
+    setPageIndex(e.data);
+  };
 
   return (
     <section className="relative overflow-hidden bg-[#f9efd9] px-4 py-20 sm:px-6 lg:py-28">
@@ -133,153 +99,101 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
           <span aria-hidden className="text-[#c8a26a]">
             <FlourishRule />
           </span>
-          {/* `!` is load-bearing: globals.css styles h1–h4 unlayered, and an
-              unlayered rule beats Tailwind's layered utilities regardless of
-              specificity — without it these headings render Coastal navy. */}
           <h2 className="font-display text-[clamp(26px,4vw,42px)] tracking-[0.08em] text-[#4a2c17]! uppercase">
             {copy.heading}
           </h2>
         </div>
 
-        <div className="flex w-full items-center justify-center gap-1 sm:gap-6">
-          <ArrowButton
-            direction="prev"
-            label={copy.prev}
-            disabled={isFirst || flip !== null}
-            onClick={() => turn("prev")}
-          />
+        <div className="flex w-full items-center justify-center sm:gap-6">
+          <div className="hidden sm:block">
+            <ArrowButton
+              direction="prev"
+              label={copy.prev}
+              disabled={isFirst}
+              onClick={() => turn("prev")}
+            />
+          </div>
 
-          <div
-            className="relative min-w-0 flex-1 sm:max-w-[820px]"
-            style={{ perspective: "2400px" }}
-          >
+          <div className="relative min-w-0 w-full sm:max-w-[1000px]">
             <div
               aria-hidden
               className="absolute inset-x-6 -bottom-4 h-10 rounded-[50%] bg-[#2a0b12]/35 blur-xl"
             />
 
-            {/* Oxblood hardcover leather binding matching the reference image */}
-            <div className="relative rounded-[8px] bg-[linear-gradient(180deg,#42121c,#360e16_40%,#2b0a11)] p-2 shadow-[0_30px_60px_-15px_rgba(42,11,18,0.7),inset_0_1px_0_rgba(255,255,255,0.12),0_0_0_1px_rgba(30,8,13,0.9)] sm:p-3">
-              {/* Binding, seen through the wedge the bowed pages leave open at
-                  the head and tail of the spine. Sits behind the page block. */}
+            <div className="relative mx-auto w-full max-w-[960px] rounded-[8px] bg-[linear-gradient(180deg,#42121c,#360e16_40%,#2b0a11)] p-1 shadow-[0_30px_60px_-15px_rgba(42,11,18,0.7),inset_0_1px_0_rgba(255,255,255,0.12),0_0_0_1px_rgba(30,8,13,0.9)] sm:p-1.5">
               <div
                 aria-hidden
-                className="absolute inset-y-1.5 left-1/2 w-6 -translate-x-1/2 rounded-full bg-[linear-gradient(to_right,rgba(0,0,0,0.5),rgba(255,255,255,0.08)_42%,rgba(255,255,255,0.12)_50%,rgba(255,255,255,0.08)_58%,rgba(0,0,0,0.5))]"
+                className="absolute inset-y-0.5 left-1/2 w-6 -translate-x-1/2 rounded-full bg-[linear-gradient(to_right,rgba(0,0,0,0.5),rgba(255,255,255,0.08)_42%,rgba(255,255,255,0.12)_50%,rgba(255,255,255,0.08)_58%,rgba(0,0,0,0.5))] sm:inset-y-1"
               />
 
-              <div
-                className="relative grid grid-cols-2"
-                style={{ transformStyle: "preserve-3d" }}
-                role="group"
-                aria-roledescription="book spread"
-                aria-label={copy.pageOf(index + 1, SPREADS.length)}
-              >
-                {/* The only pages in the accessibility tree, and always the
-                    current spread — every animation layer below is
-                    aria-hidden, so a screen reader never sees a page
-                    mid-turn or reads the outgoing spread. */}
-                <PageFace side="left" spread={SPREADS[index]} />
-                <PageFace side="right" spread={SPREADS[index]} />
-
-                {/* Visually, the half the leaf is about to land on has to keep
-                    showing the *outgoing* page until it gets there. */}
-                {flip ? (
-                  <div
-                    aria-hidden
-                    className={`absolute inset-y-0 z-10 w-1/2 ${
-                      flip.direction === "next" ? "left-0" : "left-1/2"
-                    }`}
-                  >
-                    <PageFace
-                      side={flip.direction === "next" ? "left" : "right"}
-                      spread={SPREADS[flip.fromIndex]}
-                    />
-                  </div>
-                ) : null}
-
-                {/* Cast shadow sweeping across the resting page as the leaf turns overhead */}
-                {flip ? (
-                  <div
-                    aria-hidden
-                    className={`pointer-events-none absolute inset-y-0 z-15 w-1/2 ${
-                      flip.direction === "next"
-                        ? "left-0 brand-cast-shadow-next"
-                        : "left-1/2 brand-cast-shadow-prev"
-                    }`}
-                  />
-                ) : null}
-
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute inset-y-0 left-1/2 z-10 w-10 -translate-x-1/2 bg-[linear-gradient(to_right,transparent,rgba(42,11,18,0.18)_38%,rgba(42,11,18,0.32)_50%,rgba(42,11,18,0.18)_62%,transparent)]"
-                />
-
-                {flip ? (
-                  <div
-                    key={flip.id}
-                    aria-hidden
-                    className={`absolute inset-y-0 z-20 w-1/2 ${
-                      flip.direction === "next"
-                        ? "left-1/2 origin-left brand-leaf-next"
-                        : "left-0 origin-right brand-leaf-prev"
-                    }`}
-                    style={{ transformStyle: "preserve-3d" }}
-                  >
-                    <div className="absolute inset-0 [backface-visibility:hidden]">
-                      <PageFace
-                        side={flip.direction === "next" ? "right" : "left"}
-                        spread={SPREADS[flip.fromIndex]}
-                        asLeaf
-                      />
-                    </div>
-                    <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)]">
-                      <PageFace
-                        side={flip.direction === "next" ? "left" : "right"}
-                        spread={SPREADS[index]}
-                        asLeaf
-                      />
-                    </div>
-                    {/* Dynamic shadow & specular reflection on the moving leaf face */}
-                    <div className="brand-leaf-shade pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,0.15),rgba(42,11,18,0.65))] mix-blend-multiply" />
-                  </div>
-                ) : null}
+              <div className="relative w-full aspect-[8/5]">
+                <FlipBook
+                  width={480}
+                  height={600}
+                  size="stretch"
+                  minWidth={100}
+                  maxWidth={480}
+                  minHeight={125}
+                  maxHeight={600}
+                  maxShadowOpacity={0.5}
+                  showCover={false}
+                  usePortrait={false}
+                  mobileScrollSupport={true}
+                  onFlip={onPageFlip}
+                  className="mx-auto h-full w-full"
+                  ref={bookRef}
+                >
+                  {PAGES.map((src, index) => (
+                    <PageFace key={src} src={src} side={index % 2 === 0 ? "left" : "right"} />
+                  ))}
+                </FlipBook>
               </div>
             </div>
           </div>
 
-          <ArrowButton
-            direction="next"
-            label={copy.next}
-            disabled={isLast || flip !== null}
-            onClick={() => turn("next")}
-          />
+          <div className="hidden sm:block">
+            <ArrowButton
+              direction="next"
+              label={copy.next}
+              disabled={isLast}
+              onClick={() => turn("next")}
+            />
+          </div>
         </div>
 
-        <p
-          aria-live="polite"
-          className="text-[11px] font-bold tracking-[0.28em] text-[#a9723f] uppercase"
-        >
-          {copy.pageOf(index + 1, SPREADS.length)}
-        </p>
+        <div className="flex w-full items-center justify-between px-2 sm:justify-center">
+          <div className="sm:hidden">
+            <ArrowButton
+              direction="prev"
+              label={copy.prev}
+              disabled={isFirst}
+              onClick={() => turn("prev")}
+            />
+          </div>
+          <p
+            aria-live="polite"
+            className="text-[11px] font-bold tracking-[0.28em] text-[#a9723f] uppercase"
+          >
+            {copy.pageOf(Math.floor(pageIndex / 2) + 1, Math.ceil(PAGES.length / 2))}
+          </p>
+          <div className="sm:hidden">
+            <ArrowButton
+              direction="next"
+              label={copy.next}
+              disabled={isLast}
+              onClick={() => turn("next")}
+            />
+          </div>
+        </div>
       </div>
     </section>
   );
 }
 
-function PageFace({
-  side,
-  spread,
-  asLeaf = false,
-}: {
+const PageFace = React.forwardRef<HTMLDivElement, {
   side: "left" | "right";
-  spread: BookSpread;
-  asLeaf?: boolean;
-}) {
-  // Sheets bow into the gutter, so the spine-side edge is shorter than the
-  // outer one — a wide, shallow elliptical radius bends the head and tail in
-  // toward the binding, and the inset shadow shades the trough it makes.
-  // Composed as one boxShadow string because two Tailwind `shadow-[…]`
-  // utilities on one element would collide rather than merge.
+  src: string;
+}>(({ side, src }, ref) => {
   const gutterShade =
     side === "left"
       ? "inset -18px 0 22px -18px rgba(42,11,18,0.45)"
@@ -287,71 +201,30 @@ function PageFace({
 
   return (
     <div
-      style={{ boxShadow: asLeaf ? `${gutterShade}, 0 0 30px rgba(42,11,18,0.24)` : gutterShade }}
-      className={`relative flex h-full min-h-[330px] flex-col items-center justify-center bg-[#faf6ee] px-4 py-8 text-center sm:min-h-[500px] sm:px-8 sm:py-12 ${
+      ref={ref}
+      style={{ boxShadow: gutterShade }}
+      className={`relative flex h-full w-full flex-col items-center justify-center bg-[#faf6ee] overflow-hidden ${
         side === "left"
-          ? "rounded-l-[4px] rounded-tr-[100%_16px] rounded-br-[100%_16px]"
-          : "rounded-r-[4px] rounded-tl-[100%_16px] rounded-bl-[100%_16px]"
+          ? "rounded-l-[4px]"
+          : "rounded-r-[4px]"
       }`}
     >
       <PaperGrain />
-      {/* Fanned page edges along the book's outer trim. */}
       <div
         aria-hidden
-        className={`absolute inset-y-1 w-[11px] bg-[repeating-linear-gradient(to_right,rgba(42,11,18,0.22)_0px,rgba(42,11,18,0.22)_1px,transparent_1px,transparent_3px)] ${
+        className={`absolute inset-y-1 z-10 w-[11px] bg-[repeating-linear-gradient(to_right,rgba(42,11,18,0.22)_0px,rgba(42,11,18,0.22)_1px,transparent_1px,transparent_3px)] ${
           side === "left" ? "left-0 rounded-l-[3px]" : "right-0 rounded-r-[3px]"
         }`}
       />
-
-      {side === "left" ? (
-        <>
-          {/* text-[...]! — see the note on the section heading above. */}
-          <h3
-            className={`${slab.className} relative whitespace-pre-line text-[18px] leading-[1.28] tracking-[-0.01em] text-[#2c1810]! sm:text-[28px]`}
-          >
-            {spread.title}
-          </h3>
-          <div className="relative mt-6 text-[#a9622f] sm:mt-9">
-            {spread.illustration}
-          </div>
-        </>
-      ) : (
-        <>
-          <CornerFlourish className="absolute top-2 left-2 sm:top-4 sm:left-4" />
-          <CornerFlourish className="absolute top-2 right-2 -scale-x-100 sm:top-4 sm:right-4" />
-          <CornerFlourish className="absolute bottom-2 left-2 -scale-y-100 sm:bottom-4 sm:left-4" />
-          <CornerFlourish className="absolute right-2 bottom-2 -scale-x-100 -scale-y-100 sm:right-4 sm:bottom-4" />
-
-          {/* Decorative hop sprigs matching the reference image arrangement */}
-          <HopSprig className="absolute top-7 right-7 h-6 w-5 rotate-[25deg] sm:top-10 sm:right-12 sm:h-9 sm:w-7" />
-          <HopSprig className="absolute top-[42%] left-4 h-6 w-5 -rotate-[45deg] sm:top-[42%] sm:left-8 sm:h-8 sm:w-6" />
-          <div className="absolute top-[38%] right-5 flex items-center gap-1 sm:top-[38%] sm:right-9">
-            <HopSprig className="h-5 w-4 rotate-[60deg] sm:h-8 sm:w-6" />
-          </div>
-          <HopSprig className="absolute top-[60%] right-10 h-5 w-4 rotate-[15deg] sm:top-[60%] sm:right-14 sm:h-7 sm:w-5" />
-          <HopSprig className="absolute bottom-6 left-1/2 -translate-x-1/2 h-6 w-5 rotate-[180deg] sm:bottom-8 sm:h-8 sm:w-6" />
-
-          <div className="relative flex flex-col items-center justify-center gap-1 py-4 sm:gap-2 sm:py-6">
-            {spread.lines.map((line, lineIndex) => (
-              <div key={line} className="flex flex-col items-center">
-                <p
-                  className={`${script.className} text-[clamp(28px,6vw,56px)] leading-[1.1] text-[#3d1a0d]`}
-                >
-                  {line}
-                </p>
-                {lineIndex < spread.lines.length - 1 ? (
-                  <span aria-hidden className="my-0.5 text-[#c8a26a] sm:my-1">
-                    <TinyFlourish />
-                  </span>
-                ) : null}
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+      <img
+        src={src}
+        alt="Brand Story Page"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
     </div>
   );
-}
+});
+PageFace.displayName = "PageFace";
 
 function PaperGrain() {
   return (
@@ -368,7 +241,6 @@ function PaperGrain() {
   );
 }
 
-/** Tiled brewing line-art wallpaper behind the book. */
 function BackgroundMotif() {
   return (
     <svg
@@ -384,14 +256,12 @@ function BackgroundMotif() {
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            {/* hop cone */}
             <g transform="translate(18 16)">
               <path d="M16 4v6" />
               <path d="M16 10c-7 0-11 5-11 11s4 14 11 14 11-7 11-14-4-11-11-11z" />
               <path d="M6 18c3-2 6-3 10-3s7 1 10 3M6 25c3-2 6-3 10-3s7 1 10 3M8 31c2-2 5-3 8-3s6 1 8 3" />
               <path d="M16 6c-3-3-7-3-9-1 2 3 6 4 9 1z" />
             </g>
-            {/* wheat ear */}
             <g transform="translate(104 12)">
               <path d="M14 52V16" />
               <path d="M14 20c-6-1-9-5-9-10 5 0 9 3 9 8zM14 20c6-1 9-5 9-10-5 0-9 3-9 8z" />
@@ -399,38 +269,32 @@ function BackgroundMotif() {
               <path d="M14 40c-6-1-9-5-9-10 5 0 9 3 9 8zM14 40c6-1 9-5 9-10-5 0-9 3-9 8z" />
               <path d="M14 12c-2-4-1-8 2-10 1 4 0 8-2 10z" />
             </g>
-            {/* beer mug */}
             <g transform="translate(176 20)">
               <path d="M4 14h24v28a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V14z" />
               <path d="M28 20h6a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4h-6" />
               <path d="M4 14c2-6 6-8 12-8s10 2 12 8" />
               <path d="M11 22v18M20 22v18" strokeWidth="1.1" />
             </g>
-            {/* barrel */}
             <g transform="translate(24 108)">
               <path d="M10 6h28c4 8 4 30 0 38H10c-4-8-4-30 0-38z" />
               <path d="M6 16h36M6 34h36" />
               <path d="M24 6v38" strokeWidth="1.1" />
             </g>
-            {/* bottle */}
             <g transform="translate(112 104)">
-              <path d="M12 4h8v12c8 5 10 10 10 18v14a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V34c0-8 2-13 10-18V4z" />
+              <path d="M12 4h8v12c8 5 10 10 18v14a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V34c0-8 2-13 10-18V4z" />
               <path d="M2 34h28" strokeWidth="1.1" />
               <path d="M13 2h6" strokeWidth="2.2" />
             </g>
-            {/* kettle */}
             <g transform="translate(178 112)">
               <path d="M6 16c-2 12 2 22 6 26h20c4-4 8-14 6-26" />
               <ellipse cx="22" cy="16" rx="16" ry="4" />
               <path d="M22 12V2M17 2h10" />
               <path d="M38 20c5 2 6 8 6 14" />
             </g>
-            {/* pint glass */}
             <g transform="translate(66 178)">
               <path d="M6 6h24l-3 34a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4L6 6z" />
               <path d="M7 16h22" strokeWidth="1.1" />
             </g>
-            {/* funnel */}
             <g transform="translate(150 180)">
               <path d="M4 6h28L21 24v16h-6V24L4 6z" />
               <path d="M4 12h28" strokeWidth="1.1" />
@@ -455,7 +319,6 @@ function CornerFlourish({ className = "" }: { className?: string }) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      {/* Intricate Victorian filigree corner scrollwork matching the design reference */}
       <path d="M 8 92 V 30 C 8 18 18 8 30 8 H 92" strokeWidth="1.8" />
       <path d="M 16 92 V 38 C 16 26 26 16 38 16 H 92" strokeWidth="1" opacity="0.6" />
       <path d="M 30 8 C 42 20 20 42 8 30" />
@@ -526,10 +389,6 @@ function FlourishRule() {
   );
 }
 
-// ─── Engraving-style illustrations ────────────────────────────────────────
-// Hatched line art in the manner of a Victorian brewing manual, matching the
-// reference frame's copper etchings.
-
 function CopperKettleEngraving() {
   return (
     <svg
@@ -541,39 +400,29 @@ function CopperKettleEngraving() {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      {/* ground */}
       <path d="M26 210h34M68 210h24M100 210h34M142 210h20M168 210h10" strokeWidth="1.8" opacity="0.7" />
       <path d="M38 217h28M76 217h30M116 217h28M152 217h18" strokeWidth="1.4" opacity="0.45" />
-      {/* plinth */}
       <path d="M48 191h104a5 5 0 0 1 5 5v5a4 4 0 0 1-4 4H47a4 4 0 0 1-4-4v-5a5 5 0 0 1 5-5z" />
       <path d="M52 198h96" strokeWidth="1.4" opacity="0.5" />
-      {/* body */}
       <path d="M42 130c-4 26 5 47 15 59 6 6 60 6 66 0 10-12 19-33 15-59" />
       <ellipse cx="100" cy="130" rx="58" ry="13" />
       <path d="M43 137c14 8 100 8 114 0" strokeWidth="1.8" opacity="0.8" />
       <path d="M50 160c16 9 84 9 100 0" strokeWidth="1.6" opacity="0.6" />
-      {/* dome + collar */}
       <path d="M57 126c2-25 18-42 43-42s41 17 43 42" />
       <ellipse cx="100" cy="85" rx="19" ry="5.5" />
-      {/* tall chimney */}
       <path d="M90 84V26M110 84V26" />
       <path d="M84 26h32" strokeWidth="3.4" />
       <path d="M87 19h26" strokeWidth="2.6" />
       <ellipse cx="100" cy="15" rx="15" ry="4.5" />
       <path d="M93 84V32M107 84V32" strokeWidth="1.2" opacity="0.4" />
-      {/* outlet pipe */}
       <path d="M153 123c17 5 23 19 23 35v31" />
       <path d="M162 119c19 7 25 23 25 39v27" opacity="0.85" />
       <path d="M168 205h26" strokeWidth="3" />
-      {/* spout + smoke */}
       <path d="M134 99l16-11 7 9-14 10" />
       <path d="M157 81c8-5 6-14-2-16M164 63c9-3 8-14 0-17M150 68c6-3 4-12-1-14" strokeWidth="1.8" opacity="0.62" />
-      {/* body hatching — denser on the shaded left flank */}
       <path d="M53 143c-2 18 2 33 10 45M64 147c-2 17 1 31 8 42M75 150c-2 16 0 29 6 39M86 152c-1 15 0 27 4 36" strokeWidth="1.5" opacity="0.45" />
       <path d="M140 147c2 17-1 31-8 42M130 151c1 15-1 27-5 37" strokeWidth="1.3" opacity="0.3" />
-      {/* dome hatching */}
       <path d="M64 116c2-18 11-30 25-34M75 122c2-17 10-28 22-32M86 125c1-16 7-26 16-30" strokeWidth="1.4" opacity="0.4" />
-      {/* rivets */}
       <circle cx="60" cy="139" r="2" fill="currentColor" stroke="none" opacity="0.75" />
       <circle cx="100" cy="142" r="2" fill="currentColor" stroke="none" opacity="0.75" />
       <circle cx="140" cy="139" r="2" fill="currentColor" stroke="none" opacity="0.75" />
@@ -592,25 +441,18 @@ function HopBineEngraving() {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      {/* ground */}
       <path d="M32 210h34M74 210h28M110 210h32M150 210h18" strokeWidth="1.5" opacity="0.6" />
-      {/* main bine */}
       <path d="M100 206c-6-40-4-78 2-116" />
-      {/* twining tendrils */}
       <path d="M102 154c-16-4-26-16-24-30M102 118c16-5 25-18 22-32" strokeWidth="1.6" />
-      {/* leaves */}
       <path d="M78 124c-14-3-22-13-20-24 12-1 21 9 20 24z" />
       <path d="M78 124c-6-8-9-15-9-21" strokeWidth="1.1" opacity="0.5" />
       <path d="M124 86c14-4 22-14 19-25-12 0-20 10-19 25z" />
       <path d="M124 86c5-8 8-15 8-21" strokeWidth="1.1" opacity="0.5" />
-      {/* big cone */}
       <path d="M104 32c-18 2-28 16-26 34s16 32 30 30 22-18 20-36-8-30-24-28z" />
       <path d="M80 50c7-4 14-6 22-6s15 2 22 5M79 64c7-4 15-6 23-6s15 2 22 6M84 78c6-4 12-6 19-6s13 2 19 5M90 90c5-3 10-4 15-4s10 1 14 4" />
       <path d="M102 34c2 20 4 41 4 62" strokeWidth="1.1" opacity="0.45" />
-      {/* small cone */}
       <path d="M58 168c-13 1-20 12-19 25s12 23 22 22 16-13 15-26-6-22-18-21z" />
       <path d="M41 181c5-3 10-4 16-4s11 1 16 4M41 191c5-3 11-4 17-4s11 1 15 4M45 201c4-2 8-3 13-3s9 1 12 3" />
-      {/* barley ear */}
       <path d="M148 208V150" />
       <path d="M148 156c-10-2-15-8-15-17 9 0 15 6 15 14zM148 156c10-2 15-8 15-17-9 0-15 6-15 14z" />
       <path d="M148 174c-10-2-15-8-15-17 9 0 15 6 15 14zM148 174c10-2 15-8 15-17-9 0-15 6-15 14z" />
@@ -630,32 +472,22 @@ function FermentationTankEngraving() {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      {/* ground */}
       <path d="M26 212h34M68 212h26M102 212h34M144 212h22" strokeWidth="1.5" opacity="0.6" />
-      {/* legs */}
       <path d="M62 186l-8 22M138 186l8 22" />
-      {/* conical body */}
       <path d="M52 44h96v112l-48 52-48-52V44z" />
       <ellipse cx="100" cy="44" rx="48" ry="11" />
-      {/* domed lid */}
       <path d="M62 40c4-14 18-22 38-22s34 8 38 22" />
       <ellipse cx="100" cy="18" rx="12" ry="4" />
       <path d="M100 14V4M92 4h16" strokeWidth="2.4" />
-      {/* hoop bands */}
       <path d="M52 74c16 7 80 7 96 0M52 112c16 7 80 7 96 0" strokeWidth="1.6" opacity="0.85" />
-      {/* sight glass */}
       <path d="M120 60v78" strokeWidth="1.4" opacity="0.7" />
       <path d="M114 96h12M114 118h12" strokeWidth="1.2" opacity="0.6" />
-      {/* valve + tap */}
       <circle cx="100" cy="176" r="7" />
       <path d="M100 183v14M92 197h16" strokeWidth="2.4" />
-      {/* pressure gauge */}
       <circle cx="158" cy="66" r="10" />
       <path d="M158 66l5-5" strokeWidth="1.5" />
       <path d="M148 66h-8" />
-      {/* hatching */}
       <path d="M64 88v52M76 92v48M88 96v42" strokeWidth="1.1" opacity="0.35" />
-      {/* rising bubbles */}
       <circle cx="76" cy="70" r="3" opacity="0.55" />
       <circle cx="90" cy="58" r="2.2" opacity="0.5" />
       <circle cx="106" cy="66" r="2.6" opacity="0.5" />
@@ -683,7 +515,6 @@ function ArrowButton({
       aria-label={label}
       className="group relative flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#a9723f] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f9efd9] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-20 sm:h-16 sm:w-16"
     >
-      {/* Frameless simple rounded chevron arrow */}
       <svg
         viewBox="0 0 24 24"
         className="h-7 w-7 fill-current text-[#a9723f] transition-all duration-200 group-hover:scale-125 group-hover:text-[#4a2c17] sm:h-10 sm:w-10"
