@@ -69,7 +69,13 @@ export function FeatureCard({
       >
         <div className="relative h-48 w-full bg-[linear-gradient(135deg,var(--color-primary)_0%,var(--color-primary-container)_60%,var(--color-secondary-container)_100%)]">
           {imageSrc ? (
-            <Image src={imageSrc} alt={imageAlt} fill className="object-cover" />
+            <Image
+              src={imageSrc}
+              alt={imageAlt}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
+            />
           ) : null}
         </div>
         <div className="flex flex-col gap-2 p-8">

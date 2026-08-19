@@ -88,6 +88,7 @@ export function Header({
             src="/images/header/logo.png"
             alt="Otter Beer Logo"
             fill
+            sizes="(max-width: 640px) 110px, 150px"
             className="object-contain"
             priority
           />
