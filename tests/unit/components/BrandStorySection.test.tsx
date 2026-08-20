@@ -4,7 +4,10 @@ import userEvent from "@testing-library/user-event";
 import { BrandStorySection } from "@/components/sections/BrandStorySection";
 
 jest.mock("react-pageflip", () => {
-  const MockFlipBook = React.forwardRef<any, any>(({ children, onFlip }, ref) => {
+  const MockFlipBook = React.forwardRef<
+    { pageFlip: () => { flipNext: () => void; flipPrev: () => void } },
+    { children?: React.ReactNode; onFlip?: (e: { data: number }) => void }
+  >(({ children, onFlip }, ref) => {
     let currentPage = 0;
     React.useImperativeHandle(ref, () => ({
       pageFlip: () => ({
