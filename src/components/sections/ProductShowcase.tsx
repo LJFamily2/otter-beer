@@ -105,7 +105,7 @@ export function ProductShowcase({ locale }: ProductShowcaseProps) {
 
         {/* Top-Shifted Editorial Background Watermark */}
         <div className="absolute top-4 sm:top-8 lg:top-0 inset-x-0 flex items-start justify-center pointer-events-none select-none">
-          <span className="font-display text-[10vw] sm:text-[12vw] leading-normal whitespace-nowrap text-transparent [-webkit-text-stroke:5px_rgba(0,40,103,0.08)] tracking-wider uppercase transition-all duration-500 py-2">
+          <span className="font-display text-[10vw] sm:text-[12vw] leading-normal whitespace-nowrap text-transparent [-webkit-text-stroke:2px_rgba(0,40,103,0.08)] tracking-wider uppercase transition-all duration-500 py-2">
             {currentBeer.bgText}
           </span>
         </div>
