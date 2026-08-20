@@ -45,7 +45,7 @@ export function TaglineSection({ locale = DEFAULT_LOCALE }: TaglineSectionProps)
   return (
     <section
       aria-label="Brand Tagline"
-      className="relative w-full overflow-hidden bg-background text-primary border-y border-primary/10 py-12 sm:py-16 lg:py-20"
+      className="relative w-full overflow-hidden bg-background text-primary py-12 sm:py-16 lg:py-20"
     >
       {/* Decorative Watermark Text */}
       <div aria-hidden className="pointer-events-none absolute -right-10 top-1/2 -translate-y-1/2 select-none overflow-hidden opacity-5">

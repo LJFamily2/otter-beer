@@ -12,30 +12,20 @@ const COPY = {
     headingLine1: "CHÚNG TÔI LUÔN SẴN",
     headingLine2: "SÀNG LẮNG NGHE",
     subtext:
-      "Thắc mắc sản phẩm, đại lý phân phối, hay hợp tác kinh doanh — Otter Beer luôn đón chào bạn.",
+      "Thắc mắc sản phẩm, đại lý phân phối, hay hợp tác kinh doanh Otter Beer luôn đón chào bạn.",
     cardHeadingLine1: "NHẮN TIN VỚI",
     cardHeadingLine2: "CHÚNG TÔI QUA ZALO",
     cardAction: "NHẮN TIN TRỰC TIẾP",
-    stats: [
-      { value: "50+", label: "Đại Lý & Taproom Partner" },
-      { value: "100%", label: "Mạch Nha Vàng Tự Nhiên" },
-      { value: "4.9★", label: "Đánh Giá Từ Cộng Đồng Craft" },
-    ],
   },
   en: {
     kicker: "GET IN TOUCH WITH OTTER",
     headingLine1: "WE'RE ALWAYS A",
     headingLine2: "MESSAGE AWAY",
     subtext:
-      "Product inquiries, distribution partnerships, or just saying hi — Otter Beer is always here.",
+      "Product inquiries, distribution partnerships, or just saying hi Otter Beer is always here.",
     cardHeadingLine1: "CHAT WITH US",
     cardHeadingLine2: "ON ZALO",
     cardAction: "DIRECT MESSAGE",
-    stats: [
-      { value: "50+", label: "Partner Taprooms & Vendors" },
-      { value: "100%", label: "Artisanal Golden Malt" },
-      { value: "4.9★", label: "Craft Community Rating" },
-    ],
   },
 } as const;
 
@@ -58,11 +48,11 @@ export function ContactCtaSection({
 
       <div className="relative z-10 mx-auto max-w-[1280px] px-6 sm:px-10 lg:px-16">
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-16">
-          
-          {/* Left Column: Heading, Subtext & Social Proof Stats */}
+
+          {/* Left Column: Heading & Subtext */}
           <div className="flex flex-col items-start lg:col-span-7">
             <span className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-secondary">
-              // {content.kicker}
+              {content.kicker}
             </span>
 
             <h2 className="mt-3 font-display text-4xl uppercase leading-[1.12] tracking-wide text-primary sm:text-5xl sm:leading-[1.12] md:text-6xl lg:text-[60px] lg:leading-[1.08]">
@@ -74,26 +64,12 @@ export function ContactCtaSection({
             <p className="mt-4 max-w-lg text-base font-medium leading-relaxed text-primary-container/85 sm:text-lg">
               {content.subtext}
             </p>
-
-            {/* Social Proof Stats Bar */}
-            <div className="mt-10 grid w-full grid-cols-3 gap-4 border-t border-primary/15 pt-8">
-              {content.stats.map((stat, idx) => (
-                <div key={idx} className="flex flex-col">
-                  <span className="font-display text-2xl font-bold text-primary sm:text-3xl lg:text-4xl">
-                    {stat.value}
-                  </span>
-                  <span className="mt-1 text-xs font-semibold text-primary-container/70 sm:text-sm">
-                    {stat.label}
-                  </span>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* Right Column: Interactive Zalo Glass Card */}
           <div className="lg:col-span-5">
             <div className="relative overflow-hidden rounded-3xl border border-white/60 bg-primary-container p-8 !text-white shadow-2xl transition-all duration-300 hover:scale-[1.02] sm:p-10">
-              
+
               {/* Subtle Card Glow Effect */}
               <div aria-hidden className="pointer-events-none absolute -right-10 -bottom-10 h-48 w-48 rounded-full bg-secondary-container/20 blur-2xl" />
 
