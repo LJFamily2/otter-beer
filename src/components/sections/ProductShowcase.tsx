@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 import { buttonVariants } from "@/components/ui/Button";
 
 interface ProductShowcaseProps {
@@ -15,6 +16,7 @@ const COPY = {
     style: "DÒNG BIA",
     abv: "NỒNG ĐỘ (ABV)",
     ibu: "ĐỘ ĐẮNG (IBU)",
+    swipeHint: "Vuốt để xem các dòng bia khác",
   },
   en: {
     shop: "SHOP NOW",
@@ -22,6 +24,7 @@ const COPY = {
     style: "STYLE",
     abv: "ALCOHOL (ABV)",
     ibu: "BITTERNESS (IBU)",
+    swipeHint: "Swipe to explore products",
   },
 } as const;
 
@@ -75,6 +78,8 @@ const FEATURED_BEERS = [
 
 export function ProductShowcase({ locale }: ProductShowcaseProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
 
   const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
   const currentBeer = FEATURED_BEERS[currentIndex];
@@ -87,9 +92,38 @@ export function ProductShowcase({ locale }: ProductShowcaseProps) {
     setCurrentIndex((prev) => (prev === FEATURED_BEERS.length - 1 ? 0 : prev + 1));
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+
+    const deltaX = touchStartX.current - touchEndX;
+    const deltaY = touchStartY.current - touchEndY;
+
+    // Minimum swipe threshold: 40px, ensuring horizontal movement dominates vertical scroll
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 40) {
+      if (deltaX > 0) {
+        handleNext();
+      } else {
+        handlePrev();
+      }
+    }
+
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
   return (
     <section
-      className="relative flex min-h-[100vh] flex-col items-center justify-center overflow-hidden bg-background px-5 py-16 sm:py-20 lg:py-24 transition-colors duration-700"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      className="relative flex min-h-[100vh] flex-col items-center justify-center overflow-hidden bg-background px-5 py-16 sm:py-20 lg:py-24 transition-colors duration-700 select-none touch-pan-y"
       style={{
         "--color-primary": currentBeer.themeColor,
         "--color-primary-container": currentBeer.themeColorContainer
@@ -104,8 +138,8 @@ export function ProductShowcase({ locale }: ProductShowcaseProps) {
         <div className="absolute top-0 right-0 h-[400px] w-[400px] rounded-full bg-radial from-primary/5 to-transparent blur-2xl" />
 
         {/* Top-Shifted Editorial Background Watermark */}
-        <div className="absolute top-4 sm:top-8 lg:top-0 inset-x-0 flex items-start justify-center pointer-events-none select-none">
-          <span className="font-display text-[10vw] sm:text-[12vw] leading-normal whitespace-nowrap text-transparent [-webkit-text-stroke:2px_rgba(0,40,103,0.08)] tracking-wider uppercase transition-all duration-500 py-2">
+        <div className="absolute top-6 sm:top-8 lg:top-0 inset-x-0 flex items-start justify-center pointer-events-none select-none">
+          <span className="font-display text-[20vw] sm:text-[12vw] leading-normal whitespace-nowrap text-transparent [-webkit-text-stroke:2px_rgba(0,40,103,0.08)] tracking-wider uppercase transition-all duration-500 py-2">
             {currentBeer.bgText}
           </span>
         </div>
@@ -176,17 +210,26 @@ export function ProductShowcase({ locale }: ProductShowcaseProps) {
             {/* Soft Ambient Light Halo */}
             <div className="absolute size-[85%] rounded-full bg-radial from-secondary-container/50 via-primary-container/20 to-transparent blur-3xl transition-transform duration-700 group-hover:scale-110" />
 
-            {/* Perfectly Proportioned Can Image with Hover Float */}
-            <div key={currentBeer.id} className="relative h-full w-full transform-gpu transition-all duration-500 ease-out group-hover:-translate-y-2 group-hover:scale-105">
-              <Image
-                src={currentBeer.imageSrc}
-                alt={currentBeer.style}
-                fill
-                className="object-contain drop-shadow-[0_25px_30px_rgba(0,40,103,0.3)]"
-                sizes="(max-width: 1024px) 80vw, 360px"
-                priority
-              />
-            </div>
+            {/* Animated Can Image Container */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentBeer.id}
+                initial={{ opacity: 0, scale: 0.92, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.92, y: -15 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="relative h-full w-full transform-gpu transition-all duration-500 ease-out group-hover:-translate-y-2 group-hover:scale-105"
+              >
+                <Image
+                  src={currentBeer.imageSrc}
+                  alt={currentBeer.style}
+                  fill
+                  className="object-contain drop-shadow-[0_25px_30px_rgba(0,40,103,0.3)]"
+                  sizes="(max-width: 1024px) 80vw, 360px"
+                  priority
+                />
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           {/* Realistic 3D Ground Reflection Shadow */}
@@ -206,19 +249,42 @@ export function ProductShowcase({ locale }: ProductShowcaseProps) {
               IBU {currentBeer.ibu}
             </span>
           </div>
+
+          {/* Mobile Swipe Hint */}
+          <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-primary/60 font-medium lg:hidden select-none">
+            <svg className="size-3.5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+            </svg>
+            <span className="text-[11px] tracking-wider uppercase font-semibold text-primary/70">{copy.swipeHint}</span>
+            <svg className="size-3.5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </div>
         </div>
 
         {/* Right Column: Copy & Sharp Action Buttons */}
         <div className="flex flex-col items-center text-center lg:items-end lg:text-right">
           {/* Main Headline */}
-          <h1 className="font-display text-[clamp(34px,5vw,52px)] leading-[1.08] tracking-[0.12em] whitespace-pre-line text-primary uppercase">
+          <motion.h1
+            key={`headline-${currentBeer.id}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="font-display text-[clamp(34px,5vw,52px)] leading-[1.08] tracking-[0.12em] whitespace-pre-line text-primary uppercase"
+          >
             {currentBeer.headline}
-          </h1>
+          </motion.h1>
 
           {/* Description */}
-          <p className="mt-4 max-w-[340px] whitespace-pre-line text-base leading-relaxed text-on-surface-variant">
+          <motion.p
+            key={`desc-${currentBeer.id}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.05 }}
+            className="mt-4 max-w-[340px] whitespace-pre-line text-base leading-relaxed text-on-surface-variant"
+          >
             {currentBeer.description}
-          </p>
+          </motion.p>
 
           {/* Sharp Architectural Buttons */}
           <div className="mt-7 flex flex-col gap-4 sm:flex-row">
@@ -298,6 +364,7 @@ export function ProductShowcase({ locale }: ProductShowcaseProps) {
     </section>
   );
 }
+
 
 
 
