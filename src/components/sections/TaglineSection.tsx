@@ -47,15 +47,8 @@ export function TaglineSection({ locale = DEFAULT_LOCALE }: TaglineSectionProps)
       aria-label="Brand Tagline"
       className="relative w-full overflow-hidden bg-background text-primary py-12 sm:py-16 lg:py-20"
     >
-      {/* Decorative Watermark Text */}
-      <div aria-hidden className="pointer-events-none absolute -right-10 top-1/2 -translate-y-1/2 select-none overflow-hidden opacity-5">
-        <span className="font-display text-[14vw] font-black uppercase text-primary">
-          OTTER
-        </span>
-      </div>
-
       <div className="relative z-10 mx-auto max-w-[1280px] px-6 sm:px-10 lg:px-16">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
 
           {/* Left Column: Heading & Philosophy */}
           <div className="max-w-3xl">
@@ -74,14 +67,14 @@ export function TaglineSection({ locale = DEFAULT_LOCALE }: TaglineSectionProps)
             </p>
           </div>
 
-          {/* Right Column: Monospaced Craft Badge Pills */}
-          <div className="mt-4 flex flex-wrap gap-2.5 lg:mt-0 lg:max-w-md lg:justify-end">
+          {/* Right Column: Airy Minimalist List */}
+          <div className="mt-8 flex flex-wrap gap-x-8 gap-y-4 lg:mt-0 lg:max-w-[420px] lg:justify-end lg:pb-1">
             {content.pillars.map((pillar, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-2 rounded-full border border-primary/20 bg-white/70 px-4 py-2 text-xs font-mono font-bold tracking-wider text-primary shadow-xs backdrop-blur-md transition-all hover:border-secondary hover:bg-secondary/10"
+                className="flex items-center gap-3 text-[11px] font-mono font-bold tracking-widest text-primary/70"
               >
-                <span className="h-1.5 w-1.5 rounded-full bg-secondary" />
+                <span className="text-secondary/50 font-light text-[10px]">+</span>
                 <span>{pillar}</span>
               </div>
             ))}
