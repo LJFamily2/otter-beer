@@ -36,13 +36,10 @@ interface BookSpread {
   lines: string[];
 }
 
-const PAGES = [
-  "/images/otter-beer-premium-lager.jpg",
-  "/images/contact-hero.jpeg",
-  "/images/otter-beer-hero.png",
-  "/images/otter-beer-single-3d.png",
-  "/images/otter-beer-single-can.png",
-  "/images/otter-beer-premium-lager-transparent.png",
+const SPREADS = [
+  { title: "Copper Kettle", left: "/images/otter-beer-premium-lager.jpg", right: "/images/contact-hero.jpeg" },
+  { title: "Hops & Malt", left: "/images/otter-beer-hero.png", right: "/images/otter-beer-single-3d.png" },
+  { title: "Fermentation", left: "/images/otter-beer-single-can.png", right: "/images/otter-beer-premium-lager-transparent.png" },
 ];
 
 interface PageFlipInstance {
@@ -70,16 +67,20 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
 
   // Math.floor(pageIndex / 2) is the current spread (0, 1, 2).
   const isFirst = pageIndex === 0;
-  const isLast = pageIndex >= PAGES.length - 2; // Can't flip next if we're on the last spread
+  const isLast = pageIndex >= SPREADS.length * 2 - 2; // Can't flip next if we're on the last spread
 
   function turn(direction: "next" | "prev") {
     if (!bookRef.current) return;
     if (direction === "next" && !isLast) {
       bookRef.current.pageFlip().flipNext();
       playPageTurn();
+      const nextIndex = Math.min(pageIndex + 2, SPREADS.length * 2 - 2);
+      setPageIndex(nextIndex);
     } else if (direction === "prev" && !isFirst) {
       bookRef.current.pageFlip().flipPrev();
       playPageTurn();
+      const prevIndex = Math.max(pageIndex - 2, 0);
+      setPageIndex(prevIndex);
     }
   }
 
@@ -142,9 +143,24 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
                   className="mx-auto h-full w-full"
                   ref={bookRef}
                 >
-                  {PAGES.map((src, index) => (
-                    <PageFace key={src} src={src} side={index % 2 === 0 ? "left" : "right"} />
-                  ))}
+                  {SPREADS.flatMap((spread, sIndex) => {
+                    const isCurrentSpread = Math.floor(pageIndex / 2) === sIndex;
+                    return [
+                      <PageFace
+                        key={`${spread.title}-left`}
+                        src={spread.left}
+                        title={spread.title}
+                        side="left"
+                        aria-hidden={!isCurrentSpread}
+                      />,
+                      <PageFace
+                        key={`${spread.title}-right`}
+                        src={spread.right}
+                        side="right"
+                        aria-hidden={!isCurrentSpread}
+                      />
+                    ];
+                  })}
                 </FlipBook>
               </div>
             </div>
@@ -173,7 +189,7 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
             aria-live="polite"
             className="text-[11px] font-bold tracking-[0.28em] text-primary-container uppercase"
           >
-            {copy.pageOf(Math.floor(pageIndex / 2) + 1, Math.ceil(PAGES.length / 2))}
+            {copy.pageOf(Math.floor(pageIndex / 2) + 1, SPREADS.length)}
           </p>
           <div className="sm:hidden">
             <ArrowButton
@@ -192,18 +208,22 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
 const PageFace = React.forwardRef<HTMLDivElement, {
   side: "left" | "right";
   src: string;
-}>(({ side, src }, ref) => {
+  title?: string;
+  "aria-hidden"?: boolean;
+}>(({ side, src, title, "aria-hidden": ariaHidden }, ref) => {
   return (
     <div
       ref={ref}
+      aria-hidden={ariaHidden}
       className={`relative flex h-full w-full flex-col items-center justify-center bg-background overflow-hidden ${side === "left"
           ? "rounded-l-[4px]"
           : "rounded-r-[4px]"
         }`}
     >
+      {title && <h3 className="sr-only">{title}</h3>}
       <img
         src={src}
-        alt="Brand Story Page"
+        alt={title}
         className="absolute inset-0 h-full w-full object-cover"
       />
 
