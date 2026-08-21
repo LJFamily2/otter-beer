@@ -79,8 +79,13 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
 
   return (
     <section className="relative overflow-hidden bg-background px-4 py-20 sm:px-6 lg:py-28">
+      {/* Background Image */}
+      <div
+        className="absolute inset-0 z-0 bg-[url('/images/brand-story-bg.jpg')] bg-cover bg-fixed bg-center opacity-10"
+        aria-hidden="true"
+      />
 
-      <div className="relative mx-auto flex max-w-[1120px] flex-col items-center gap-10">
+      <div className="relative z-10 mx-auto flex max-w-[1120px] flex-col items-center gap-10">
         <div className="flex flex-col items-center gap-3 text-center">
           <span className="text-[11px] font-bold tracking-[0.32em] text-primary-container">
             {copy.kicker}
@@ -205,8 +210,8 @@ const PageFace = React.forwardRef<HTMLDivElement, {
       ref={ref}
       aria-hidden={ariaHidden}
       className={`relative flex h-full w-full flex-col items-center justify-center bg-background overflow-hidden ${side === "left"
-          ? "rounded-l-[4px]"
-          : "rounded-r-[4px]"
+        ? "rounded-l-[4px]"
+        : "rounded-r-[4px]"
         }`}
     >
       {title && <h3 className="sr-only">{title}</h3>}
