@@ -35,6 +35,7 @@ interface PageFlipInstance {
   pageFlip: () => {
     flipNext: () => void;
     flipPrev: () => void;
+    turnToPage: (page: number) => void;
   };
 }
 
@@ -53,32 +54,78 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
   const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
   const [pageIndex, setPageIndex] = useState(0);
   const bookRef = useRef<PageFlipInstance | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  
+  // Toolbar state
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [isSinglePage, setIsSinglePage] = useState(false);
+  const [isSoundMuted, setIsSoundMuted] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
   // Math.floor(pageIndex / 2) is the current spread (0, 1, 2).
   const isFirst = pageIndex === 0;
-  const isLast = pageIndex >= SPREADS.length * 2 - 2; // Can't flip next if we're on the last spread
+  const isLast = pageIndex >= SPREADS.length * 2 - (isSinglePage ? 1 : 2);
+
+  const currentScale = isSinglePage ? zoomLevel * 1.6 : zoomLevel;
+  const currentTranslate = isSinglePage ? (pageIndex % 2 === 0 ? '25%' : '-25%') : '0%';
 
   function turn(direction: "next" | "prev") {
     if (!bookRef.current) return;
-    if (direction === "next" && !isLast) {
-      bookRef.current.pageFlip().flipNext();
-      playPageTurn();
-      const nextIndex = Math.min(pageIndex + 2, SPREADS.length * 2 - 2);
-      setPageIndex(nextIndex);
-    } else if (direction === "prev" && !isFirst) {
-      bookRef.current.pageFlip().flipPrev();
-      playPageTurn();
-      const prevIndex = Math.max(pageIndex - 2, 0);
-      setPageIndex(prevIndex);
+    
+    if (isSinglePage) {
+      if (direction === "next" && !isLast) {
+        if (pageIndex % 2 === 0) {
+          // Left page -> Right page. Just pan camera.
+          setPageIndex(pageIndex + 1);
+        } else {
+          // Right page -> Left page of NEXT spread. Flip page + pan camera.
+          bookRef.current.pageFlip().flipNext();
+          if (!isSoundMuted) playPageTurn();
+          setPageIndex(pageIndex + 1);
+        }
+      } else if (direction === "prev" && !isFirst) {
+        if (pageIndex % 2 === 1) {
+          // Right page -> Left page. Just pan camera.
+          setPageIndex(pageIndex - 1);
+        } else {
+          // Left page -> Right page of PREV spread. Flip page + pan camera.
+          bookRef.current.pageFlip().flipPrev();
+          if (!isSoundMuted) playPageTurn();
+          setPageIndex(pageIndex - 1);
+        }
+      }
+    } else {
+      if (direction === "next" && !isLast) {
+        bookRef.current.pageFlip().flipNext();
+        if (!isSoundMuted) playPageTurn();
+        const nextIndex = Math.min(pageIndex + 2, SPREADS.length * 2 - 2);
+        setPageIndex(nextIndex);
+      } else if (direction === "prev" && !isFirst) {
+        bookRef.current.pageFlip().flipPrev();
+        if (!isSoundMuted) playPageTurn();
+        const prevIndex = Math.max(pageIndex - 2, 0);
+        setPageIndex(prevIndex);
+      }
     }
   }
 
   const onPageFlip = (e: PageFlipEvent) => {
-    setPageIndex(e.data);
+    if (!isSinglePage) {
+      setPageIndex(e.data);
+    } else {
+      const currentSpread = Math.floor(pageIndex / 2) * 2;
+      if (e.data > currentSpread) {
+        // Flipped Forward: land on the Left page of the new spread
+        setPageIndex(e.data);
+      } else if (e.data < currentSpread) {
+        // Flipped Backward: land on the Right page of the new spread
+        setPageIndex(e.data + 1);
+      }
+    }
   };
 
   return (
-    <section className="relative overflow-hidden bg-background px-4 py-20 sm:px-6 lg:py-28">
+    <section ref={sectionRef} className="relative overflow-hidden bg-background px-4 py-20 sm:px-6 lg:py-28">
       {/* Background Image */}
       <div
         className="absolute inset-0 z-0 bg-[url('/images/brand-story-bg.jpg')] bg-cover bg-fixed bg-center opacity-10"
@@ -108,19 +155,33 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
             />
           </div>
 
-          <div className="relative min-w-0 w-full sm:max-w-[1000px]">
+          <div className="relative min-w-0 w-full sm:max-w-[1000px] perspective-[1200px]">
+            {/* Deep ground shadow */}
             <div
               aria-hidden
-              className="absolute inset-x-6 -bottom-4 h-10 rounded-[50%] bg-[#2a0b12]/35 blur-xl"
+              className="absolute inset-x-12 -bottom-6 h-12 rounded-[50%] bg-black/50 blur-2xl sm:inset-x-20 sm:-bottom-10 sm:h-20 transition-transform duration-1000"
+              style={{ transform: `scale(${currentScale}) translateX(${currentTranslate})` }}
             />
 
-            <div className="relative mx-auto w-full max-w-[960px] rounded-[8px] bg-primary p-1 shadow-md sm:p-1.5">
+            {/* The Hardcover */}
+            <div 
+              className="relative mx-auto w-full max-w-[960px] aspect-[8/5] rounded-[6px] sm:rounded-[10px] bg-[#2a0b12] p-1.5 pb-2 sm:p-2 sm:pb-3 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.7),inset_0_1px_1px_rgba(255,255,255,0.1)] border border-[#1a060a] transition-transform duration-1000 origin-center"
+              style={{ transform: `scale(${currentScale}) translateX(${currentTranslate})` }}
+            >
+              
+              {/* Paper Stack Edge (Bottom & Sides) */}
+              <div className="absolute inset-1.5 bg-[#f4f2ec] rounded-[3px] sm:inset-2 shadow-[inset_0_0_8px_rgba(0,0,0,0.1)]">
+                {/* Horizontal paper lines at the bottom */}
+                <div className="absolute inset-x-0 bottom-0 h-1.5 sm:h-2 bg-[repeating-linear-gradient(to_bottom,rgba(0,0,0,0.06)_0px,rgba(0,0,0,0.06)_1px,transparent_1px,transparent_2px)] rounded-b-[3px]" />
+              </div>
+
+              {/* Center Spine Binding (Hardcover) */}
               <div
                 aria-hidden
-                className="absolute inset-y-0.5 left-1/2 w-6 -translate-x-1/2 rounded-full bg-[linear-gradient(to_right,rgba(0,0,0,0.5),rgba(255,255,255,0.08)_42%,rgba(255,255,255,0.12)_50%,rgba(255,255,255,0.08)_58%,rgba(0,0,0,0.5))] sm:inset-y-1"
+                className="absolute inset-y-0 left-1/2 w-8 sm:w-12 -translate-x-1/2 rounded-sm bg-[linear-gradient(to_right,rgba(0,0,0,0.7),rgba(255,255,255,0.08)_40%,rgba(255,255,255,0.12)_50%,rgba(255,255,255,0.08)_60%,rgba(0,0,0,0.7))] shadow-[inset_0_0_15px_rgba(0,0,0,0.8)] z-0"
               />
 
-              <div className="relative w-full aspect-[8/5]">
+              <div className="relative w-full aspect-[8/5] z-10 -mt-0.5 sm:-mt-[2px] -mb-0.5 sm:-mb-[2px]">
                 <FlipBook
                   width={480}
                   height={600}
@@ -133,6 +194,7 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
                   showCover={false}
                   usePortrait={false}
                   mobileScrollSupport={true}
+                  flippingTime={1000}
                   onFlip={onPageFlip}
                   className="mx-auto h-full w-full"
                   ref={bookRef}
@@ -195,6 +257,21 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
           </div>
         </div>
       </div>
+      
+      <FlipbookToolbar
+        pageIndex={pageIndex}
+        totalPages={SPREADS.length * 2}
+        setZoomLevel={setZoomLevel}
+        isSinglePage={isSinglePage}
+        setIsSinglePage={setIsSinglePage}
+        isSoundMuted={isSoundMuted}
+        setIsSoundMuted={setIsSoundMuted}
+        isMoreMenuOpen={isMoreMenuOpen}
+        setIsMoreMenuOpen={setIsMoreMenuOpen}
+        sectionRef={sectionRef}
+        bookRef={bookRef}
+        setPageIndex={setPageIndex}
+      />
     </section>
   );
 }
@@ -233,11 +310,22 @@ const PageFace = React.forwardRef<HTMLDivElement, {
       {/* Book spine gutter shadow */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 z-20"
+        className="pointer-events-none absolute inset-0 z-20 mix-blend-multiply"
         style={{
           background: side === "left"
-            ? "linear-gradient(to right, transparent 82%, rgba(255,255,255,0.1) 92%, rgba(0,0,0,0.55) 100%)"
-            : "linear-gradient(to left, transparent 82%, rgba(255,255,255,0.1) 92%, rgba(0,0,0,0.55) 100%)"
+            ? "linear-gradient(to right, transparent 50%, rgba(0,0,0,0.05) 85%, rgba(0,0,0,0.4) 96%, rgba(0,0,0,0.8) 100%)"
+            : "linear-gradient(to left, transparent 50%, rgba(0,0,0,0.05) 85%, rgba(0,0,0,0.4) 96%, rgba(0,0,0,0.8) 100%)"
+        }}
+      />
+
+      {/* Page Lighting curve simulating a bent page */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-20 mix-blend-overlay opacity-50"
+        style={{
+          background: side === "left"
+            ? "linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 15%, rgba(255,255,255,0) 40%)"
+            : "linear-gradient(to left, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 15%, rgba(255,255,255,0) 40%)"
         }}
       />
     </div>
@@ -316,3 +404,174 @@ function ArrowButton({
     </button>
   );
 }
+
+function FlipbookToolbar({
+  pageIndex,
+  totalPages,
+  setZoomLevel,
+  isSinglePage,
+  setIsSinglePage,
+  isSoundMuted,
+  setIsSoundMuted,
+  isMoreMenuOpen,
+  setIsMoreMenuOpen,
+  sectionRef,
+  bookRef,
+  setPageIndex
+}: {
+  pageIndex: number;
+  totalPages: number;
+  setZoomLevel: React.Dispatch<React.SetStateAction<number>>;
+  isSinglePage: boolean;
+  setIsSinglePage: React.Dispatch<React.SetStateAction<boolean>>;
+  isSoundMuted: boolean;
+  setIsSoundMuted: React.Dispatch<React.SetStateAction<boolean>>;
+  isMoreMenuOpen: boolean;
+  setIsMoreMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  sectionRef: React.RefObject<HTMLElement | null>;
+  bookRef: React.RefObject<PageFlipInstance | null>;
+  setPageIndex: React.Dispatch<React.SetStateAction<number>>;
+}) {
+  const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.5, 3));
+  const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 0.5, 1));
+  
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement && sectionRef.current) {
+      sectionRef.current.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+      });
+    } else if (document.fullscreenElement) {
+      document.exitFullscreen();
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      alert("Link copied to clipboard!"); 
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  };
+
+  const goToFirstPage = () => {
+    if (bookRef.current) {
+      bookRef.current.pageFlip().turnToPage(0);
+      setPageIndex(0);
+      setIsMoreMenuOpen(false);
+    }
+  };
+
+  const goToLastPage = () => {
+    if (bookRef.current) {
+      const target = totalPages - (isSinglePage ? 1 : 2);
+      bookRef.current.pageFlip().turnToPage(target);
+      setPageIndex(target);
+      setIsMoreMenuOpen(false);
+    }
+  };
+
+  return (
+    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 sm:gap-4 rounded-full bg-[#1a080c] px-4 sm:px-6 py-2 sm:py-3 shadow-lg border border-[#2a0b12]">
+      <span className="text-[#f4f2ec] text-xs sm:text-sm font-medium mr-1 sm:mr-2 select-none whitespace-nowrap">
+        {isSinglePage ? pageIndex + 1 : Math.floor(pageIndex / 2) + 1} / {isSinglePage ? totalPages : totalPages / 2}
+      </span>
+      
+      <div className="w-[1px] h-5 bg-white/20" />
+
+      <button onClick={handleZoomIn} className="text-[#f4f2ec] hover:text-white transition-colors" aria-label="Zoom In">
+        <ZoomInIcon />
+      </button>
+      
+      <button onClick={handleZoomOut} className="text-[#f4f2ec] hover:text-white transition-colors" aria-label="Zoom Out">
+        <ZoomOutIcon />
+      </button>
+      
+      <button onClick={toggleFullscreen} className="hidden sm:block text-[#f4f2ec] hover:text-white transition-colors" aria-label="Fullscreen">
+        <FullscreenIcon />
+      </button>
+      
+      <button onClick={handleShare} className="text-[#f4f2ec] hover:text-white transition-colors" aria-label="Share">
+        <ShareIcon />
+      </button>
+      
+      <div className="relative">
+        <button onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)} className="text-[#f4f2ec] hover:text-white transition-colors" aria-label="More Options">
+          <MoreHorizontalIcon />
+        </button>
+        
+        {isMoreMenuOpen && (
+          <div className="absolute bottom-[calc(100%+16px)] right-0 w-56 rounded-lg bg-[#1a080c] border border-[#2a0b12] p-2 shadow-xl flex flex-col gap-1 z-50">
+            <a href="/BrandStory.pdf" download className="flex items-center gap-3 px-3 py-2 text-sm text-[#f4f2ec] hover:bg-white/10 rounded-md transition-colors">
+              <DownloadIcon /> Download PDF File
+            </a>
+            <button onClick={() => { 
+              if (isSinglePage) {
+                // Switching to Two Page mode: snap to the left page of the current spread
+                setPageIndex(Math.floor(pageIndex / 2) * 2);
+              }
+              setIsSinglePage(!isSinglePage); 
+              setIsMoreMenuOpen(false); 
+            }} className="flex items-center gap-3 px-3 py-2 text-sm text-[#f4f2ec] hover:bg-white/10 rounded-md transition-colors w-full text-left">
+              <SinglePageIcon /> {isSinglePage ? 'Two Page Mode' : 'Single Page Mode'}
+            </button>
+            <button onClick={goToFirstPage} className="flex items-center gap-3 px-3 py-2 text-sm text-[#f4f2ec] hover:bg-white/10 rounded-md transition-colors w-full text-left">
+              <FirstPageIcon /> Goto First Page
+            </button>
+            <button onClick={goToLastPage} className="flex items-center gap-3 px-3 py-2 text-sm text-[#f4f2ec] hover:bg-white/10 rounded-md transition-colors w-full text-left">
+              <LastPageIcon /> Goto Last Page
+            </button>
+            <button onClick={() => setIsSoundMuted(!isSoundMuted)} className="flex items-center gap-3 px-3 py-2 text-sm text-[#f4f2ec] hover:bg-white/10 rounded-md transition-colors w-full text-left">
+              {isSoundMuted ? <SoundOffIcon /> : <SoundOnIcon />} {isSoundMuted ? 'Turn on Sound' : 'Turn off Sound'}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ZoomInIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>;
+}
+
+function ZoomOutIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>;
+}
+
+function FullscreenIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>;
+}
+
+function ShareIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>;
+}
+
+function MoreHorizontalIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>;
+}
+
+function DownloadIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>;
+}
+
+function SinglePageIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>;
+}
+
+function FirstPageIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>;
+}
+
+function LastPageIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>;
+}
+
+function SoundOnIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>;
+}
+
+function SoundOffIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>;
+}
+

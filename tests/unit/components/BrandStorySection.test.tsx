@@ -5,7 +5,7 @@ import { BrandStorySection } from "@/components/sections/BrandStorySection";
 
 jest.mock("react-pageflip", () => {
   const MockFlipBook = React.forwardRef<
-    { pageFlip: () => { flipNext: () => void; flipPrev: () => void } },
+    { pageFlip: () => { flipNext: () => void; flipPrev: () => void; turnToPage: (page: number) => void } },
     { children?: React.ReactNode; onFlip?: (e: { data: number }) => void }
   >(({ children, onFlip }, ref) => {
     let currentPage = 0;
@@ -17,6 +17,10 @@ jest.mock("react-pageflip", () => {
         },
         flipPrev: () => {
           currentPage = Math.max(currentPage - 2, 0);
+          onFlip?.({ data: currentPage });
+        },
+        turnToPage: (page: number) => {
+          currentPage = page;
           onFlip?.({ data: currentPage });
         },
       }),
