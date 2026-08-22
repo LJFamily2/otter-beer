@@ -56,8 +56,8 @@ describe("AgeVerificationGate Component", () => {
       screen.getByRole("link", { name: /learn more/i })
     ).toHaveAttribute("href", "https://www.responsibility.org");
     expect(
-      screen.getByRole("link", { name: /leave site/i })
-    ).toHaveAttribute("href", "https://www.google.com");
+      screen.queryByRole("link", { name: /leave site/i })
+    ).not.toBeInTheDocument();
   });
 
   it("allows retrying when clicking 'I made a mistake' in restriction screen", () => {
