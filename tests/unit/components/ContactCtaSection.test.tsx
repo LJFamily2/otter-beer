@@ -12,12 +12,29 @@ describe("ContactCtaSection Component", () => {
     expect(
       screen.getByText(/product inquiries, distribution partnerships/i)
     ).toBeInTheDocument();
+
+    expect(screen.getByText("PHONE NUMBERS")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "(+84) 908 790 102" })).toHaveAttribute(
+      "href",
+      "tel:+84908790102"
+    );
+    expect(screen.getByRole("link", { name: "(+84) 981 686 491" })).toHaveAttribute(
+      "href",
+      "tel:+84981686491"
+    );
+
+    expect(screen.getByText("THE TAPROOM")).toBeInTheDocument();
+    expect(screen.getByText("BADENBEER Co., Ltd.")).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /chat with us on zalo/i })
+      screen.getByText(/13 house, alley 30, lac long quan street/i)
     ).toBeInTheDocument();
+
     expect(
-      screen.getByRole("link", { name: /direct message on zalo/i })
-    ).toHaveAttribute("href", "https://zalo.me");
+      screen.getByRole("link", { name: /get directions/i })
+    ).toHaveAttribute("href", "https://maps.google.com");
+    expect(
+      screen.getByRole("link", { name: /visit our factory/i })
+    ).toHaveAttribute("href", "https://maps.google.com");
   });
 
   it("renders Vietnamese content when locale is 'vi'", () => {
@@ -27,8 +44,32 @@ describe("ContactCtaSection Component", () => {
     expect(
       screen.getByRole("heading", { name: /chúng tôi luôn sẵn sàng lắng nghe/i })
     ).toBeInTheDocument();
+
+    expect(screen.getByText("SỐ ĐIỆN THOẠI")).toBeInTheDocument();
+    expect(screen.getByText("TAPROOM")).toBeInTheDocument();
+
     expect(
-      screen.getByRole("link", { name: /nhắn tin trực tiếp on zalo/i })
+      screen.getByRole("link", { name: /chỉ đường/i })
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /tham quan nhà máy/i })
+    ).toBeInTheDocument();
+  });
+
+  it("uses custom mapsUrl and factoryUrl when provided", () => {
+    render(
+      <ContactCtaSection
+        locale="en"
+        mapsUrl="https://maps.google.com/custom-taproom"
+        factoryUrl="https://maps.google.com/custom-factory"
+      />
+    );
+
+    expect(
+      screen.getByRole("link", { name: /get directions/i })
+    ).toHaveAttribute("href", "https://maps.google.com/custom-taproom");
+    expect(
+      screen.getByRole("link", { name: /visit our factory/i })
+    ).toHaveAttribute("href", "https://maps.google.com/custom-factory");
   });
 });
