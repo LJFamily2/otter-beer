@@ -31,6 +31,8 @@ test.describe("Age Verification Gate E2E", () => {
       page.getByRole("heading", { name: "ACCESS RESTRICTED" })
     ).toBeVisible();
     await expect(page.getByRole("link", { name: "LEARN MORE" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "LEAVE SITE" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /i made a mistake/i })
+    ).toBeVisible();
   });
 });
