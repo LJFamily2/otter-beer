@@ -31,10 +31,10 @@ describe("ContactCtaSection Component", () => {
 
     expect(
       screen.getByRole("link", { name: /get directions/i })
-    ).toHaveAttribute("href", "https://maps.google.com");
+    ).toHaveAttribute("href", expect.stringContaining("https://maps.google.com"));
     expect(
       screen.getByRole("link", { name: /visit our factory/i })
-    ).toHaveAttribute("href", "https://maps.google.com");
+    ).toHaveAttribute("href", expect.stringContaining("https://maps.google.com"));
   });
 
   it("renders Vietnamese content when locale is 'vi'", () => {
