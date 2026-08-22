@@ -75,7 +75,7 @@ export default async function BlogListPage({
                   alt=""
                   fill
                   className="object-cover"
-                  sizes="100vw"
+                  sizes="(max-width: 1320px) calc(100vw - 40px), 1280px"
                   priority
                 />
               </div>
