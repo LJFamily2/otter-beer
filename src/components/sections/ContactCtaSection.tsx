@@ -3,7 +3,8 @@ import { DEFAULT_LOCALE } from "@/config/locales";
 
 interface ContactCtaSectionProps {
   locale?: string;
-  zaloUrl?: string;
+  mapsUrl?: string;
+  factoryUrl?: string;
 }
 
 const COPY = {
@@ -13,9 +14,15 @@ const COPY = {
     headingLine2: "SÀNG LẮNG NGHE",
     subtext:
       "Thắc mắc sản phẩm, đại lý phân phối, hay hợp tác kinh doanh Otter Beer luôn đón chào bạn.",
-    cardHeadingLine1: "NHẮN TIN VỚI",
-    cardHeadingLine2: "CHÚNG TÔI QUA ZALO",
-    cardAction: "NHẮN TIN TRỰC TIẾP",
+    phoneLabel: "SỐ ĐIỆN THOẠI",
+    phone1: "(+84) 908 790 102",
+    phone2: "(+84) 981 686 491",
+    taproomLabel: "TAPROOM",
+    taproomName: "BADENBEER Co., Ltd.",
+    taproomAddress:
+      "13 House, Alley 30, Lac Long Quan Street, Hiep Dinh Ward, Tay Ninh Province",
+    directionsLabel: "Chỉ đường",
+    factoryLabel: "Tham quan nhà máy",
   },
   en: {
     kicker: "GET IN TOUCH WITH OTTER",
@@ -23,15 +30,22 @@ const COPY = {
     headingLine2: "MESSAGE AWAY",
     subtext:
       "Product inquiries, distribution partnerships, or just saying hi Otter Beer is always here.",
-    cardHeadingLine1: "CHAT WITH US",
-    cardHeadingLine2: "ON ZALO",
-    cardAction: "DIRECT MESSAGE",
+    phoneLabel: "PHONE NUMBERS",
+    phone1: "(+84) 908 790 102",
+    phone2: "(+84) 981 686 491",
+    taproomLabel: "THE TAPROOM",
+    taproomName: "BADENBEER Co., Ltd.",
+    taproomAddress:
+      "13 House, Alley 30, Lac Long Quan Street, Hiep Dinh Ward, Tay Ninh Province",
+    directionsLabel: "Get Directions",
+    factoryLabel: "Visit our factory",
   },
 } as const;
 
 export function ContactCtaSection({
   locale = DEFAULT_LOCALE,
-  zaloUrl = "https://zalo.me",
+  mapsUrl = "https://maps.google.com",
+  factoryUrl = "https://maps.google.com",
 }: ContactCtaSectionProps) {
   const content = COPY[locale as keyof typeof COPY] ?? COPY.en;
 
@@ -66,54 +80,77 @@ export function ContactCtaSection({
             </p>
           </div>
 
-          {/* Right Column: Interactive Zalo Glass Card */}
-          <div className="lg:col-span-5">
-            <div className="relative overflow-hidden rounded-3xl border border-white/60 bg-primary-container p-8 !text-white shadow-2xl transition-all duration-300 hover:scale-[1.02] sm:p-10">
+          {/* Right Column: Contact Info (no card, sits on section background) */}
+          <div className="flex flex-col gap-8 lg:col-span-5">
 
-              {/* Subtle Card Glow Effect */}
-              <div aria-hidden className="pointer-events-none absolute -right-10 -bottom-10 h-48 w-48 rounded-full bg-secondary-container/20 blur-2xl" />
-
-              {/* Logo Badge in top right corner */}
-              <div className="absolute top-6 right-6 h-16 w-16 sm:top-8 sm:right-8 sm:h-20 sm:w-20">
-                <Image
-                  src="/images/otter-beer-logo-yellow-bg.png"
-                  alt="Otter Beer"
-                  width={80}
-                  height={80}
-                  className="h-16 w-16 rounded-2xl object-contain drop-shadow-lg sm:h-20 sm:w-20"
-                />
+            {/* Phone Numbers */}
+            <div>
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-secondary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M4 3h3l1.5 4-2 1.5a10 10 0 0 0 5 5l1.5-2 4 1.5v3c0 1-1 1.5-2 1.3C8.5 15.8 2.2 9.5 1.7 3.5 1.5 2.5 3 3 4 3Z"
+                    fill="currentColor"
+                  />
+                </svg>
+                <span>{content.phoneLabel}</span>
               </div>
-
-              {/* Card Text Content */}
-              <div className="relative z-10 pr-16 sm:pr-20">
-                <h3
-                  style={{ color: "#ffffff" }}
-                  className="font-display text-2xl uppercase leading-tight tracking-wide !text-white sm:text-3xl"
-                >
-                  {content.cardHeadingLine1}
-                  <br />
-                  {content.cardHeadingLine2}
-                </h3>
-
-                <p className="mt-3 text-xs font-medium text-white/80 sm:text-sm">
-                  Tải catalogue báo giá & hỗ trợ giao hàng nhanh trong ngày.
-                </p>
-
-                <a
-                  href={zaloUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`${content.cardAction} on Zalo`}
-                  className="group mt-8 inline-flex items-center gap-2 rounded-xl bg-[#fed65b] px-6 py-3.5 font-display text-sm font-bold uppercase tracking-wider text-primary shadow-md transition-all duration-200 hover:bg-white hover:shadow-lg sm:text-base"
-                >
-                  <span>{content.cardAction}</span>
-                  <span className="transition-transform duration-200 group-hover:translate-x-1">
-                    →
-                  </span>
-                </a>
-              </div>
-
+              <p className="mt-3 text-xl font-semibold text-primary sm:text-2xl">
+                {content.phone1}
+              </p>
+              <p className="text-xl font-semibold text-primary sm:text-2xl">
+                {content.phone2}
+              </p>
             </div>
+
+            {/* Taproom */}
+            <div>
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-secondary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M12 21s7-6.5 7-11.5a7 7 0 0 0-14 0C5 14.5 12 21 12 21Z"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinejoin="round"
+                  />
+                  <circle cx="12" cy="9.5" r="2.3" stroke="currentColor" strokeWidth="1.8" />
+                </svg>
+                <span>{content.taproomLabel}</span>
+              </div>
+              <p className="mt-3 text-lg font-bold text-primary">
+                {content.taproomName}
+              </p>
+              <p className="mt-1 max-w-xs text-base font-medium leading-relaxed text-primary-container/85">
+                {content.taproomAddress}
+              </p>
+            </div>
+
+            {/* Links */}
+            <div className="flex flex-col gap-2">
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex w-fit items-center gap-2 font-display text-sm font-bold uppercase tracking-wider text-secondary transition-colors duration-200 hover:text-primary"
+              >
+                <span>{content.directionsLabel}</span>
+                <span className="transition-transform duration-200 group-hover:translate-x-1">
+                  →
+                </span>
+              </a>
+
+              <a
+                href={factoryUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex w-fit items-center gap-2 font-display text-sm font-bold uppercase tracking-wider text-secondary transition-colors duration-200 hover:text-primary"
+              >
+                <span>{content.factoryLabel}</span>
+                <span className="transition-transform duration-200 group-hover:translate-x-1">
+                  →
+                </span>
+              </a>
+            </div>
+
           </div>
 
         </div>
@@ -121,4 +158,3 @@ export function ContactCtaSection({
     </section>
   );
 }
-
