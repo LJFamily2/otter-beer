@@ -9,7 +9,9 @@ test.describe("Public blog", () => {
         name: /biên niên sử otter|the otter chronicles/i,
       })
     ).toBeVisible();
-    await expect(page.getByRole("link", { name: /otter beer/i })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Otter Beer", exact: true })
+    ).toBeVisible();
   });
 
   test("homepage stays at the bare path (default locale has no prefix)", async ({
