@@ -208,3 +208,35 @@ h4 {
   border-top: 2px solid var(--color-secondary-fixed-dim);
 }
 
+
+/* Hero carousel indicator fill — see src/components/sections/HeroSection.tsx.
+   The active segment fills left-to-right across one autoplay dwell. The
+   component re-mounts the fill via a React `key` change on every slide change
+   and on every autoplay resume, which restarts these keyframes in step with
+   the restarted timer, and flips `data-paused` while autoplay is suspended
+   (drag in progress, tab backgrounded, focus inside the indicator group).
+   The duration is fed in as --hero-dwell from AUTO_PLAY_INTERVAL in that file,
+   so the two never drift apart. */
+@keyframes hero-indicator-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.hero-indicator-fill {
+  transform-origin: left center;
+  animation: hero-indicator-fill var(--hero-dwell, 6000ms) linear forwards;
+}
+.hero-indicator-fill[data-paused="true"] {
+  animation-play-state: paused;
+}
+/* Autoplay is switched off entirely under reduced motion, so the active
+   segment simply reads as filled with no sweep. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-indicator-fill {
+    animation: none;
+    transform: scaleX(1);
+  }
+}
