@@ -64,6 +64,12 @@ export class BeerRepository extends BaseRepository<IBeer> {
       .exec();
   }
 
+  /** Every published beer, newest first — backs the homepage showcase carousel. Uses the {status, createdAt} index, no cap. */
+  async listShowcasePublished(): Promise<IBeer[]> {
+    const model = await this.ready();
+    return model.find({ status: "published" }).sort({ createdAt: -1 }).exec();
+  }
+
   /**
    * True if `key` is a published beer's image — the gate for the public
    * image proxy (src/app/api/media/public/[...key]/route.ts), mirroring

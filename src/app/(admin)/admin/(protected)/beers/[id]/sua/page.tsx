@@ -32,6 +32,8 @@ export default async function EditBeerPage({ params }: EditBeerPageProps) {
     ibu: beer.ibu,
     shopUrl: beer.shopUrl,
     findLocallyUrl: beer.findLocallyUrl,
+    themeColor: beer.themeColor,
+    themeColorContainer: beer.themeColorContainer,
     isFeatured: beer.isFeatured,
     status: beer.status,
     translations: Object.fromEntries(

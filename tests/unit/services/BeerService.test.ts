@@ -23,6 +23,7 @@ describe("BeerService", () => {
       updateById: jest.fn(),
       findById: jest.fn(),
       clearFeaturedExcept: jest.fn(),
+      listShowcasePublished: jest.fn(),
     } as unknown as BeerRepository;
     service = new BeerService(repository);
   });
@@ -42,6 +43,29 @@ describe("BeerService", () => {
       await service.create(input, "507f1f77bcf86cd799439011");
 
       expect(repository.clearFeaturedExcept).toHaveBeenCalledWith("beer-1");
+    });
+
+    it("passes theme colors through to the repository", async () => {
+      const created = { _id: "beer-1", isFeatured: false };
+      (repository.create as jest.Mock).mockResolvedValue(created);
+
+      const input: BeerCreateInput = {
+        abv: 4.3,
+        ibu: 20,
+        isFeatured: false,
+        status: "draft",
+        themeColor: "#002867",
+        themeColorContainer: "#1d3f82",
+        translations: fakeTranslations(),
+      };
+      await service.create(input, "507f1f77bcf86cd799439011");
+
+      expect(repository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          themeColor: "#002867",
+          themeColorContainer: "#1d3f82",
+        })
+      );
     });
 
     it("does not touch other featured beers when the new beer is not featured", async () => {
@@ -79,6 +103,46 @@ describe("BeerService", () => {
 
       expect(result).toBeNull();
       expect(repository.updateById).not.toHaveBeenCalled();
+    });
+
+    it("includes theme colors in the update when provided", async () => {
+      (repository.findById as jest.Mock).mockResolvedValue({ _id: "beer-1" });
+      (repository.updateById as jest.Mock).mockResolvedValue({ _id: "beer-1" });
+
+      await service.update(
+        "beer-1",
+        { themeColor: "#b22a2a", themeColorContainer: "#8b1f1f" },
+        "507f1f77bcf86cd799439011"
+      );
+
+      expect(repository.updateById).toHaveBeenCalledWith(
+        "beer-1",
+        expect.objectContaining({ themeColor: "#b22a2a", themeColorContainer: "#8b1f1f" })
+      );
+    });
+
+    it("clears a theme color when explicitly set to null", async () => {
+      (repository.findById as jest.Mock).mockResolvedValue({ _id: "beer-1" });
+      (repository.updateById as jest.Mock).mockResolvedValue({ _id: "beer-1" });
+
+      await service.update("beer-1", { themeColor: null }, "507f1f77bcf86cd799439011");
+
+      expect(repository.updateById).toHaveBeenCalledWith(
+        "beer-1",
+        expect.objectContaining({ themeColor: undefined })
+      );
+    });
+  });
+
+  describe("listShowcasePublished", () => {
+    it("delegates to the repository", async () => {
+      const beers = [{ _id: "beer-1" }, { _id: "beer-2" }];
+      (repository.listShowcasePublished as jest.Mock).mockResolvedValue(beers);
+
+      const result = await service.listShowcasePublished();
+
+      expect(repository.listShowcasePublished).toHaveBeenCalled();
+      expect(result).toBe(beers);
     });
   });
 });
