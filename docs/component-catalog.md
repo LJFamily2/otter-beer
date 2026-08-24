@@ -61,7 +61,7 @@ Bilingual (vi default with no prefix, en under `/en`), public, SEO-tracked
 
 | Route | File | Description |
 |---|---|---|
-| `/` | `page.tsx` | Homepage — renders `HeroSection` (ported from Figma node 28:877, "Main Hero Section" / the "Production List" section), then `BrandStorySection` |
+| `/` | `page.tsx` | Homepage — renders `HeroSection` (ported from Figma node 28:877, "Main Hero Section" / the "Production List" section), then `BrandStorySection`, `TaglineSection`, `ProductShowcase`, `NewsBlogSection`, `ContactCtaSection` and the contact form |
 | `/blog` | `blog/page.tsx` | Public blog list ("The Otter Chronicles" / "Biên Niên Sử Otter") — hero, featured post, tag filter, pagination |
 | `/blog/[slug]` | `blog/[slug]/page.tsx` | Public blog detail — article body, author card, recent posts, topics, JSON-LD |
 | `/design-system` | `design-system/page.tsx` | Live showcase of every `src/components/ui/*` component, grouped like the Figma "Coastal Premium UI Library" batches |
@@ -95,6 +95,7 @@ Homepage/public-page building blocks, one Figma frame per component.
 | Component | File | Description |
 |---|---|---|
 | `HeroSection` | `HeroSection.tsx` | Homepage hero carousel ("Production List" section, Figma node 28:877). Client Component; full-bleed 16:9 slides over a hardcoded `SLIDES` array — **not** wired to `beerService` (an earlier revision of this row claimed a Server Component fetching `getFeaturedPublished()`; that was never true of the shipped file). Drag/swipe + segmented gold progress indicators, no arrow controls; autoplay pauses on drag, backgrounded tab, and keyboard focus; cross-fades with autoplay off under `prefers-reduced-motion`. Indicator fill keyframes live in `globals.css` as `.hero-indicator-fill` |
+| `NewsBlogSection` | `NewsBlogSection.tsx` | Homepage news & blog rail, sits directly under `ProductShowcase` — no Figma frame (self-designed, layout ported from the hoiana.com/vn editorial band and re-themed to Coastal Premium). Client Component: full-bleed `bg-primary` navy band, two-column masthead (Anton heading + standfirst), and a snap-scrolling card rail inset to the container gutter that bleeds past the right edge. Cards are Playfair-italic titles over a photo scrim with a `Badge variant="overlay"` tag; pointer users get floating prev/next controls (disabled at each bound), touch users swipe. Renders a hardcoded `POSTS` placeholder array and links every card at `/blog` — **not** yet wired to `blogPostService.listPublished()`, same pending wiring as `HeroSection`/`BrandStorySection` |
 | `BrandStorySection` | `BrandStorySection.tsx` | Homepage "brand story" flipbook — no Figma frame exists for this (self-designed, original SVG illustrations/decorative motifs, no source art files). Client Component (page-turn interaction); currently renders TEMPORARY hardcoded placeholder pages, not yet wired to `brandStoryService.getPublished()` — swap when asked to "connect" the section, same pattern as the Beer wiring still pending for `HeroSection` |
 
 ## Admin-only components (`src/components/admin/`)
