@@ -94,8 +94,8 @@ Homepage/public-page building blocks, one Figma frame per component.
 
 | Component | File | Description |
 |---|---|---|
-| `HeroSection` | `HeroSection.tsx` | Homepage hero ("Production List" section, Figma node 28:877) — fetches `beerService.getFeaturedPublished()` directly (Server Component, no API round trip); renders `null` until a beer is marked both `isFeatured` and `published` |
-| `BrandStorySection` | `BrandStorySection.tsx` | Homepage "brand story" flipbook — no Figma frame exists for this (self-designed, original SVG illustrations/decorative motifs, no source art files). Client Component (page-turn interaction); currently renders TEMPORARY hardcoded placeholder pages, not yet wired to `brandStoryService.getPublished()` — swap when asked to "connect" the section, same pattern as `HeroSection`'s pending Beer wiring |
+| `HeroSection` | `HeroSection.tsx` | Homepage hero carousel ("Production List" section, Figma node 28:877). Client Component; full-bleed 16:9 slides over a hardcoded `SLIDES` array — **not** wired to `beerService` (an earlier revision of this row claimed a Server Component fetching `getFeaturedPublished()`; that was never true of the shipped file). Drag/swipe + segmented gold progress indicators, no arrow controls; autoplay pauses on drag, backgrounded tab, and keyboard focus; cross-fades with autoplay off under `prefers-reduced-motion`. Indicator fill keyframes live in `globals.css` as `.hero-indicator-fill` |
+| `BrandStorySection` | `BrandStorySection.tsx` | Homepage "brand story" flipbook — no Figma frame exists for this (self-designed, original SVG illustrations/decorative motifs, no source art files). Client Component (page-turn interaction); currently renders TEMPORARY hardcoded placeholder pages, not yet wired to `brandStoryService.getPublished()` — swap when asked to "connect" the section, same pattern as the Beer wiring still pending for `HeroSection` |
 
 ## Admin-only components (`src/components/admin/`)
 

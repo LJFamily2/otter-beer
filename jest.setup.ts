@@ -48,3 +48,22 @@ jest.mock("next/headers", () => ({
   })),
   headers: jest.fn(() => new Headers()),
 }));
+
+// ─── Browser APIs jsdom doesn't implement ──────────────────────
+import { installMatchMediaMock, setPrefersReducedMotion } from "./tests/support/matchMedia";
+
+installMatchMediaMock();
+
+// HeroSection measures its stage with a ResizeObserver; jsdom ships none.
+if (!globalThis.ResizeObserver) {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver;
+}
+
+// Motion is allowed by default; tests opt into reduced motion explicitly.
+afterEach(() => {
+  setPrefersReducedMotion(false);
+});
