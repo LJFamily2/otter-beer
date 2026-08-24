@@ -62,6 +62,27 @@ describe("BeerCreateSchema", () => {
     expect(result.status).toBe("draft");
     expect(result.isFeatured).toBe(false);
   });
+
+  it("accepts valid 6-digit hex theme colors", () => {
+    const result = BeerCreateSchema.safeParse(
+      baseBeer({ themeColor: "#002867", themeColorContainer: "#1d3f82" })
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it("allows omitting theme colors entirely", () => {
+    const result = BeerCreateSchema.safeParse(baseBeer());
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a malformed hex theme color", () => {
+    expect(BeerCreateSchema.safeParse(baseBeer({ themeColor: "002867" })).success).toBe(false);
+    expect(BeerCreateSchema.safeParse(baseBeer({ themeColor: "#00286" })).success).toBe(false);
+    expect(BeerCreateSchema.safeParse(baseBeer({ themeColor: "red" })).success).toBe(false);
+    expect(
+      BeerCreateSchema.safeParse(baseBeer({ themeColorContainer: "#gggggg" })).success
+    ).toBe(false);
+  });
 });
 
 describe("BeerUpdateSchema", () => {
@@ -84,5 +105,18 @@ describe("BeerUpdateSchema", () => {
       findLocallyUrl: null,
     });
     expect(result.success).toBe(true);
+  });
+
+  it("allows clearing theme colors via null", () => {
+    const result = BeerUpdateSchema.safeParse({
+      themeColor: null,
+      themeColorContainer: null,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a malformed hex theme color on update", () => {
+    const result = BeerUpdateSchema.safeParse({ themeColor: "not-a-color" });
+    expect(result.success).toBe(false);
   });
 });

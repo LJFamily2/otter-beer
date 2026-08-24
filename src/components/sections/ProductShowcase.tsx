@@ -4,9 +4,11 @@ import { useState, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { buttonVariants } from "@/components/ui/Button";
+import type { BeerShowcaseItem } from "@/lib/utils/BeerPresenter";
 
 interface ProductShowcaseProps {
   locale: string;
+  beers: BeerShowcaseItem[];
 }
 
 const COPY = {
@@ -28,68 +30,23 @@ const COPY = {
   },
 } as const;
 
-const FEATURED_BEERS = [
-  {
-    id: "premium-lager",
-    abv: "4.3%",
-    ibu: 20,
-    imageSrc: "/images/otter-beer-single-can.png",
-    style: "PREMIUM LAGER",
-    bgText: "DOANH NHÂN TRẺ",
-    headline: "BREWING\nCONNECTIONS.",
-    description: "A crisp, golden pour born in Tay Ninh.\nCrafted for moments that matter.",
-    flavorNotes: "Mạch Nha Vàng • Thảo Mộc • Sảng Khoái",
-    shopUrl: "#",
-    findLocallyUrl: "#",
-    themeColor: "#002867", // Default Otter Beer Blue
-    themeColorContainer: "#1d3f82",
-  },
-  {
-    id: "craft-ipa",
-    abv: "6.2%",
-    ibu: 45,
-    imageSrc: "/images/otter-beer-single-3d.png",
-    style: "COASTAL CRAFT IPA",
-    bgText: "COASTAL CRAFT IPA",
-    headline: "BOLD TROPICAL\nFLAVORS.",
-    description: "Infused with rich citrus hops & Tay Ninh craftsmanship.\nBold, aromatic, and invigorating.",
-    flavorNotes: "Hương Cam Quýt • Hoa Bia Đậm • Sảng Khoái",
-    shopUrl: "#",
-    findLocallyUrl: "#",
-    themeColor: "#055030", // Forest Green
-    themeColorContainer: "#033b22",
-  },
-  {
-    id: "gold-craft",
-    abv: "5.0%",
-    ibu: 28,
-    imageSrc: "/images/otter-beer-hero.png",
-    style: "GOLDEN ALE",
-    bgText: "GOLDEN ALE",
-    headline: "PURE CRAFT\nREFRESHMENT.",
-    description: "Smooth caramel malt profile paired with light herbal notes.\nPerfect for sunny coastal days.",
-    flavorNotes: "Mạch Nha Cháy • Ca Cao • Ém Ám",
-    shopUrl: "#",
-    findLocallyUrl: "#",
-    themeColor: "#b22a2a", // Crimson Red
-    themeColorContainer: "#8b1f1f",
-  },
-];
-
-export function ProductShowcase({ locale }: ProductShowcaseProps) {
+export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
 
   const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
-  const currentBeer = FEATURED_BEERS[currentIndex];
+  const currentBeer = beers[currentIndex];
+  const hasMultiple = beers.length > 1;
+
+  if (!currentBeer) return null;
 
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev === 0 ? FEATURED_BEERS.length - 1 : prev - 1));
+    setCurrentIndex((prev) => (prev === 0 ? beers.length - 1 : prev - 1));
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev === FEATURED_BEERS.length - 1 ? 0 : prev + 1));
+    setCurrentIndex((prev) => (prev === beers.length - 1 ? 0 : prev + 1));
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -140,7 +97,7 @@ export function ProductShowcase({ locale }: ProductShowcaseProps) {
         {/* Top-Shifted Editorial Background Watermark */}
         <div className="absolute top-6 sm:top-8 lg:top-0 inset-x-0 flex items-start justify-center pointer-events-none select-none">
           <span className="font-display text-[20vw] sm:text-[12vw] leading-normal whitespace-nowrap text-transparent [-webkit-text-stroke:2px_rgba(0,40,103,0.08)] tracking-wider uppercase transition-all duration-500 py-2">
-            {currentBeer.bgText}
+            {currentBeer.style}
           </span>
         </div>
       </div>
@@ -158,9 +115,6 @@ export function ProductShowcase({ locale }: ProductShowcaseProps) {
             </div>
             <p className="mt-3 font-display text-2xl tracking-wide text-primary">
               {currentBeer.style}
-            </p>
-            <p className="mt-1.5 text-sm font-medium text-primary/70">
-              {currentBeer.flavorNotes}
             </p>
           </div>
 
@@ -287,80 +241,88 @@ export function ProductShowcase({ locale }: ProductShowcaseProps) {
           </motion.p>
 
           {/* Sharp Architectural Buttons */}
-          <div className="mt-7 flex flex-col gap-4 sm:flex-row">
-            {/* Primary CTA */}
-            <a
-              href={currentBeer.shopUrl}
-              className={buttonVariants("primary", "md")}
-            >
-              <span>{copy.shop}</span>
-              <svg className="size-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </a>
+          {currentBeer.shopUrl || currentBeer.findLocallyUrl ? (
+            <div className="mt-7 flex flex-col gap-4 sm:flex-row">
+              {/* Primary CTA */}
+              {currentBeer.shopUrl ? (
+                <a
+                  href={currentBeer.shopUrl}
+                  className={buttonVariants("primary", "md")}
+                >
+                  <span>{copy.shop}</span>
+                  <svg className="size-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </a>
+              ) : null}
 
-            {/* Secondary CTA */}
-            <a
-              href={currentBeer.findLocallyUrl}
-              className={buttonVariants("secondary", "md")}
-            >
-              <svg className="size-4 text-primary transition-colors group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span>{copy.find}</span>
-            </a>
-          </div>
+              {/* Secondary CTA */}
+              {currentBeer.findLocallyUrl ? (
+                <a
+                  href={currentBeer.findLocallyUrl}
+                  className={buttonVariants("secondary", "md")}
+                >
+                  <svg className="size-4 text-primary transition-colors group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>{copy.find}</span>
+                </a>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </div>
 
       {/* Bottom Product Carousel Navigation: Spread to Outer Left & Right Ends */}
-      <div className="relative z-20 mt-10 flex w-full max-w-[1380px] items-center justify-between px-4 sm:px-8 lg:px-12">
-        {/* Left Ultra-Thin Long Arrow Button */}
-        <button
-          type="button"
-          onClick={handlePrev}
-          aria-label="Previous Product"
-          className="group flex cursor-pointer items-center p-2 text-primary transition-all duration-200 hover:opacity-100 active:scale-95"
-        >
-          <svg
-            width="80"
-            height="18"
-            viewBox="0 0 80 18"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="stroke-primary stroke-[1] transition-all duration-300 group-hover:stroke-secondary group-hover:-translate-x-2"
+      {hasMultiple ? (
+        <div className="relative z-20 mt-10 flex w-full max-w-[1380px] items-center justify-between px-4 sm:px-8 lg:px-12">
+          {/* Left Ultra-Thin Long Arrow Button */}
+          <button
+            type="button"
+            onClick={handlePrev}
+            aria-label="Previous Product"
+            className="group flex cursor-pointer items-center p-2 text-primary transition-all duration-200 hover:opacity-100 active:scale-95"
           >
-            <path d="M80 9H2M2 9L11 1M2 9L11 17" strokeLinecap="square" strokeLinejoin="miter" />
-          </svg>
-        </button>
+            <svg
+              width="80"
+              height="18"
+              viewBox="0 0 80 18"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="stroke-primary stroke-[1] transition-all duration-300 group-hover:stroke-secondary group-hover:-translate-x-2"
+            >
+              <path d="M80 9H2M2 9L11 1M2 9L11 17" strokeLinecap="square" strokeLinejoin="miter" />
+            </svg>
+          </button>
 
-        {/* Slide Counter Indicator */}
-        <div className="font-display text-xs tracking-widest text-primary/70">
-          <span>0{currentIndex + 1}</span>
-          <span className="mx-1 text-primary/30">/</span>
-          <span className="text-primary/40">0{FEATURED_BEERS.length}</span>
+          {/* Slide Counter Indicator */}
+          <div className="font-display text-xs tracking-widest text-primary/70">
+            <span>0{currentIndex + 1}</span>
+            <span className="mx-1 text-primary/30">/</span>
+            <span className="text-primary/40">0{beers.length}</span>
+          </div>
+
+          {/* Right Ultra-Thin Long Arrow Button */}
+          <button
+            type="button"
+            onClick={handleNext}
+            aria-label="Next Product"
+            className="group flex cursor-pointer items-center p-2 text-primary transition-all duration-200 hover:opacity-100 active:scale-95"
+          >
+            <svg
+              width="80"
+              height="18"
+              viewBox="0 0 80 18"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="stroke-primary stroke-[1] transition-all duration-300 group-hover:stroke-secondary group-hover:translate-x-2"
+            >
+              <path d="M0 9H78M78 9L69 1M78 9L69 17" strokeLinecap="square" strokeLinejoin="miter" />
+            </svg>
+          </button>
         </div>
-
-        {/* Right Ultra-Thin Long Arrow Button */}
-        <button
-          type="button"
-          onClick={handleNext}
-          aria-label="Next Product"
-          className="group flex cursor-pointer items-center p-2 text-primary transition-all duration-200 hover:opacity-100 active:scale-95"
-        >
-          <svg
-            width="80"
-            height="18"
-            viewBox="0 0 80 18"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="stroke-primary stroke-[1] transition-all duration-300 group-hover:stroke-secondary group-hover:translate-x-2"
-          >
-            <path d="M0 9H78M78 9L69 1M78 9L69 17" strokeLinecap="square" strokeLinejoin="miter" />
-          </svg>
-        </button>
-      </div>
+      ) : null}
     </section>
   );
 }
