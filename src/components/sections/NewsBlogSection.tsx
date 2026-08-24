@@ -23,8 +23,6 @@ const COPY = {
   vi: {
     kicker: "TIN TỨC & BLOG",
     heading: "CHUYỆN NHÀ OTTER",
-    intro:
-      "Từ mẻ bia đầu tiên trong xưởng đến những đêm nhạc bên bờ biển — nơi chúng tôi kể lại hành trình thủ công, con người và những cuộc gặp gỡ làm nên hương vị Otter Beer.",
     viewAll: "XEM TẤT CẢ BÀI VIẾT",
     prev: "Bài viết trước",
     next: "Bài viết tiếp theo",
@@ -35,8 +33,6 @@ const COPY = {
   en: {
     kicker: "NEWS & BLOG",
     heading: "THE OTTER JOURNAL",
-    intro:
-      "From the first pour in the brewhouse to late nights by the coast — where we tell the story of the craft, the people, and the encounters behind every Otter Beer.",
     viewAll: "VIEW ALL STORIES",
     prev: "Previous story",
     next: "Next story",
@@ -169,10 +165,6 @@ export function NewsBlogSection({ locale = DEFAULT_LOCALE }: NewsBlogSectionProp
               </svg>
             </Link>
           </div>
-
-          <p className="max-w-[420px] text-[15px] font-medium leading-relaxed text-white/70 lg:col-span-5">
-            {copy.intro}
-          </p>
         </div>
 
         {/* Card rail: inset to the container gutter on the left, bleeding past

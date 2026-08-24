@@ -21,9 +21,6 @@ describe("NewsBlogSection Component", () => {
       screen.getByRole("heading", { name: /the otter journal/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/news & blog/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/from the first pour in the brewhouse/i)
-    ).toBeInTheDocument();
 
     expect(
       screen.getByRole("heading", { name: /brewhouse diary/i })
