@@ -2,6 +2,7 @@ import { HeroSection } from "@/components/sections/HeroSection";
 import { TaglineSection } from "@/components/sections/TaglineSection";
 import { ProductShowcase } from "@/components/sections/ProductShowcase";
 import { BrandStorySection } from "@/components/sections/BrandStorySection";
+import { NewsBlogSection } from "@/components/sections/NewsBlogSection";
 import ContactSection from "./contact/contact";
 import { ContactCtaSection } from "@/components/sections/ContactCtaSection";
 import { beerService } from "@/services/BeerService";
@@ -25,6 +26,7 @@ export default async function HomePage({ params }: HomePageProps) {
       <BrandStorySection locale={locale} />
       <TaglineSection locale={locale} />
       {beers.length > 0 ? <ProductShowcase locale={locale} beers={beers} /> : null}
+      <NewsBlogSection locale={locale} />
       <ContactCtaSection locale={locale} />
       <ContactSection locale={locale} />
     </>
