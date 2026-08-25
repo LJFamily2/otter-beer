@@ -4,9 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Playfair_Display } from "next/font/google";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { DEFAULT_LOCALE } from "@/config/locales";
 import { localizedPath } from "@/lib/seo";
-import { Badge } from "@/components/ui/Badge";
 
 const playfair = Playfair_Display({
   subsets: ["latin", "vietnamese"],
@@ -90,14 +90,20 @@ const CARD_GAP_PX = 20;
 
 export function NewsBlogSection({ locale = DEFAULT_LOCALE }: NewsBlogSectionProps) {
   const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
+  const sectionRef = useRef<HTMLElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
 
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"],
+  });
+
+  const parallaxY = useTransform(scrollYProgress, [0, 1], ["-15%", "15%"]);
+
   const syncBounds = useCallback(() => {
     const rail = railRef.current;
-    // scrollWidth is 0 until the rail has been laid out — measuring then
-    // would wrongly park both arrows in their disabled end state.
     if (!rail || rail.scrollWidth === 0) return;
 
     setAtStart(rail.scrollLeft <= 8);
@@ -119,26 +125,37 @@ export function NewsBlogSection({ locale = DEFAULT_LOCALE }: NewsBlogSectionProp
       ? card.offsetWidth + CARD_GAP_PX
       : rail.clientWidth * FALLBACK_SCROLL_RATIO;
 
-    // No explicit `behavior` — the rail's CSS scroll-behavior decides, so
-    // prefers-reduced-motion users get an instant jump instead of a glide.
     rail.scrollBy({ left: direction * step });
   };
 
   return (
     <section
+      ref={sectionRef}
       aria-label={copy.sectionLabel}
-      className="relative w-full overflow-hidden bg-primary py-16 sm:py-20 lg:py-28"
+      className="relative flex min-h-[85vh] sm:min-h-[90vh] w-full flex-col justify-center overflow-hidden bg-primary py-24 sm:py-36 lg:py-44"
     >
-      {/* Ambient depth — a warm gold wash top-right, a cooler one bottom-left,
-          so the flat navy band reads as lit rather than printed. */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 select-none">
-        <div className="absolute -top-32 right-0 h-[520px] w-[520px] rounded-full bg-radial from-secondary-container/12 to-transparent blur-3xl" />
-        <div className="absolute -bottom-40 -left-24 h-[460px] w-[460px] rounded-full bg-radial from-primary-fixed-dim/10 to-transparent blur-3xl" />
+      {/* Parallax Background Graphic & Ambient Lighting */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 select-none z-0 overflow-hidden">
+        <motion.div
+          style={{ y: parallaxY }}
+          className="absolute -top-[25%] -bottom-[25%] inset-x-0 h-[150%]"
+        >
+          <Image
+            src="/images/new-bg.png"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center opacity-25"
+          />
+        </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/60 via-primary/30 to-primary/80 z-10" />
+        <div className="absolute -top-32 right-0 h-[520px] w-[520px] rounded-full bg-radial from-secondary-container/12 to-transparent blur-3xl z-10" />
+        <div className="absolute -bottom-40 -left-24 h-[460px] w-[460px] rounded-full bg-radial from-primary-fixed-dim/10 to-transparent blur-3xl z-10" />
       </div>
 
-      <div className="relative z-10">
-        {/* Header: heading left, standfirst right — mirrors the reference's
-            two-column editorial masthead. */}
+      <div className="relative z-10 my-auto">
+        {/* Header: heading left, standfirst right — clean editorial masthead */}
         <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-8 px-6 sm:px-10 lg:grid-cols-12 lg:items-start lg:gap-16 lg:px-16">
           <div className="lg:col-span-7 lg:pt-6">
             <span className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-secondary-fixed-dim">
@@ -151,7 +168,7 @@ export function NewsBlogSection({ locale = DEFAULT_LOCALE }: NewsBlogSectionProp
 
             <Link
               href={localizedPath(locale, "/blog")}
-              className="group mt-6 inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-secondary-fixed-dim transition-colors hover:text-white"
+              className="group mt-6 inline-flex items-center gap-3 text-md font-bold uppercase tracking-[0.18em] text-secondary-fixed-dim transition-colors hover:text-white"
             >
               <span>{copy.viewAll}</span>
               <svg
@@ -169,14 +186,59 @@ export function NewsBlogSection({ locale = DEFAULT_LOCALE }: NewsBlogSectionProp
 
         {/* Card rail: inset to the container gutter on the left, bleeding past
             the right edge so the next card is always half-visible. */}
-        <div className="relative mt-12 lg:mt-16">
+        <div className="relative mt-16 lg:mt-24">
+          {/* Arrow controls centered vertically — hidden on mobile view, visible on desktop (lg:flex) */}
+          <div className="pointer-events-none absolute inset-y-0 inset-x-0 mx-auto hidden max-w-[1280px] items-center justify-between px-4 sm:px-8 lg:px-12 z-30 lg:flex">
+            {/* Prev Arrow */}
+            <button
+              type="button"
+              onClick={() => scrollByCard(-1)}
+              disabled={atStart}
+              aria-label={copy.prev}
+              className="group pointer-events-auto flex size-12 sm:size-14 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/30 bg-white/20 text-white shadow-xl backdrop-blur-md transition-all duration-300 hover:border-white hover:bg-white/35 hover:scale-110 active:scale-95 disabled:pointer-events-none disabled:opacity-0"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="size-5 sm:size-6 fill-current text-white transition-transform duration-200 group-hover:scale-110"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <path d="M 17.5 4.5 L 5.5 12 L 17.5 19.5 L 14.2 12 Z" />
+              </svg>
+            </button>
+
+            {/* Next Arrow */}
+            <button
+              type="button"
+              onClick={() => scrollByCard(1)}
+              disabled={atEnd}
+              aria-label={copy.next}
+              className="group pointer-events-auto flex size-12 sm:size-14 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/30 bg-white/20 text-white shadow-xl backdrop-blur-md transition-all duration-300 hover:border-white hover:bg-white/35 hover:scale-110 active:scale-95 disabled:pointer-events-none disabled:opacity-0"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="size-5 sm:size-6 fill-current text-white transition-transform duration-200 group-hover:scale-110"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <path d="M 6.5 4.5 L 18.5 12 L 6.5 19.5 L 9.8 12 Z" />
+              </svg>
+            </button>
+          </div>
+
           <div
             ref={railRef}
             onScroll={syncBounds}
             role="region"
             aria-label={copy.railLabel}
             tabIndex={0}
-            className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth scroll-pl-6 pr-6 pb-3 pl-6 [scrollbar-width:none] motion-reduce:scroll-auto sm:scroll-pl-10 sm:pl-10 lg:scroll-pl-[calc(max(0px,(100vw-1280px)/2)_+_4rem)] lg:pl-[calc(max(0px,(100vw-1280px)/2)_+_4rem)] [&::-webkit-scrollbar]:hidden"
+            className="flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth scroll-pl-6 pr-6 pb-4 pl-6 [scrollbar-width:none] motion-reduce:scroll-auto sm:scroll-pl-10 sm:pl-10 lg:scroll-pl-[calc(max(0px,(100vw-1280px)/2)_+_4rem)] lg:pl-[calc(max(0px,(100vw-1280px)/2)_+_4rem)] [&::-webkit-scrollbar]:hidden"
           >
             {POSTS.map((post) => {
               const content = post[locale as "vi" | "en"] ?? post.en;
@@ -184,72 +246,42 @@ export function NewsBlogSection({ locale = DEFAULT_LOCALE }: NewsBlogSectionProp
                 <article
                   key={post.id}
                   data-news-card
-                  className="w-[264px] shrink-0 snap-start sm:w-[300px] lg:w-[324px]"
+                  className="w-[280px] shrink-0 snap-start sm:w-[340px] lg:w-[370px]"
                 >
                   <Link
                     href={localizedPath(locale, "/blog")}
-                    className="group relative block aspect-[5/6] overflow-hidden rounded-lg no-underline shadow-md ring-1 ring-white/10 transition-[transform,box-shadow] duration-500 hover:-translate-y-1.5 focus-visible:-translate-y-1.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-secondary-fixed-dim"
+                    className="group relative block aspect-[5/6] overflow-hidden rounded-2xl no-underline shadow-lg ring-1 ring-white/10 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl hover:ring-white/25 focus-visible:-translate-y-1.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-secondary-fixed-dim"
                   >
                     <Image
                       src={post.imageSrc}
                       alt=""
                       fill
                       sizes="(max-width: 640px) 264px, (max-width: 1024px) 300px, 324px"
-                      className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+                      className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
                     />
 
-                    {/* Legibility scrim — deep at the caption, clear at the top. */}
+                    {/* Smooth bottom backdrop blur & gradient scrim */}
                     <div
                       aria-hidden
-                      className="absolute inset-0 bg-gradient-to-t from-primary from-8% via-primary/70 via-48% to-primary/10"
+                      className="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-black/80 via-black/40 to-transparent backdrop-blur-md [mask-image:linear-gradient(to_top,black_50%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_50%,transparent_100%)]"
                     />
 
-                    <div className="absolute inset-x-0 bottom-0 flex flex-col items-start p-5">
-                      <time className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-white/60">
-                        {post.date}
-                      </time>
-
+                    {/* Clean, high-contrast caption area */}
+                    <div className="absolute inset-x-0 bottom-0 flex flex-col items-start p-5 sm:p-6">
                       <h3
-                        className={`${playfair.className} mt-1.5 text-2xl font-medium italic leading-snug !text-white`}
+                        className={`${playfair.className} text-2xl sm:text-[28px] font-normal italic leading-snug !text-white drop-shadow-sm transition-transform duration-300 group-hover:translate-x-1`}
                       >
                         {content.title}
                       </h3>
 
-                      <Badge variant="overlay" className="mt-3">
+                      <span className="mt-3 inline-flex items-center rounded-full border border-white/20 bg-white/20 px-3.5 py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur-md transition-colors duration-300 group-hover:bg-white/30">
                         {content.tag}
-                      </Badge>
+                      </span>
                     </div>
                   </Link>
                 </article>
               );
             })}
-          </div>
-
-          {/* Floating rail controls — pointer-only; touch users just swipe. */}
-          <div className="pointer-events-none absolute inset-y-0 right-6 hidden items-center gap-3 lg:flex">
-            <button
-              type="button"
-              onClick={() => scrollByCard(-1)}
-              disabled={atStart}
-              aria-label={copy.prev}
-              className="pointer-events-auto flex size-14 cursor-pointer items-center justify-center rounded-full border border-white/40 bg-primary/30 text-white backdrop-blur-md transition-all duration-200 hover:border-white hover:bg-primary/60 active:scale-95 disabled:cursor-default disabled:opacity-30 disabled:hover:border-white/40"
-            >
-              <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 12H5m0 0l6-6m-6 6l6 6" />
-              </svg>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => scrollByCard(1)}
-              disabled={atEnd}
-              aria-label={copy.next}
-              className="pointer-events-auto flex size-14 cursor-pointer items-center justify-center rounded-full border border-white/40 bg-primary/30 text-white backdrop-blur-md transition-all duration-200 hover:border-white hover:bg-primary/60 active:scale-95 disabled:cursor-default disabled:opacity-30 disabled:hover:border-white/40"
-            >
-              <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14m0 0l-6-6m6 6l-6 6" />
-              </svg>
-            </button>
           </div>
 
           {/* Mobile swipe affordance — mirrors ProductShowcase's hint. */}
