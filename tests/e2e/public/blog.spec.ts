@@ -1,5 +1,10 @@
 import { test, expect } from "@playwright/test";
 
+// The age gate renders its own <h1> until the verified-storage check clears it,
+// so every heading assertion here matches by name — a bare `level: 1` locator
+// races that overlay and measures the wrong element.
+const BLOG_HEADING = /biên niên sử otter|the otter chronicles/i;
+
 test.describe("Public blog", () => {
   test("blog list page renders the hero and header nav", async ({ page }) => {
     await page.goto("/blog");
@@ -12,6 +17,47 @@ test.describe("Public blog", () => {
     await expect(
       page.getByRole("link", { name: "Otter Beer", exact: true })
     ).toBeVisible();
+  });
+
+  test("blog masthead shows the kicker above the heading", async ({ page }) => {
+    await page.goto("/blog");
+    const heading = page.getByRole("heading", {
+      level: 1,
+      name: BLOG_HEADING,
+    });
+    await expect(heading).toBeVisible();
+
+    const kicker = page.getByText(/nhật ký nhà máy bia|the brewery journal/i);
+    await expect(kicker).toBeVisible();
+
+    // The kicker is an eyebrow — it has to sit above the h1, not below it.
+    const kickerBox = await kicker.boundingBox();
+    const headingBox = await heading.boundingBox();
+    expect(kickerBox!.y).toBeLessThan(headingBox!.y);
+  });
+
+  test("blog heading uses the tightened masthead type, not stretched", async ({
+    page,
+  }) => {
+    await page.goto("/blog");
+    const heading = page.getByRole("heading", {
+      level: 1,
+      name: BLOG_HEADING,
+    });
+    await expect(heading).toBeVisible();
+
+    const styles = await heading.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return {
+        fontSize: parseFloat(s.fontSize),
+        lineHeight: parseFloat(s.lineHeight),
+        letterSpacing: parseFloat(s.letterSpacing),
+      };
+    });
+    // leading-[0.92] and tracking-[-0.03em] are what turn the plain centered
+    // title into a masthead block; guard both against a regression.
+    expect(styles.lineHeight / styles.fontSize).toBeLessThan(1);
+    expect(styles.letterSpacing).toBeLessThan(0);
   });
 
   test("homepage stays at the bare path (default locale has no prefix)", async ({
