@@ -51,7 +51,7 @@ export default async function BlogListPage({
 
   return (
     <>
-      <section className="border-b border-outline-variant/40 bg-surface-container-low px-5 py-20 text-center">
+      <section className="px-5 pt-18 text-center">
         <span className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-secondary">
           {isVi ? "Nhật ký nhà máy bia" : "The brewery journal"}
         </span>
@@ -64,11 +64,6 @@ export default async function BlogListPage({
           {isVi ? "Biên Niên Sử Otter" : "The Otter Chronicles"}
         </h1>
         <div className="mx-auto mt-6 h-[3px] w-16 bg-secondary-fixed-dim" />
-        <p className="mx-auto mt-6 max-w-[560px] text-lg leading-relaxed text-on-surface-variant">
-          {isVi
-            ? "Câu chuyện từ vùng biển, cập nhật từ nhà máy bia, và những góc nhìn sâu về quy trình chế biến của chúng tôi."
-            : "Tales from the coastal waters, brewery updates, and deep dives into our crafting process."}
-        </p>
       </section>
 
       <div className="mx-auto flex max-w-[1280px] flex-col gap-16 px-5 py-16">
