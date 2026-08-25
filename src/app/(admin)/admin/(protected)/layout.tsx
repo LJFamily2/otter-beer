@@ -2,7 +2,7 @@ import Link from "next/link";
 import { auth, signOut } from "@/auth";
 import { MODULE_KEYS } from "@/config/permissions";
 import { SYSTEM_ROLE_LABELS_VI, type SystemRoleKey } from "@/config/roles";
-import { NewsBlogIcon, BeerIcon, BrandStoryIcon, LogoutIcon, UsersIcon, ShieldIcon } from "@/components/admin/icons";
+import { NewsBlogIcon, BeerIcon, BrandStoryIcon, HeroIcon, LogoutIcon, UsersIcon, ShieldIcon } from "@/components/admin/icons";
 import { NavSidebar } from "@/components/ui/NavSidebar";
 import { Avatar } from "@/components/ui/Avatar";
 
@@ -26,6 +26,12 @@ export default async function ProtectedAdminLayout({
       href: "/admin/blog",
       label: "Tin tức & Blog",
       icon: <NewsBlogIcon />,
+    },
+    {
+      key: MODULE_KEYS.HERO_SECTION,
+      href: "/admin/hero",
+      label: "Ảnh bìa trang chủ",
+      icon: <HeroIcon />,
     },
     {
       key: MODULE_KEYS.BEERS,

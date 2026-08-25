@@ -5,27 +5,30 @@ import { storageService } from "@/lib/storage/StorageService";
 import { BlogPostRepository } from "@/repositories/BlogPostRepository";
 import { BeerRepository } from "@/repositories/BeerRepository";
 import { BrandStoryRepository } from "@/repositories/BrandStoryRepository";
+import { HeroSectionRepository } from "@/repositories/HeroSectionRepository";
 
 export const dynamic = "force-dynamic";
 
 const blogPostRepository = new BlogPostRepository();
 const beerRepository = new BeerRepository();
 const brandStoryRepository = new BrandStoryRepository();
+const heroSectionRepository = new HeroSectionRepository();
 
 interface RouteParams {
   params: Promise<{ key: string[] }>;
 }
 
 /**
- * Image endpoint behind a dual gate — access control needs to serve two
+ * Media endpoint behind a dual gate — images and, for the hero section,
+ * video — access control needs to serve two
  * different audiences the same way regardless of which storage provider is
  * active:
- *  1. Public visitors: only images actually referenced by a *published*
- *     post/beer (fast, cacheable, crawlable — required for SEO/social
- *     previews).
- *  2. Logged-in admins with news_blog or beers view access: any key, so
- *     the Tiptap editor / BeerForm can preview images that aren't
- *     published yet.
+ *  1. Public visitors: only media actually referenced by a *published*
+ *     post/beer/hero slide (fast, cacheable, crawlable — required for
+ *     SEO/social previews).
+ *  2. Logged-in admins with view access to any module that owns media:
+ *     any key, so the Tiptap editor / BeerForm / HeroSlidesForm can
+ *     preview files that aren't published yet.
  * Everything else (orphaned uploads, guesses) 404s either way.
  *
  * Streams the bytes rather than redirecting to the provider's view URL —
@@ -47,16 +50,28 @@ export async function GET(_request: NextRequest, context: RouteParams) {
   const canPreviewAsAdmin = Boolean(
     session?.user?.permissions?.[MODULE_KEYS.NEWS_BLOG]?.view ||
       session?.user?.permissions?.[MODULE_KEYS.BEERS]?.view ||
-      session?.user?.permissions?.[MODULE_KEYS.BRAND_STORY]?.view
+      session?.user?.permissions?.[MODULE_KEYS.BRAND_STORY]?.view ||
+      session?.user?.permissions?.[MODULE_KEYS.HERO_SECTION]?.view
   );
 
   if (!canPreviewAsAdmin) {
-    const [visibleAsPost, visibleAsBeer, visibleAsBrandStoryPage] = await Promise.all([
+    const [
+      visibleAsPost,
+      visibleAsBeer,
+      visibleAsBrandStoryPage,
+      visibleAsHeroSlide,
+    ] = await Promise.all([
       blogPostRepository.isKeyPubliclyVisible(key),
       beerRepository.isKeyPubliclyVisible(key),
       brandStoryRepository.isKeyPubliclyVisible(key),
+      heroSectionRepository.isKeyPubliclyVisible(key),
     ]);
-    if (!visibleAsPost && !visibleAsBeer && !visibleAsBrandStoryPage) {
+    if (
+      !visibleAsPost &&
+      !visibleAsBeer &&
+      !visibleAsBrandStoryPage &&
+      !visibleAsHeroSlide
+    ) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
   }
