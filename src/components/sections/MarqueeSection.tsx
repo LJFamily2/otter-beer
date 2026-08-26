@@ -37,8 +37,8 @@ const TAGLINE_DURATION_MS = 32000;
 function DropletIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      width={14}
-      height={14}
+      width={18}
+      height={18}
       viewBox="0 0 20 20"
       fill="none"
       aria-hidden="true"
@@ -57,8 +57,8 @@ function DropletIcon(props: SVGProps<SVGSVGElement>) {
 function SparkleIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      width={12}
-      height={12}
+      width={14}
+      height={14}
       viewBox="0 0 20 20"
       fill="currentColor"
       aria-hidden="true"
@@ -118,20 +118,20 @@ function MarqueeRow({
 
 /** Homepage brand marquee — a diagonal band of two independently looping
  *  rows: a bold brand name scrolling one way, a lighter tagline scrolling
- *  the other. Ported from a Stitch mockup (stitch.withgoogle.com), not a
- *  Figma frame — no exported assets or design tokens were available, so
- *  colors/type reuse the site's existing "Coastal Premium" tokens and the
- *  separator icons are hand-authored (see DropletIcon/SparkleIcon above),
- *  same convention as BrandStorySection's decorative motifs. */
+ *  the other. Styled off Figma node 153-544 ("Otter Beer Redesign"),
+ *  matched from screenshots rather than a live MCP fetch — colors/type
+ *  reuse the site's existing "Coastal Premium" tokens, and the separator
+ *  icons are hand-authored (see DropletIcon/SparkleIcon above), same
+ *  convention as BrandStorySection's decorative motifs. */
 export function MarqueeSection({ locale = DEFAULT_LOCALE }: MarqueeSectionProps) {
   const content = COPY[locale as keyof typeof COPY] ?? COPY.en;
 
   return (
     <section
       aria-label="Brand Marquee"
-      className="relative w-full overflow-hidden bg-surface-container-low py-10 sm:py-14"
+      className="relative w-full overflow-hidden bg-surface-container-lowest py-8 sm:py-12"
     >
-      <div className="w-[120%] -translate-x-[8%] -rotate-2 space-y-3 sm:space-y-4">
+      <div className="w-[120%] -translate-x-[8%] -rotate-2 space-y-1 sm:space-y-2">
         <MarqueeRow
           text={content.brand}
           repeat={BRAND_REPEAT}
@@ -146,7 +146,7 @@ export function MarqueeSection({ locale = DEFAULT_LOCALE }: MarqueeSectionProps)
           durationMs={TAGLINE_DURATION_MS}
           direction="right"
           icon={<SparkleIcon className="text-secondary-fixed-dim" />}
-          textClassName="font-mono text-sm font-semibold uppercase tracking-widest text-on-surface-variant sm:text-lg"
+          textClassName="font-display text-sm font-normal uppercase tracking-wide text-primary-container/70 sm:text-xl"
         />
       </div>
     </section>
