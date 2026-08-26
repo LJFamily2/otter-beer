@@ -31,34 +31,13 @@ const TAGLINE_REPEAT = 6;
 const BRAND_DURATION_MS = 26000;
 const TAGLINE_DURATION_MS = 32000;
 
-/** Decorative separators between repeats. Plain geometric shapes authored
- *  for this component, not sourced from any design file — same convention as
- *  src/components/ui/icons.tsx. */
-function DropletIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      width={14}
-      height={14}
-      viewBox="0 0 20 20"
-      fill="none"
-      aria-hidden="true"
-      {...props}
-    >
-      <path
-        d="M10 2c3 4.2 6 7.7 6 11a6 6 0 1 1-12 0c0-3.3 3-6.8 6-11Z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+
 
 function SparkleIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      width={12}
-      height={12}
+      width={14}
+      height={14}
       viewBox="0 0 20 20"
       fill="currentColor"
       aria-hidden="true"
@@ -118,36 +97,40 @@ function MarqueeRow({
 
 /** Homepage brand marquee — a diagonal band of two independently looping
  *  rows: a bold brand name scrolling one way, a lighter tagline scrolling
- *  the other. Ported from a Stitch mockup (stitch.withgoogle.com), not a
- *  Figma frame — no exported assets or design tokens were available, so
- *  colors/type reuse the site's existing "Coastal Premium" tokens and the
- *  separator icons are hand-authored (see DropletIcon/SparkleIcon above),
- *  same convention as BrandStorySection's decorative motifs. */
+ *  the other. Styled off Figma node 153-544 ("Otter Beer Redesign"),
+ *  matched from screenshots rather than a live MCP fetch — colors/type
+ *  reuse the site's existing "Coastal Premium" tokens, and the separator
+ *  icons are hand-authored (see DropletIcon/SparkleIcon above), same
+ *  convention as BrandStorySection's decorative motifs. */
 export function MarqueeSection({ locale = DEFAULT_LOCALE }: MarqueeSectionProps) {
   const content = COPY[locale as keyof typeof COPY] ?? COPY.en;
 
   return (
     <section
       aria-label="Brand Marquee"
-      className="relative w-full overflow-hidden bg-surface-container-low py-10 sm:py-14"
+      className="relative flex w-full flex-col items-center justify-center overflow-hidden py-12 sm:py-20"
     >
-      <div className="w-[120%] -translate-x-[8%] -rotate-2 space-y-3 sm:space-y-4">
-        <MarqueeRow
-          text={content.brand}
-          repeat={BRAND_REPEAT}
-          durationMs={BRAND_DURATION_MS}
-          direction="left"
-          icon={<DropletIcon className="text-secondary-fixed-dim" />}
-          textClassName="font-display text-2xl font-normal uppercase tracking-tight text-primary sm:text-4xl"
-        />
-        <MarqueeRow
-          text={content.tagline}
-          repeat={TAGLINE_REPEAT}
-          durationMs={TAGLINE_DURATION_MS}
-          direction="right"
-          icon={<SparkleIcon className="text-secondary-fixed-dim" />}
-          textClassName="font-mono text-sm font-semibold uppercase tracking-widest text-on-surface-variant sm:text-lg"
-        />
+      <div className="relative z-10 flex w-[105%] -translate-x-[2.5%] flex-col sm:w-[110%]">
+        <div className="relative z-0 w-full -rotate-1 overflow-hidden bg-primary py-4 shadow-[0_4px_30px_rgba(29,63,130,0.06)] sm:py-6">
+          <MarqueeRow
+            text={content.brand}
+            repeat={BRAND_REPEAT}
+            durationMs={BRAND_DURATION_MS}
+            direction="left"
+            icon={null}
+            textClassName="font-display text-2xl font-normal uppercase tracking-tight text-on-primary sm:text-4xl"
+          />
+        </div>
+        <div className="relative z-10 -mt-3 w-full rotate-0 overflow-hidden border-t border-white/40 bg-white/20 py-3 shadow-sm backdrop-blur-md sm:-mt-4 sm:py-5">
+          <MarqueeRow
+            text={content.tagline}
+            repeat={TAGLINE_REPEAT}
+            durationMs={TAGLINE_DURATION_MS}
+            direction="right"
+            icon={<SparkleIcon className="text-secondary-fixed-dim" />}
+            textClassName="font-display text-sm font-normal uppercase tracking-wide text-primary-container/70 sm:text-xl"
+          />
+        </div>
       </div>
     </section>
   );
