@@ -338,7 +338,7 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
         </div>
         <div className={fieldClass}>
           <label className={labelClass}>Ảnh sản phẩm</label>
-          <ImageUploadField imageKey={imageKey} onChange={setImageKey} />
+          <ImageUploadField imageKey={imageKey} onChange={setImageKey} namespace="beers" />
         </div>
       </Card>
 

@@ -29,6 +29,7 @@ export const PERMISSION_ACTION_KEYS: readonly PermissionAction[] =
 
 export const MODULE_KEYS = {
   NEWS_BLOG: "news_blog",
+  HERO_SECTION: "hero_section",
   BEERS: "beers",
   BRAND_STORY: "brand_story",
   USERS: "users",
@@ -39,6 +40,7 @@ export type ModuleKey = (typeof MODULE_KEYS)[keyof typeof MODULE_KEYS];
 
 export const MODULE_LABELS_VI: Record<ModuleKey, string> = {
   [MODULE_KEYS.NEWS_BLOG]: "Tin tức & Blog",
+  [MODULE_KEYS.HERO_SECTION]: "Ảnh bìa trang chủ",
   [MODULE_KEYS.BEERS]: "Sản phẩm bia",
   [MODULE_KEYS.BRAND_STORY]: "Câu chuyện thương hiệu",
   [MODULE_KEYS.USERS]: "Người dùng",

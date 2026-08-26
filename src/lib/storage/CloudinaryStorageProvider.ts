@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { env } from "@/lib/env";
+import { isVideoKey } from "./constants";
 import type {
   CreateUploadRequest,
   CreateViewUrlRequest,
@@ -48,6 +49,16 @@ export class CloudinaryStorageProvider implements IStorageProvider {
     return key.replace(/\.[^./]+$/, "");
   }
 
+  /**
+   * Cloudinary namespaces images and videos under different resource types,
+   * and every endpoint path carries it — upload, delivery, and destroy all
+   * 404 (or silently address the wrong object) if it is wrong. The key's
+   * extension is what decides, see isVideoKey.
+   */
+  private toResourceType(key: string): "image" | "video" {
+    return isVideoKey(key) ? "video" : "image";
+  }
+
   private sign(params: Record<string, string>): string {
     const toSign = Object.keys(params)
       .sort()
@@ -79,7 +90,9 @@ export class CloudinaryStorageProvider implements IStorageProvider {
 
     return {
       key: request.key,
-      url: `https://api.cloudinary.com/v1_1/${this.config.cloudName}/image/upload`,
+      url: `https://api.cloudinary.com/v1_1/${this.config.cloudName}/${this.toResourceType(
+        request.key
+      )}/upload`,
       fields: {
         api_key: this.config.apiKey,
         ...signedParams,
@@ -91,7 +104,8 @@ export class CloudinaryStorageProvider implements IStorageProvider {
 
   async createViewUrl(request: CreateViewUrlRequest): Promise<string> {
     const publicId = this.toPublicId(request.key);
-    return `https://res.cloudinary.com/${this.config.cloudName}/image/upload/f_auto,q_auto/${publicId}`;
+    const resourceType = this.toResourceType(request.key);
+    return `https://res.cloudinary.com/${this.config.cloudName}/${resourceType}/upload/f_auto,q_auto/${publicId}`;
   }
 
   async getObject(key: string): Promise<StoredObject | null> {
@@ -110,7 +124,9 @@ export class CloudinaryStorageProvider implements IStorageProvider {
     const signedParams = { public_id: publicId, timestamp };
 
     await fetch(
-      `https://api.cloudinary.com/v1_1/${this.config.cloudName}/image/destroy`,
+      `https://api.cloudinary.com/v1_1/${this.config.cloudName}/${this.toResourceType(
+        key
+      )}/destroy`,
       {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },

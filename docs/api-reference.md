@@ -10,6 +10,50 @@ Base URL: `https://otterbeer.vn/api` (production) / `http://localhost:3000/api` 
 
 ---
 
+## 🖼️ Hero Section
+
+Singleton resource — there is exactly one Hero Section document (the homepage
+carousel's ordered slide list), so there is no `[id]` segment. Mirrors
+`/api/brand-story`.
+
+### `GET /api/hero-section`
+Read the slide list. *(Requires `hero_section` → `view`)*
+
+**Response `200`:**
+```json
+{
+  "slides": [
+    {
+      "mediaKey": "hero/2026-08-25/uuid.jpg",
+      "mediaType": "image",
+      "status": "published",
+      "translations": [{ "locale": "vi", "alt": "Otter Beer – Premium Lager" }]
+    }
+  ]
+}
+```
+`slides` is `[]` when the singleton has never been saved.
+
+### `PUT /api/hero-section`
+Replace the whole slide list in one call — this is also how reordering is
+persisted. *(Requires `hero_section` → `edit`)*
+
+**Body:** `{ "slides": HeroSlideInput[] }`, validated by
+`HeroSectionUpdateSchema` (`src/lib/validation/heroSection.ts`).
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `mediaKey` | string | ✅ | Storage key from `POST /api/media/upload-url` with `namespace: "hero"` |
+| `mediaType` | `"image"` \| `"video"` | — | Defaults to `"image"` |
+| `status` | `"draft"` \| `"published"` | — | Defaults to `"draft"`; only `published` slides are publicly visible |
+| `translations[].locale` | `"vi"` \| `"en"` | ✅ | `vi` is required, `en` optional |
+| `translations[].alt` | string | ✅ | Max 200 chars — read out by the carousel's live region |
+
+At most `MAX_HERO_SLIDES` (12) slides; over that the request is rejected `400`.
+
+**Response `200`:** the saved `{ "slides": [...] }`.
+
+
 ## 📰 News & Blog
 
 ### `GET /api/news-blog`
@@ -146,6 +190,12 @@ Bulk-writes one role's matrix. *(Requires `roles_permissions` → `edit`)* Rejec
 Images never pass through the Next.js server body — the browser uploads directly to R2 using a presigned POST, and reads go through a short-lived signed URL (bucket is private). See [security.md](./security.md#6-file-upload-security).
 
 ### `POST /api/media/upload-url`
+
+**Body:** `{ contentType, namespace? }`. `namespace` is one of `news-blog`
+(default), `beers`, `brand-story`, `hero` — it selects both the storage folder
+and the permission module checked (`add` or `edit` on it). Video content types
+are accepted only for `hero`.
+
 *(Requires `news_blog` → `add` OR `edit`)*
 ```json
 { "contentType": "image/webp" }
