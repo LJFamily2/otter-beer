@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { DEFAULT_LOCALE } from "@/config/locales";
 import { Header } from "@/components/layout/header";
 import { CookieConsent } from "@/components/ui/CookieConsent";
-import { Footer } from "@/components/layout/Footer";
 import { AgeGateWrapper } from "@/components/layout/AgeGateWrapper";
 
 interface MarketingLayoutProps {
@@ -21,12 +20,10 @@ export default async function MarketingLayout({
   const navigationLinks = isVi
     ? [
         { label: "Sản phẩm", href: `${prefix}#products` },
-        { label: "Blogs", href: `${prefix}/blog` },
         { label: "Tin tức", href: `${prefix}/blog` },
       ]
     : [
         { label: "Products", href: `${prefix}#products` },
-        { label: "Blogs", href: `${prefix}/blog` },
         { label: "News", href: `${prefix}/blog` },
       ];
 
