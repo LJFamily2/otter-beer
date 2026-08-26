@@ -14,6 +14,35 @@ interface AgeVerificationGateProps {
 const STORAGE_KEY = "otter_age_verified";
 const COOKIE_NAME = "otter_age_verified";
 
+const COPY = {
+  vi: {
+    heading: "BẠN ĐÃ ĐỦ 18 TUỔI CHƯA?",
+    yesButton: "Xác nhận đủ 18 tuổi",
+    noButton: "Chưa đủ 18 tuổi",
+    responsibleDrinking: "SỬ DỤNG RƯỢU BIA CÓ TRÁCH NHIỆM",
+    address:
+      "BADENBEER Co., Ltd. — 13 nhà, Hẻm 30, Đường Lạc Long Quân, Phường Hiệp Định, Tỉnh Tây Ninh",
+    deniedHeading: "TRUY CẬP BỊ HẠN CHẾ",
+    deniedMessage:
+      "Bạn phải đủ 18 tuổi trở lên để truy cập Otter Beer. Chúng tôi khuyến khích sử dụng rượu bia có trách nhiệm.",
+    learnMore: "TÌM HIỂU THÊM",
+    retry: "Tôi đã chọn nhầm (xác minh lại)",
+  },
+  en: {
+    heading: "ARE YOU 18+?",
+    yesButton: "Yes, I'm over 18",
+    noButton: "No, I'm underage",
+    responsibleDrinking: "Please drink responsibly",
+    address:
+      "BADENBEER Co., Ltd. — 13 House, Alley 30, Lac Long Quan Street, Hiep Dinh Ward, Tay Ninh Province",
+    deniedHeading: "ACCESS RESTRICTED",
+    deniedMessage:
+      "You must be 18 years of age or older to enter Otter Beer. We promote and support responsible drinking.",
+    learnMore: "LEARN MORE",
+    retry: "I made a mistake (re-verify)",
+  },
+} as const;
+
 export function AgeVerificationGate({
   locale = DEFAULT_LOCALE,
   isStandalone = false,
@@ -21,6 +50,7 @@ export function AgeVerificationGate({
 }: AgeVerificationGateProps) {
   const router = useRouter();
   const prefix = locale === DEFAULT_LOCALE ? "" : `/${locale}`;
+  const content = COPY[locale as keyof typeof COPY] ?? COPY.vi;
 
   const [isVerified, setIsVerified] = useState<boolean | null>(() =>
     isStandalone ? false : null
@@ -89,7 +119,7 @@ export function AgeVerificationGate({
       aria-labelledby="age-verification-heading"
       className={
         isStandalone
-          ? "relative flex min-h-dvh w-full flex-col overflow-hidden bg-[#1B3D84] sm:grid sm:grid-rows-2"
+          ? "relative flex min-h-dvh w-full flex-col overflow-hidden sm:grid sm:grid-rows-2"
           : "fixed inset-0 z-50 flex flex-col overflow-hidden bg-[#1B3D84] sm:grid sm:grid-rows-2"
       }
     >
@@ -119,9 +149,9 @@ export function AgeVerificationGate({
               {/* Age Question */}
               <h1
                 id="age-verification-heading"
-                className="font-display text-6xl uppercase leading-tight tracking-wide text-white lg:text-7xl"
+                className="font-display text-6xl uppercase leading-tight tracking-wide text-white"
               >
-                ARE YOU 18+?
+                {content.heading}
               </h1>
 
               {/* Buttons Row */}
@@ -130,26 +160,27 @@ export function AgeVerificationGate({
                 <button
                   type="button"
                   onClick={handleConfirmAge}
-                  className="group inline-flex cursor-pointer items-center gap-2 rounded-full border-2 border-white bg-white px-6 py-3 font-display text-sm font-bold tracking-wider text-[#1B3D84] shadow-[0_4px_14px_rgba(0,0,0,0.15)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(0,0,0,0.35)] active:translate-y-0 active:scale-95 sm:px-8 sm:py-3.5 sm:text-base">
-                  Yes, I'm over 18
+                  className="group inline-flex cursor-pointer items-center gap-2 rounded-full border-2 border-white bg-white px-6 py-3 font-display text-sm font-bold tracking-wider text-[#1B3D84] shadow-[0_4px_14px_rgba(0,0,0,0.15)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(0,0,0,0.35)] active:translate-y-0 active:scale-95 sm:px-8 sm:py-3.5 sm:text-base"
+                >
+                  {content.yesButton}
                 </button>
 
                 {/* NO Button */}
                 <button
                   type="button"
                   onClick={handleDenyAge}
-                  className="group inline-flex cursor-pointer items-center gap-2 rounded-full border-2 border-white/70 bg-transparent px-6 py-3 font-display text-sm font-bold tracking-wider text-white shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-white/10 hover:shadow-[0_8px_24px_rgba(0,0,0,0.25)] active:translate-y-0 active:scale-95 sm:px-8 sm:py-3.5 sm:text-base">
-                  No, I'm underage
+                  className="group inline-flex cursor-pointer items-center gap-2 rounded-full border-2 border-white/70 bg-transparent px-6 py-3 font-display text-sm font-bold tracking-wider text-white shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-white/10 hover:shadow-[0_8px_24px_rgba(0,0,0,0.25)] active:translate-y-0 active:scale-95 sm:px-8 sm:py-3.5 sm:text-base"
+                >
+                  {content.noButton}
                 </button>
               </div>
 
               {/* Footer text */}
               <p className="mt-6 text-base font-bold uppercase tracking-[0.15em] text-white sm:mt-8">
-                Please drink responsibly
+                {content.responsibleDrinking}
               </p>
               <p className="mt-1.5 max-w-md text-sm font-medium text-white/60">
-                BADENBEER Co., Ltd. — 13 House, Alley 30, Lac Long Quan
-                Street, Hiep Dinh Ward, Tay Ninh Province
+                {content.address}
               </p>
             </>
           ) : (
@@ -157,13 +188,12 @@ export function AgeVerificationGate({
             <div className="animate-in fade-in slide-in-from-bottom-2 flex flex-col items-center duration-200">
               <h1
                 id="age-verification-heading"
-                className="font-display text-6xl uppercase leading-tight tracking-wide text-white lg:text-7xl"
+                className="font-display text-6xl uppercase leading-tight tracking-wide text-white"
               >
-                ACCESS RESTRICTED
+                {content.deniedHeading}
               </h1>
               <p className="mt-3 max-w-md text-base font-medium text-white/70">
-                You must be 18 years of age or older to enter Otter Beer. We
-                promote and support responsible drinking.
+                {content.deniedMessage}
               </p>
 
               <div className="mt-5 flex flex-wrap justify-center gap-3 sm:mt-6">
@@ -173,7 +203,7 @@ export function AgeVerificationGate({
                   rel="noopener noreferrer"
                   className="group inline-flex items-center gap-2 rounded-full border-2 border-white bg-white px-6 py-3 font-display text-sm font-bold tracking-wider text-[#1B3D84] shadow-[0_4px_14px_rgba(0,0,0,0.15)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(0,0,0,0.35)] active:translate-y-0 active:scale-95 sm:px-8 sm:py-3.5 sm:text-base"
                 >
-                  LEARN MORE
+                  {content.learnMore}
                 </a>
               </div>
 
@@ -204,7 +234,7 @@ export function AgeVerificationGate({
                   />
                 </svg>
                 <span className="underline-offset-4 group-hover:underline">
-                  I made a mistake (re-verify)
+                  {content.retry}
                 </span>
               </button>
             </div>
