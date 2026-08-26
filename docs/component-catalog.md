@@ -85,8 +85,8 @@ exists, so you don't have to open every file to check:
 Button, BackButton, Input, Textarea, Select, Checkbox, Card, FeatureCard,
 Badge, StatusBadge, Avatar/AvatarGroup, DataTable, Accordion, ActivityList,
 Breadcrumbs, Tabs, Pagination, NavSidebar, TopNavBar, DropdownMenu, Modal,
-Alert, Toast, Tooltip, Spinner, Skeleton, plus a shared generic icon set
-(`icons.tsx`).
+Alert, Toast, Tooltip, Spinner, Skeleton, AgeVerificationGate,
+CookieConsent, plus a shared generic icon set (`icons.tsx`).
 
 ## Marketing section components (`src/components/sections/`)
 
