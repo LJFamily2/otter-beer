@@ -45,7 +45,7 @@ export default async function MarketingLayout({
 
       <Footer locale={locale} />
 
-      <CookieConsent />
+      <CookieConsent locale={locale} />
     </div>
    </AgeGateWrapper> 
   );
