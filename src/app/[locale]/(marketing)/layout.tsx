@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
 import { DEFAULT_LOCALE } from "@/config/locales";
 import { Header } from "@/components/layout/header";
+import { CookieConsent } from "@/components/ui/CookieConsent";
+import { Footer } from "@/components/layout/Footer";
+import { AgeGateWrapper } from "@/components/layout/AgeGateWrapper";
 
 interface MarketingLayoutProps {
   children: ReactNode;
@@ -28,27 +31,23 @@ export default async function MarketingLayout({
       ];
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <Header
-        links={navigationLinks}
-        contactHref={`${prefix}/contact`}
-        locale={isVi ? "VIE" : "ENG"}
-        locales={["VIE", "ENG"]}
-      />
-
-      <main className="flex-1">{children}</main>
-
-      <footer className="mt-auto bg-primary px-5 py-16">
-        <div className="mx-auto flex max-w-[1280px] flex-col items-center gap-2 text-center">
-          <div className="font-display text-xl tracking-wide text-on-primary">
-            OTTER BEER
-          </div>
-          <p className="text-sm text-inverse-primary">
-            © {new Date().getFullYear()} Otter Beer.{" "}
-            {isVi ? "Đã đăng ký bản quyền." : "All rights reserved."}
-          </p>
+    <AgeGateWrapper locale={locale}>
+      <div className="relative flex min-h-dvh flex-col">
+        <div className="fixed inset-x-0 top-0 z-30">
+          <Header
+            links={navigationLinks}
+            contactHref={`${prefix}/contact`}
+            locale={isVi ? "VIE" : "ENG"}
+            locales={["VIE", "ENG"]}
+          />
         </div>
-      </footer>
-    </div>
+
+        <main className="flex-1">{children}</main>
+
+        <Footer locale={locale} />
+
+        <CookieConsent locale={locale} />
+      </div>
+    </AgeGateWrapper>
   );
 }

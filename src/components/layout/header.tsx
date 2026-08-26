@@ -79,7 +79,7 @@ export function Header({
       >
         {links.slice(0, 3).map((link) => (
           <Link
-            key={link.href}
+            key={`${link.href}-${link.label}`}
             href={link.href}
             className={`text-[19px] font-bold uppercase tracking-[0.9px] transition-colors ${isScrolled ? "text-primary hover:text-primary-container" : "text-on-tertiary hover:text-on-tertiary-container"}`}
             style={{ fontFamily: "sans-serif" }}
@@ -102,6 +102,7 @@ export function Header({
             src="/images/header/logo.png"
             alt="Otter Beer Logo"
             fill
+            sizes="(max-width: 640px) 110px, 150px"
             className="object-contain"
             priority
           />
