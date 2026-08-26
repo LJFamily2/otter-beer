@@ -1,10 +1,18 @@
 import { z } from "zod";
-import { ALLOWED_IMAGE_CONTENT_TYPES } from "@/lib/storage/constants";
+import { ALLOWED_MEDIA_CONTENT_TYPES } from "@/lib/storage/constants";
+import { MEDIA_NAMESPACES } from "@/lib/storage/namespaces";
 
 export const RequestUploadSchema = z.object({
   contentType: z.enum(
-    ALLOWED_IMAGE_CONTENT_TYPES as unknown as [string, ...string[]]
+    ALLOWED_MEDIA_CONTENT_TYPES as unknown as [string, ...string[]]
   ),
+  /**
+   * Which module the upload belongs to. Decides both the storage folder and
+   * which permission grant is checked — see src/lib/storage/namespaces.ts.
+   * Defaults to news-blog so the Tiptap editor's existing calls, which
+   * predate this field, keep working unchanged.
+   */
+  namespace: z.enum(MEDIA_NAMESPACES).default("news-blog"),
 });
 
 export const RequestViewUrlSchema = z.object({

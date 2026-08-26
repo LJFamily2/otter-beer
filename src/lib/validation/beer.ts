@@ -50,6 +50,11 @@ function validateTranslationSet(
   }
 }
 
+const hexColor = z
+  .string()
+  .trim()
+  .regex(/^#[0-9a-fA-F]{6}$/, "Màu phải ở định dạng mã hex (VD: #002867)");
+
 const baseFields = {
   imageKey: z.string().trim().optional(),
   abv: z
@@ -62,6 +67,8 @@ const baseFields = {
     .max(200, "IBU không được vượt quá 200"),
   shopUrl: z.string().trim().min(1).optional(),
   findLocallyUrl: z.string().trim().min(1).optional(),
+  themeColor: hexColor.optional(),
+  themeColorContainer: hexColor.optional(),
   isFeatured: z.boolean().default(false),
   status: z.enum(BEER_STATUSES).default("draft"),
 };
@@ -82,6 +89,8 @@ export const BeerUpdateSchema = z
     ibu: baseFields.ibu.optional(),
     shopUrl: z.string().trim().min(1).nullable().optional(),
     findLocallyUrl: z.string().trim().min(1).nullable().optional(),
+    themeColor: hexColor.nullable().optional(),
+    themeColorContainer: hexColor.nullable().optional(),
     isFeatured: z.boolean().optional(),
     status: z.enum(BEER_STATUSES).optional(),
     translations: z.array(BeerTranslationInputSchema).min(1).optional(),

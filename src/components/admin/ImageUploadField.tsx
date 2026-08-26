@@ -2,17 +2,26 @@
 
 import { useRef, useState } from "react";
 import { uploadImage } from "@/lib/utils/uploadImage";
-import { publicImageUrl } from "@/lib/storage/constants";
+import { publicMediaUrl } from "@/lib/storage/constants";
+import type { MediaNamespace } from "@/lib/storage/namespaces";
 import { buttonVariants } from "@/components/ui/Button";
 
 interface ImageUploadFieldProps {
   imageKey?: string;
   onChange: (key: string | undefined) => void;
+  /**
+   * Storage folder the upload lands in, and the module whose permission
+   * grant authorizes it — see src/lib/storage/namespaces.ts. Defaults to
+   * news-blog, which is where every upload used to go regardless of the
+   * form it came from.
+   */
+  namespace?: MediaNamespace;
 }
 
 export function ImageUploadField({
   imageKey,
   onChange,
+  namespace = "news-blog",
 }: ImageUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -26,7 +35,7 @@ export function ImageUploadField({
     setError(null);
     setIsUploading(true);
     try {
-      const uploaded = await uploadImage(file);
+      const uploaded = await uploadImage(file, { namespace });
       onChange(uploaded.key);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Tải ảnh thất bại.");
@@ -47,7 +56,7 @@ export function ImageUploadField({
           {imageKey ? (
             // eslint-disable-next-line @next/next/no-img-element -- served by our own proxy route, arbitrary R2 key, next/image optimization not applicable
             <img
-              src={publicImageUrl(imageKey)}
+              src={publicMediaUrl(imageKey)}
               alt=""
               className="h-full w-full object-cover"
             />

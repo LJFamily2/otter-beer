@@ -32,10 +32,12 @@ VI-only, session-gated by `src/proxy.ts`, permission-gated per-page via
 | `/admin/blog/moi` | `(protected)/blog/moi/page.tsx` | Create post — renders `PostForm` (Tiptap editor) |
 | `/admin/blog/[id]/sua` | `(protected)/blog/[id]/sua/page.tsx` | Edit post — renders `PostForm` (Tiptap editor) |
 | — | `(protected)/blog/PostForm.tsx` | Shared create/edit form — `Breadcrumbs`, `Tabs` (locale switcher), `Input`/`Textarea`/`Select` for every field |
+| `/admin/hero` | `(protected)/hero/page.tsx` | Ảnh bìa trang chủ — singleton editor (not per-item CRUD) for the homepage hero carousel's ordered slide list; renders `HeroSlidesForm` |
+| — | `(protected)/hero/HeroSlidesForm.tsx` | Whole-list editor — `Tabs` (locale switcher), add/remove/reorder slide cards, each with `MediaUploadField` (image **or** video, 16:9), a per-locale alt-text `Input`, and a per-slide draft/published `Select`; `PUT /api/hero-section` replaces the whole `slides` array in one save (same pattern as `BrandStoryForm`). Capped at `MAX_HERO_SLIDES` (`src/config/heroSlide.ts`) |
 | `/admin/beers` | `(protected)/beers/page.tsx` | Sản phẩm bia (product) list — `DataTable` with dòng bia/thông số/nổi bật/trạng thái columns; at most one beer can be `isFeatured` (enforced in `BeerService`) — that one, if also `published`, is what renders on the public homepage hero |
 | `/admin/beers/moi` | `(protected)/beers/moi/page.tsx` | Create product — renders `BeerForm` |
 | `/admin/beers/[id]/sua` | `(protected)/beers/[id]/sua/page.tsx` | Edit product — renders `BeerForm` |
-| — | `(protected)/beers/BeerForm.tsx` | Shared create/edit form — `Breadcrumbs`, `Tabs` (locale switcher: dòng bia/tiêu đề/mô tả), ABV/IBU inputs, `ImageUploadField`, shop/find-locally links, `Checkbox` for "nổi bật" |
+| — | `(protected)/beers/BeerForm.tsx` | Shared create/edit form — `Breadcrumbs`, `Tabs` (locale switcher: dòng bia/tiêu đề/mô tả), ABV/IBU inputs, `ImageUploadField`, shop/find-locally links, native color-swatch + hex `Input` pair for `themeColor`/`themeColorContainer` (optional, homepage showcase theming), `Checkbox` for "nổi bật" |
 | `/admin/brand-story` | `(protected)/brand-story/page.tsx` | Câu chuyện thương hiệu — singleton editor (not per-item CRUD) for the homepage flipbook's ordered page list; renders `BrandStoryForm` |
 | — | `(protected)/brand-story/BrandStoryForm.tsx` | Whole-list editor — `Tabs` (locale switcher), add/remove/reorder page cards, each with `ImageUploadField` + title/caption inputs; `PUT /api/brand-story` replaces the whole `pages` array in one save (mirrors `PermissionMatrixEditor`'s whole-resource-replace pattern, not Beer's per-item PATCH) |
 | `/admin/users` | `(protected)/users/page.tsx` | User Management — KPI cards (total/active/inactive), `Breadcrumbs`, role `Tabs` + search (client-side, `filterUsers()`), `DataTable`. Role dropdowns (invite/edit) are pre-filtered to roles the actor outranks — see `docs/rbac.md`'s "Role hierarchy" |
@@ -61,7 +63,7 @@ Bilingual (vi default with no prefix, en under `/en`), public, SEO-tracked
 
 | Route | File | Description |
 |---|---|---|
-| `/` | `page.tsx` | Homepage — renders `HeroSection` (ported from Figma node 28:877, "Main Hero Section" / the "Production List" section), then `BrandStorySection` |
+| `/` | `page.tsx` | Homepage — renders `HeroSection` (ported from Figma node 28:877, "Main Hero Section" / the "Production List" section), then `BrandStorySection`, `TaglineSection`, `MarqueeSection`, `ProductShowcase`, `NewsBlogSection`, `ContactCtaSection` and the contact form |
 | `/blog` | `blog/page.tsx` | Public blog list ("The Otter Chronicles" / "Biên Niên Sử Otter") — hero, featured post, tag filter, pagination |
 | `/blog/[slug]` | `blog/[slug]/page.tsx` | Public blog detail — article body, author card, recent posts, topics, JSON-LD |
 | `/design-system` | `design-system/page.tsx` | Live showcase of every `src/components/ui/*` component, grouped like the Figma "Coastal Premium UI Library" batches |
@@ -85,8 +87,8 @@ exists, so you don't have to open every file to check:
 Button, BackButton, Input, Textarea, Select, Checkbox, Card, FeatureCard,
 Badge, StatusBadge, Avatar/AvatarGroup, DataTable, Accordion, ActivityList,
 Breadcrumbs, Tabs, Pagination, NavSidebar, TopNavBar, DropdownMenu, Modal,
-Alert, Toast, Tooltip, Spinner, Skeleton, plus a shared generic icon set
-(`icons.tsx`).
+Alert, Toast, Tooltip, Spinner, Skeleton, AgeVerificationGate,
+CookieConsent, plus a shared generic icon set (`icons.tsx`).
 
 ## Marketing section components (`src/components/sections/`)
 
@@ -94,8 +96,11 @@ Homepage/public-page building blocks, one Figma frame per component.
 
 | Component | File | Description |
 |---|---|---|
-| `HeroSection` | `HeroSection.tsx` | Homepage hero ("Production List" section, Figma node 28:877) — fetches `beerService.getFeaturedPublished()` directly (Server Component, no API round trip); renders `null` until a beer is marked both `isFeatured` and `published` |
-| `BrandStorySection` | `BrandStorySection.tsx` | Homepage "brand story" flipbook — no Figma frame exists for this (self-designed, original SVG illustrations/decorative motifs, no source art files). Client Component (page-turn interaction); currently renders TEMPORARY hardcoded placeholder pages, not yet wired to `brandStoryService.getPublished()` — swap when asked to "connect" the section, same pattern as `HeroSection`'s pending Beer wiring |
+| `HeroSection` | `HeroSection.tsx` | Homepage hero carousel ("Production List" section, Figma node 28:877). Client Component; full-bleed 16:9 slides over a hardcoded `SLIDES` array — **not** wired to `beerService` (an earlier revision of this row claimed a Server Component fetching `getFeaturedPublished()`; that was never true of the shipped file). Drag/swipe + segmented gold progress indicators, no arrow controls; autoplay pauses on drag, backgrounded tab, and keyboard focus; cross-fades with autoplay off under `prefers-reduced-motion`. Indicator fill keyframes live in `globals.css` as `.hero-indicator-fill`. The admin module that will feed it (`/admin/hero` → `heroSectionService.listPublishedSlides()`, image or video per slide) now exists, but this component is deliberately **not** wired to it yet — same pending wiring as `NewsBlogSection`/`BrandStorySection` |
+| `NewsBlogSection` | `NewsBlogSection.tsx` | Homepage news & blog rail, sits directly under `ProductShowcase` — no Figma frame (self-designed, layout ported from the hoiana.com/vn editorial band and re-themed to Coastal Premium). Client Component: full-bleed `bg-primary` navy band, two-column masthead (Anton heading + standfirst), and a snap-scrolling card rail inset to the container gutter that bleeds past the right edge. Cards are Playfair-italic titles over a photo scrim with a `Badge variant="overlay"` tag; pointer users get floating prev/next controls (disabled at each bound), touch users swipe. Renders a hardcoded `POSTS` placeholder array and links every card at `/blog` — **not** yet wired to `blogPostService.listPublished()`, same pending wiring as `HeroSection`/`BrandStorySection` |
+| `BrandStorySection` | `BrandStorySection.tsx` | Homepage "brand story" flipbook — no Figma frame exists for this (self-designed, original SVG illustrations/decorative motifs, no source art files). Client Component (page-turn interaction); currently renders TEMPORARY hardcoded placeholder pages, not yet wired to `brandStoryService.getPublished()` — swap when asked to "connect" the section, same pattern as the Beer wiring still pending for `HeroSection` |
+| `MarqueeSection` | `MarqueeSection.tsx` | Homepage brand marquee, sits directly under `TaglineSection` — no Figma frame (ported from a Stitch mockup, stitch.withgoogle.com; no exported assets/tokens available for that tool, so it reuses the site's existing Coastal Premium tokens). Server Component, pure CSS: a diagonal (`-rotate-2`) band of two independently looping rows — a bold `OTTER BEER` brand row and a lighter tagline row — scrolling in opposite directions at different speeds via `.marquee-track` keyframes in `globals.css`, each edge-masked with `.marquee-fade-mask`. Frozen under `prefers-reduced-motion`. Separator icons (`DropletIcon`/`SparkleIcon`) are hand-authored SVGs local to the component, same convention as `BrandStorySection`'s decorative motifs |
+| `ProductShowcase` | `ProductShowcase.tsx` | Homepage product carousel — Client Component, receives `beers: BeerShowcaseItem[]` as a prop (built server-side in `page.tsx` via `beerService.listShowcasePublished()` + `BeerPresenter.toShowcaseItem()`, one entry per `status: "published"` Beer, newest first). Section is omitted entirely when there are zero published beers. Per-beer `themeColor`/`themeColorContainer` (admin-set hex fields on `Beer`, editable in `BeerForm`) drive the section's `--color-primary`/`--color-primary-container` CSS vars; fall back to the brand default (`DEFAULT_THEME_COLOR`/`DEFAULT_THEME_COLOR_CONTAINER` in `src/config/beer.ts`) when unset. Shop/find-locally CTAs are hidden individually when a beer has no `shopUrl`/`findLocallyUrl`; prev/next nav is hidden when only one beer is published |
 
 ## Admin-only components (`src/components/admin/`)
 
@@ -105,7 +110,8 @@ the admin shell/session context.
 | Component | File | Description |
 |---|---|---|
 | `RichTextEditor` | `RichTextEditor.tsx` | Tiptap WYSIWYG editor used by the blog post form |
-| `ImageUploadField` | `ImageUploadField.tsx` | R2 signed-upload image field (cover image, inline post images) |
+| `ImageUploadField` | `ImageUploadField.tsx` | Signed-upload image field, square preview, image-only (cover image, inline post images, beer artwork, brand-story pages). Takes a `namespace` prop deciding both the storage folder and which module's permission authorizes the upload — see `src/lib/storage/namespaces.ts` |
+| `MediaUploadField` | `MediaUploadField.tsx` | Signed-upload field that accepts an image **or** a video, previews either on a 16:9 stage, and (with `warnOnNon16x9`) warns — without blocking — when the picked file isn't 16:9. Reports `{key, mediaType}` back. Used by `HeroSlidesForm`; deliberately a sibling of `ImageUploadField` rather than a variant, since that field is image-only and three other forms depend on its current shape |
 | `icons.tsx` | `icons.tsx` | Admin-specific icon set (news/blog, beer, users, shield, logout, plus, search, edit, trash) |
 | `classNames.ts` | `classNames.ts` | Shared Tailwind class strings reused across admin server/client component boundaries |
 

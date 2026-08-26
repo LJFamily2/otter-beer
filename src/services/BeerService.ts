@@ -27,6 +27,10 @@ export class BeerService {
     return this.repository.findFeaturedPublished();
   }
 
+  async listShowcasePublished(): Promise<IBeer[]> {
+    return this.repository.listShowcasePublished();
+  }
+
   async create(input: BeerCreateInput, actorId: string): Promise<IBeer> {
     const actorObjectId = new Types.ObjectId(actorId);
     const created = await this.repository.create({
@@ -35,6 +39,8 @@ export class BeerService {
       ibu: input.ibu,
       shopUrl: input.shopUrl,
       findLocallyUrl: input.findLocallyUrl,
+      themeColor: input.themeColor,
+      themeColorContainer: input.themeColorContainer,
       isFeatured: input.isFeatured,
       status: input.status,
       translations: input.translations,
@@ -62,6 +68,8 @@ export class BeerService {
     if (input.ibu !== undefined) update.ibu = input.ibu;
     if (input.shopUrl !== undefined) update.shopUrl = input.shopUrl ?? undefined;
     if (input.findLocallyUrl !== undefined) update.findLocallyUrl = input.findLocallyUrl ?? undefined;
+    if (input.themeColor !== undefined) update.themeColor = input.themeColor ?? undefined;
+    if (input.themeColorContainer !== undefined) update.themeColorContainer = input.themeColorContainer ?? undefined;
     if (input.isFeatured !== undefined) update.isFeatured = input.isFeatured;
     if (input.status !== undefined) update.status = input.status;
     if (input.translations !== undefined) update.translations = input.translations;

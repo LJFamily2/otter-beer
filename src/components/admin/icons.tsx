@@ -113,3 +113,13 @@ export function BeerIcon(props: SVGProps<SVGSVGElement>) {
     </IconBase>
   );
 }
+
+export function HeroIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.6} {...props}>
+      <rect x="1.5" y="4" width="17" height="12" rx="1.5" />
+      <path d="M1.5 13l4.5-4 3.5 3L13 8l5.5 5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="7" cy="8" r="1.2" />
+    </svg>
+  );
+}

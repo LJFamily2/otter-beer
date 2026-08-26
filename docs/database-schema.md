@@ -7,8 +7,9 @@ All models live in `src/models/`. Every module built so far follows a repository
 pattern (`src/repositories/`) instead of calling Mongoose directly from routes —
 see [architecture.md](./architecture.md).
 
-Images are never stored as public URLs — every image field below stores an
-**R2 object key** (e.g. `news-blog/2026-08-15/uuid.webp`), and the app hands out
+Media is never stored as a public URL — every media field below stores a
+**storage object key** (e.g. `news-blog/2026-08-15/uuid.webp`,
+`hero/2026-08-25/uuid.mp4`), and the app hands out
 short-lived signed URLs for reading (`StorageService.getViewUrl`). See
 [security.md](./security.md#file-upload-security).
 
@@ -223,3 +224,29 @@ The two per-environment files use the exact same variable names — only the val
 - `.env.local` is shared by both (auth secrets, site URL, R2 account credentials) — see [authentication.md](./authentication.md#environment-variables-envlocal)
 
 All three files are git-ignored; only `.env.example` (with blank values) is committed. When deploying to Vercel, set `MONGODB_URI` and `R2_BUCKET_NAME` under the **Production** environment scope in the Vercel dashboard with your prod values (Preview/Development scope gets the dev values); `R2_ACCOUNT_ID`/`R2_ACCESS_KEY_ID`/`R2_SECRET_ACCESS_KEY` can be set once under **All Environments** since they're shared. Vercel injects these directly, so `.env.production.local` is only needed locally if you build/start the prod bundle or run `pnpm run seed:prod` from your own machine.
+
+---
+
+### `herosections`
+Managed via [`src/models/HeroSection.ts`](../src/models/HeroSection.ts)
+
+**Singleton** — exactly one document holds the homepage hero carousel's
+ordered slide list, like `brandstories`. Replaced whole on save
+(`HeroSectionRepository.replaceSlides`).
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `_id` | ObjectId | Auto | |
+| `slides` | Array\<HeroSlide\> | — | Ordered; the array order *is* the carousel order. Capped at 12 by `HeroSectionUpdateSchema` |
+| `updatedBy` | ObjectId → `users` | ✅ | |
+| `createdAt` / `updatedAt` | Date | Auto | |
+
+**HeroSlide subdocument** (`_id: false`):
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `mediaKey` | String | ✅ | Storage object key — image or video |
+| `mediaType` | String | ✅ | `image` \| `video`, default `image`; drives `<img>` vs `<video>` at render time |
+| `status` | String | ✅ | `draft` \| `published`, default `draft` — per-slide, so one slide can be staged without pulling the hero down. Only `published` slides are served publicly (`HeroSectionRepository.isKeyPubliclyVisible`) |
+| `translations` | Array\<{locale, alt}\> | — | `alt` max 200 chars; `vi` required at the validation layer |
+

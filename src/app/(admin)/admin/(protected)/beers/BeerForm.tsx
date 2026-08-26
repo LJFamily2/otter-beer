@@ -12,6 +12,7 @@ import { Select } from "@/components/ui/Select";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Tabs } from "@/components/ui/Tabs";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { DEFAULT_THEME_COLOR, DEFAULT_THEME_COLOR_CONTAINER } from "@/config/beer";
 
 interface TranslationFormState {
   style: string;
@@ -29,10 +30,14 @@ export interface BeerFormInitialData {
   ibu: number;
   shopUrl?: string;
   findLocallyUrl?: string;
+  themeColor?: string;
+  themeColorContainer?: string;
   isFeatured: boolean;
   status: "draft" | "published";
   translations: Partial<Record<LocaleCode, TranslationFormState>>;
 }
+
+const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
 
 interface BeerFormProps {
   mode: "create" | "edit";
@@ -59,6 +64,10 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
   const [ibuInput, setIbuInput] = useState(initialData?.ibu?.toString() ?? "");
   const [shopUrl, setShopUrl] = useState(initialData?.shopUrl ?? "");
   const [findLocallyUrl, setFindLocallyUrl] = useState(initialData?.findLocallyUrl ?? "");
+  const [themeColor, setThemeColor] = useState(initialData?.themeColor ?? "");
+  const [themeColorContainer, setThemeColorContainer] = useState(
+    initialData?.themeColorContainer ?? ""
+  );
   const [isFeatured, setIsFeatured] = useState(initialData?.isFeatured ?? false);
   const [status, setStatus] = useState<"draft" | "published">(initialData?.status ?? "draft");
   const [translations, setTranslations] = useState<
@@ -123,6 +132,15 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
       newFieldErrors.ibu = "Cần nhập IBU hợp lệ";
     }
 
+    if (themeColor.trim() && !HEX_COLOR_PATTERN.test(themeColor.trim())) {
+      validationErrors.push("Màu chính không hợp lệ, cần đúng định dạng mã hex (VD: #002867).");
+      newFieldErrors.themeColor = "Mã hex không hợp lệ";
+    }
+    if (themeColorContainer.trim() && !HEX_COLOR_PATTERN.test(themeColorContainer.trim())) {
+      validationErrors.push("Màu nền không hợp lệ, cần đúng định dạng mã hex (VD: #1d3f82).");
+      newFieldErrors.themeColorContainer = "Mã hex không hợp lệ";
+    }
+
     if (validationErrors.length > 0) {
       setErrors(validationErrors);
       setFieldErrors(newFieldErrors);
@@ -149,6 +167,8 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
       ibu,
       shopUrl: shopUrl.trim() || undefined,
       findLocallyUrl: findLocallyUrl.trim() || undefined,
+      themeColor: themeColor.trim() || undefined,
+      themeColorContainer: themeColorContainer.trim() || undefined,
       isFeatured,
       status,
       translations: activeTranslations,
@@ -318,7 +338,7 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
         </div>
         <div className={fieldClass}>
           <label className={labelClass}>Ảnh sản phẩm</label>
-          <ImageUploadField imageKey={imageKey} onChange={setImageKey} />
+          <ImageUploadField imageKey={imageKey} onChange={setImageKey} namespace="beers" />
         </div>
       </Card>
 
@@ -338,6 +358,60 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
           value={findLocallyUrl}
           onChange={(e) => setFindLocallyUrl(e.target.value)}
         />
+        <div className="grid grid-cols-2 gap-4">
+          <div className={fieldClass}>
+            <label className={labelClass} htmlFor="themeColor">
+              Màu chính (trên trang chủ)
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                aria-label="Chọn màu chính"
+                value={
+                  HEX_COLOR_PATTERN.test(themeColor.trim())
+                    ? themeColor.trim()
+                    : DEFAULT_THEME_COLOR
+                }
+                onChange={(e) => setThemeColor(e.target.value)}
+                className="h-[46px] w-14 shrink-0 cursor-pointer rounded-sm border border-outline-variant bg-surface-container-lowest p-1"
+              />
+              <Input
+                id="themeColor"
+                placeholder={DEFAULT_THEME_COLOR}
+                value={themeColor}
+                error={fieldErrors.themeColor}
+                onChange={(e) => setThemeColor(e.target.value)}
+                wrapperClassName="flex-1"
+              />
+            </div>
+          </div>
+          <div className={fieldClass}>
+            <label className={labelClass} htmlFor="themeColorContainer">
+              Màu nền (trên trang chủ)
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                aria-label="Chọn màu nền"
+                value={
+                  HEX_COLOR_PATTERN.test(themeColorContainer.trim())
+                    ? themeColorContainer.trim()
+                    : DEFAULT_THEME_COLOR_CONTAINER
+                }
+                onChange={(e) => setThemeColorContainer(e.target.value)}
+                className="h-[46px] w-14 shrink-0 cursor-pointer rounded-sm border border-outline-variant bg-surface-container-lowest p-1"
+              />
+              <Input
+                id="themeColorContainer"
+                placeholder={DEFAULT_THEME_COLOR_CONTAINER}
+                value={themeColorContainer}
+                error={fieldErrors.themeColorContainer}
+                onChange={(e) => setThemeColorContainer(e.target.value)}
+                wrapperClassName="flex-1"
+              />
+            </div>
+          </div>
+        </div>
         <Checkbox
           label="Hiển thị làm sản phẩm nổi bật trên trang chủ"
           checked={isFeatured}

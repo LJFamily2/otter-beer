@@ -55,6 +55,7 @@
   --color-tertiary-fixed-dim: #c9c6c1;
   --color-on-tertiary-fixed: #1c1c19;
   --color-on-tertiary-fixed-variant: #484743;
+  --color-mahogany: #341012;
 
   --color-background: #f4fafd;
   --color-on-background: #161d1f;
@@ -101,19 +102,25 @@ h4 {
    nothing here needs an animationend listener. Keep the 780ms in sync with
    FLIP_MS in that file. */
 @keyframes brand-leaf-next {
-  from {
-    transform: rotateY(0deg);
+  0% {
+    transform: rotateY(0deg) skewY(0deg);
   }
-  to {
-    transform: rotateY(-180deg);
+  50% {
+    transform: rotateY(-90deg) skewY(-2deg);
+  }
+  100% {
+    transform: rotateY(-180deg) skewY(0deg);
   }
 }
 @keyframes brand-leaf-prev {
-  from {
-    transform: rotateY(0deg);
+  0% {
+    transform: rotateY(0deg) skewY(0deg);
   }
-  to {
-    transform: rotateY(180deg);
+  50% {
+    transform: rotateY(90deg) skewY(2deg);
+  }
+  100% {
+    transform: rotateY(180deg) skewY(0deg);
   }
 }
 /* Paper darkens as it lifts through the vertical, with subtle specular shine. */
@@ -188,5 +195,94 @@ h4 {
   .brand-cast-shadow-next,
   .brand-cast-shadow-prev {
     animation-duration: 1ms;
+  }
+}
+
+.heritage-pattern {
+  background-image: radial-gradient(var(--color-primary-container) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.03;
+}
+
+.gold-border-top {
+  border-top: 2px solid var(--color-secondary-fixed-dim);
+}
+
+
+/* Brand marquee — see src/components/sections/MarqueeSection.tsx.
+   Two rows, each rendering its item list twice back-to-back and animating
+   exactly one half-width of translateX, so the loop is seamless regardless
+   of viewport width. `data-direction="right"` reverses which half a row
+   starts from, so the two rows visibly scroll toward each other. Frozen
+   under reduced motion, matching the hero indicator / brand-leaf convention
+   below. */
+@keyframes marquee-scroll-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes marquee-scroll-right {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.marquee-track {
+  animation: marquee-scroll-left var(--marquee-duration, 30s) linear infinite;
+}
+.marquee-track[data-direction="right"] {
+  animation-name: marquee-scroll-right;
+}
+.marquee-fade-mask {
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 8%,
+    black 92%,
+    transparent
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+    transform: translateX(0);
+  }
+}
+
+/* Hero carousel indicator fill — see src/components/sections/HeroSection.tsx.
+   The active segment fills left-to-right across one autoplay dwell. The
+   component re-mounts the fill via a React `key` change on every slide change
+   and on every autoplay resume, which restarts these keyframes in step with
+   the restarted timer, and flips `data-paused` while autoplay is suspended
+   (drag in progress, tab backgrounded, focus inside the indicator group).
+   The duration is fed in as --hero-dwell from AUTO_PLAY_INTERVAL in that file,
+   so the two never drift apart. */
+@keyframes hero-indicator-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.hero-indicator-fill {
+  transform-origin: left center;
+  animation: hero-indicator-fill var(--hero-dwell, 6000ms) linear forwards;
+}
+.hero-indicator-fill[data-paused="true"] {
+  animation-play-state: paused;
+}
+/* Autoplay is switched off entirely under reduced motion, so the active
+   segment simply reads as filled with no sweep. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-indicator-fill {
+    animation: none;
+    transform: scaleX(1);
   }
 }

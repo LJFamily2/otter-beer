@@ -1,14 +1,8 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { Great_Vibes, Roboto_Slab } from "next/font/google";
+import React, { useState, useRef } from "react";
 import { playPageTurn } from "@/lib/utils/pageTurnSound";
-
-const script = Great_Vibes({ subsets: ["latin"], weight: "400" });
-const slab = Roboto_Slab({ subsets: ["latin"], weight: ["700"] });
-
-/** Keep in sync with the --flip-ms custom property set on the leaf below. */
-const FLIP_MS = 780;
+import HTMLFlipBook from "react-pageflip";
 
 interface BrandStorySectionProps {
   locale: string;
@@ -31,327 +25,313 @@ const COPY = {
   },
 } as const;
 
-interface BookSpread {
-  id: string;
-  title: string;
-  illustration: ReactNode;
-  lines: string[];
-}
-
-/**
- * TEMPORARY static content — no admin-authored pages exist yet (this
- * component isn't wired to BrandStoryService in this change). Both locales
- * render this same English content for now, the same shortcut ProductShowcase
- * takes for its placeholder beer copy. Swap for a real fetch when asked to
- * "connect" the section: each spread already carries the
- * {title, illustration, lines} split that an uploaded page image plus
- * admin-authored title/caption would fill in.
- */
-const SPREADS: BookSpread[] = [
-  {
-    id: "kettle",
-    title: "Copper Kettle\nBrewing History",
-    illustration: <CopperKettleEngraving />,
-    lines: ["Mashing", "Boiling", "Fermenting"],
-  },
-  {
-    id: "hops",
-    title: "Hand-Selected\nHops & Malt",
-    illustration: <HopBineEngraving />,
-    lines: ["Harvesting", "Milling", "Blending"],
-  },
-  {
-    id: "cellar",
-    title: "Patient\nFermentation",
-    illustration: <FermentationTankEngraving />,
-    lines: ["Yeast", "Time", "Otter Beer"],
-  },
+const SPREADS = [
+  { title: "Copper Kettle", left: "/images/otter-beer-premium-lager.jpg", right: "/images/contact-hero.jpeg" },
+  { title: "Hops & Malt", left: "/images/otter-beer-hero.png", right: "/images/otter-beer-single-3d.png" },
+  { title: "Fermentation", left: "/images/otter-beer-single-can.png", right: "/images/otter-beer-premium-lager-transparent.png" },
 ];
 
-interface FlipState {
-  /** Bumped every flip so React re-mounts the leaf and restarts its keyframes. */
-  id: number;
-  direction: "next" | "prev";
-  /** Spread index the book was showing when this flip started. */
-  fromIndex: number;
+interface PageFlipInstance {
+  pageFlip: () => {
+    flipNext: () => void;
+    flipPrev: () => void;
+    turnToPage: (page: number) => void;
+  };
 }
 
-/**
- * Homepage "Brand Story" flipbook — a bound book the visitor pages through
- * with the two arrow controls.
- *
- * The page turn is a real leaf hinged at the spine, not a whole-spread
- * rotation: a single half-width element rotates 180° around the gutter with
- * `backface-visibility: hidden` on both faces, so the outgoing page's front
- * and the incoming page's back are two sides of one sheet. Nothing between
- * the `perspective` wrapper and the leaf may set `overflow` — that would
- * flatten the 3D context and collapse the turn back into a flat wipe.
- *
- * Deliberately breaks from the site's "Coastal Premium" tokens
- * (docs/DESIGN.md) for a warm heritage-brewing mood; every illustration and
- * texture here is original SVG (no source art files exist for this section).
- */
+interface PageFlipEvent {
+  data: number;
+}
+
+// Cast HTMLFlipBook to allow optional props instead of the library's strict required ones
+const FlipBook = HTMLFlipBook as unknown as React.ComponentType<
+  Partial<Omit<React.ComponentProps<typeof HTMLFlipBook>, "children">> & {
+    children: React.ReactNode;
+  }
+>;
+
 export function BrandStorySection({ locale }: BrandStorySectionProps) {
   const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
-  const [index, setIndex] = useState(0);
-  const [flip, setFlip] = useState<FlipState | null>(null);
+  const [pageIndex, setPageIndex] = useState(0);
+  const bookRef = useRef<PageFlipInstance | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  
+  // Toolbar state
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [isSinglePage, setIsSinglePage] = useState(false);
+  const [isSoundMuted, setIsSoundMuted] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
-  const isFirst = index === 0;
-  const isLast = index === SPREADS.length - 1;
+  // Math.floor(pageIndex / 2) is the current spread (0, 1, 2).
+  const isFirst = pageIndex === 0;
+  const isLast = pageIndex >= SPREADS.length * 2 - (isSinglePage ? 1 : 2);
 
-  // The leaf is decorative only — `index` commits on click, so the spread
-  // under it is already correct and nav never depends on the animation
-  // actually running (it doesn't in jsdom, and it's skipped under
-  // prefers-reduced-motion).
-  useEffect(() => {
-    if (!flip) return;
-    const timeoutMs = process.env.NODE_ENV === "test" ? 0 : FLIP_MS;
-    const timer = setTimeout(() => setFlip(null), timeoutMs);
-    return () => clearTimeout(timer);
-  }, [flip]);
+  const currentScale = isSinglePage ? zoomLevel * 1.6 : zoomLevel;
+  const currentTranslate = isSinglePage ? (pageIndex % 2 === 0 ? '25%' : '-25%') : '0%';
 
   function turn(direction: "next" | "prev") {
-    if (flip) return; // Require current page flip animation to complete before turning again
-    if (direction === "next" && isLast) return;
-    if (direction === "prev" && isFirst) return;
-    // Safe to call here and only here: this runs inside the click handler,
-    // which is the user gesture browsers require before audio may start.
-    playPageTurn();
-    setFlip({ id: Date.now(), direction, fromIndex: index });
-    setIndex((i) => i + (direction === "next" ? 1 : -1));
+    if (!bookRef.current) return;
+    
+    if (isSinglePage) {
+      if (direction === "next" && !isLast) {
+        if (pageIndex % 2 === 0) {
+          // Left page -> Right page. Just pan camera.
+          setPageIndex(pageIndex + 1);
+        } else {
+          // Right page -> Left page of NEXT spread. Flip page + pan camera.
+          bookRef.current.pageFlip().flipNext();
+          if (!isSoundMuted) playPageTurn();
+          setPageIndex(pageIndex + 1);
+        }
+      } else if (direction === "prev" && !isFirst) {
+        if (pageIndex % 2 === 1) {
+          // Right page -> Left page. Just pan camera.
+          setPageIndex(pageIndex - 1);
+        } else {
+          // Left page -> Right page of PREV spread. Flip page + pan camera.
+          bookRef.current.pageFlip().flipPrev();
+          if (!isSoundMuted) playPageTurn();
+          setPageIndex(pageIndex - 1);
+        }
+      }
+    } else {
+      if (direction === "next" && !isLast) {
+        bookRef.current.pageFlip().flipNext();
+        if (!isSoundMuted) playPageTurn();
+        const nextIndex = Math.min(pageIndex + 2, SPREADS.length * 2 - 2);
+        setPageIndex(nextIndex);
+      } else if (direction === "prev" && !isFirst) {
+        bookRef.current.pageFlip().flipPrev();
+        if (!isSoundMuted) playPageTurn();
+        const prevIndex = Math.max(pageIndex - 2, 0);
+        setPageIndex(prevIndex);
+      }
+    }
   }
 
-  return (
-    <section className="relative overflow-hidden bg-[#f9efd9] px-4 py-20 sm:px-6 lg:py-28">
-      <BackgroundMotif />
+  const onPageFlip = (e: PageFlipEvent) => {
+    if (!isSinglePage) {
+      setPageIndex(e.data);
+    } else {
+      const currentSpread = Math.floor(pageIndex / 2) * 2;
+      if (e.data > currentSpread) {
+        // Flipped Forward: land on the Left page of the new spread
+        setPageIndex(e.data);
+      } else if (e.data < currentSpread) {
+        // Flipped Backward: land on the Right page of the new spread
+        setPageIndex(e.data + 1);
+      }
+    }
+  };
 
-      <div className="relative mx-auto flex max-w-[1120px] flex-col items-center gap-10">
+  return (
+    <section ref={sectionRef} className="relative overflow-hidden bg-background px-4 py-20 sm:px-6 lg:py-28">
+      {/* Background Image */}
+      <div
+        className="absolute inset-0 z-0 bg-[url('/images/brand-story-bg.jpg')] bg-cover bg-fixed bg-center opacity-10"
+        aria-hidden="true"
+      />
+
+      <div className="relative z-10 mx-auto flex max-w-[1120px] flex-col items-center gap-10">
         <div className="flex flex-col items-center gap-3 text-center">
-          <span className="text-[11px] font-bold tracking-[0.32em] text-[#a9723f]">
+          <span className="text-[11px] font-bold tracking-[0.32em] text-primary-container">
             {copy.kicker}
           </span>
-          <span aria-hidden className="text-[#c8a26a]">
+          <span aria-hidden className="text-secondary-fixed-dim">
             <FlourishRule />
           </span>
-          {/* `!` is load-bearing: globals.css styles h1–h4 unlayered, and an
-              unlayered rule beats Tailwind's layered utilities regardless of
-              specificity — without it these headings render Coastal navy. */}
-          <h2 className="font-display text-[clamp(26px,4vw,42px)] tracking-[0.08em] text-[#4a2c17]! uppercase">
+          <h2 className="font-display text-[clamp(26px,4vw,42px)] tracking-[0.08em] text-primary! uppercase">
             {copy.heading}
           </h2>
         </div>
 
-        <div className="flex w-full items-center justify-center gap-1 sm:gap-6">
-          <ArrowButton
-            direction="prev"
-            label={copy.prev}
-            disabled={isFirst || flip !== null}
-            onClick={() => turn("prev")}
-          />
+        <div className="flex w-full items-center justify-center sm:gap-6">
+          <div className="hidden sm:block">
+            <ArrowButton
+              direction="prev"
+              label={copy.prev}
+              disabled={isFirst}
+              onClick={() => turn("prev")}
+            />
+          </div>
 
-          <div
-            className="relative min-w-0 flex-1 sm:max-w-[820px]"
-            style={{ perspective: "2400px" }}
-          >
+          <div className="relative min-w-0 w-full sm:max-w-[1000px] perspective-[1200px]">
+            {/* Deep ground shadow */}
             <div
               aria-hidden
-              className="absolute inset-x-6 -bottom-4 h-10 rounded-[50%] bg-[#2a0b12]/35 blur-xl"
+              className="absolute inset-x-12 -bottom-6 h-12 rounded-[50%] bg-black/50 blur-2xl sm:inset-x-20 sm:-bottom-10 sm:h-20 transition-transform duration-1000"
+              style={{ transform: `scale(${currentScale}) translateX(${currentTranslate})` }}
             />
 
-            {/* Oxblood hardcover leather binding matching the reference image */}
-            <div className="relative rounded-[8px] bg-[linear-gradient(180deg,#42121c,#360e16_40%,#2b0a11)] p-2 shadow-[0_30px_60px_-15px_rgba(42,11,18,0.7),inset_0_1px_0_rgba(255,255,255,0.12),0_0_0_1px_rgba(30,8,13,0.9)] sm:p-3">
-              {/* Binding, seen through the wedge the bowed pages leave open at
-                  the head and tail of the spine. Sits behind the page block. */}
+            {/* The Hardcover */}
+            <div 
+              className="relative mx-auto w-full max-w-[960px] aspect-[8/5] rounded-[6px] sm:rounded-[10px] bg-[#2a0b12] p-1.5 pb-2 sm:p-2 sm:pb-3 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.7),inset_0_1px_1px_rgba(255,255,255,0.1)] border border-[#1a060a] transition-transform duration-1000 origin-center"
+              style={{ transform: `scale(${currentScale}) translateX(${currentTranslate})` }}
+            >
+              
+              {/* Paper Stack Edge (Bottom & Sides) */}
+              <div className="absolute inset-1.5 bg-[#f4f2ec] rounded-[3px] sm:inset-2 shadow-[inset_0_0_8px_rgba(0,0,0,0.1)]">
+                {/* Horizontal paper lines at the bottom */}
+                <div className="absolute inset-x-0 bottom-0 h-1.5 sm:h-2 bg-[repeating-linear-gradient(to_bottom,rgba(0,0,0,0.06)_0px,rgba(0,0,0,0.06)_1px,transparent_1px,transparent_2px)] rounded-b-[3px]" />
+              </div>
+
+              {/* Center Spine Binding (Hardcover) */}
               <div
                 aria-hidden
-                className="absolute inset-y-1.5 left-1/2 w-6 -translate-x-1/2 rounded-full bg-[linear-gradient(to_right,rgba(0,0,0,0.5),rgba(255,255,255,0.08)_42%,rgba(255,255,255,0.12)_50%,rgba(255,255,255,0.08)_58%,rgba(0,0,0,0.5))]"
+                className="absolute inset-y-0 left-1/2 w-8 sm:w-12 -translate-x-1/2 rounded-sm bg-[linear-gradient(to_right,rgba(0,0,0,0.7),rgba(255,255,255,0.08)_40%,rgba(255,255,255,0.12)_50%,rgba(255,255,255,0.08)_60%,rgba(0,0,0,0.7))] shadow-[inset_0_0_15px_rgba(0,0,0,0.8)] z-0"
               />
 
-              <div
-                className="relative grid grid-cols-2"
-                style={{ transformStyle: "preserve-3d" }}
-                role="group"
-                aria-roledescription="book spread"
-                aria-label={copy.pageOf(index + 1, SPREADS.length)}
-              >
-                {/* The only pages in the accessibility tree, and always the
-                    current spread — every animation layer below is
-                    aria-hidden, so a screen reader never sees a page
-                    mid-turn or reads the outgoing spread. */}
-                <PageFace side="left" spread={SPREADS[index]} />
-                <PageFace side="right" spread={SPREADS[index]} />
-
-                {/* Visually, the half the leaf is about to land on has to keep
-                    showing the *outgoing* page until it gets there. */}
-                {flip ? (
-                  <div
-                    aria-hidden
-                    className={`absolute inset-y-0 z-10 w-1/2 ${
-                      flip.direction === "next" ? "left-0" : "left-1/2"
-                    }`}
-                  >
-                    <PageFace
-                      side={flip.direction === "next" ? "left" : "right"}
-                      spread={SPREADS[flip.fromIndex]}
-                    />
-                  </div>
-                ) : null}
-
-                {/* Cast shadow sweeping across the resting page as the leaf turns overhead */}
-                {flip ? (
-                  <div
-                    aria-hidden
-                    className={`pointer-events-none absolute inset-y-0 z-15 w-1/2 ${
-                      flip.direction === "next"
-                        ? "left-0 brand-cast-shadow-next"
-                        : "left-1/2 brand-cast-shadow-prev"
-                    }`}
-                  />
-                ) : null}
-
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute inset-y-0 left-1/2 z-10 w-10 -translate-x-1/2 bg-[linear-gradient(to_right,transparent,rgba(42,11,18,0.18)_38%,rgba(42,11,18,0.32)_50%,rgba(42,11,18,0.18)_62%,transparent)]"
-                />
-
-                {flip ? (
-                  <div
-                    key={flip.id}
-                    aria-hidden
-                    className={`absolute inset-y-0 z-20 w-1/2 ${
-                      flip.direction === "next"
-                        ? "left-1/2 origin-left brand-leaf-next"
-                        : "left-0 origin-right brand-leaf-prev"
-                    }`}
-                    style={{ transformStyle: "preserve-3d" }}
-                  >
-                    <div className="absolute inset-0 [backface-visibility:hidden]">
+              <div className="relative w-full aspect-[8/5] z-10 -mt-0.5 sm:-mt-[2px] -mb-0.5 sm:-mb-[2px]">
+                <FlipBook
+                  width={480}
+                  height={600}
+                  size="stretch"
+                  minWidth={100}
+                  maxWidth={480}
+                  minHeight={125}
+                  maxHeight={600}
+                  maxShadowOpacity={0.5}
+                  showCover={false}
+                  usePortrait={false}
+                  mobileScrollSupport={true}
+                  flippingTime={1000}
+                  onFlip={onPageFlip}
+                  className="mx-auto h-full w-full"
+                  ref={bookRef}
+                >
+                  {SPREADS.flatMap((spread, sIndex) => {
+                    const isCurrentSpread = Math.floor(pageIndex / 2) === sIndex;
+                    return [
                       <PageFace
-                        side={flip.direction === "next" ? "right" : "left"}
-                        spread={SPREADS[flip.fromIndex]}
-                        asLeaf
-                      />
-                    </div>
-                    <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                        key={`${spread.title}-left`}
+                        src={spread.left}
+                        title={spread.title}
+                        side="left"
+                        aria-hidden={!isCurrentSpread}
+                      />,
                       <PageFace
-                        side={flip.direction === "next" ? "left" : "right"}
-                        spread={SPREADS[index]}
-                        asLeaf
+                        key={`${spread.title}-right`}
+                        src={spread.right}
+                        side="right"
+                        aria-hidden={!isCurrentSpread}
                       />
-                    </div>
-                    {/* Dynamic shadow & specular reflection on the moving leaf face */}
-                    <div className="brand-leaf-shade pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,0.15),rgba(42,11,18,0.65))] mix-blend-multiply" />
-                  </div>
-                ) : null}
+                    ];
+                  })}
+                </FlipBook>
               </div>
             </div>
           </div>
 
-          <ArrowButton
-            direction="next"
-            label={copy.next}
-            disabled={isLast || flip !== null}
-            onClick={() => turn("next")}
-          />
+          <div className="hidden sm:block">
+            <ArrowButton
+              direction="next"
+              label={copy.next}
+              disabled={isLast}
+              onClick={() => turn("next")}
+            />
+          </div>
         </div>
 
-        <p
-          aria-live="polite"
-          className="text-[11px] font-bold tracking-[0.28em] text-[#a9723f] uppercase"
-        >
-          {copy.pageOf(index + 1, SPREADS.length)}
-        </p>
+        <div className="flex w-full items-center justify-between px-2 sm:justify-center">
+          <div className="sm:hidden">
+            <ArrowButton
+              direction="prev"
+              label={copy.prev}
+              disabled={isFirst}
+              onClick={() => turn("prev")}
+            />
+          </div>
+          <p
+            aria-live="polite"
+            className="text-[11px] font-bold tracking-[0.28em] text-primary-container uppercase"
+          >
+            {copy.pageOf(Math.floor(pageIndex / 2) + 1, SPREADS.length)}
+          </p>
+          <div className="sm:hidden">
+            <ArrowButton
+              direction="next"
+              label={copy.next}
+              disabled={isLast}
+              onClick={() => turn("next")}
+            />
+          </div>
+        </div>
       </div>
+      
+      <FlipbookToolbar
+        pageIndex={pageIndex}
+        totalPages={SPREADS.length * 2}
+        setZoomLevel={setZoomLevel}
+        isSinglePage={isSinglePage}
+        setIsSinglePage={setIsSinglePage}
+        isSoundMuted={isSoundMuted}
+        setIsSoundMuted={setIsSoundMuted}
+        isMoreMenuOpen={isMoreMenuOpen}
+        setIsMoreMenuOpen={setIsMoreMenuOpen}
+        sectionRef={sectionRef}
+        bookRef={bookRef}
+        setPageIndex={setPageIndex}
+      />
     </section>
   );
 }
 
-function PageFace({
-  side,
-  spread,
-  asLeaf = false,
-}: {
+const PageFace = React.forwardRef<HTMLDivElement, {
   side: "left" | "right";
-  spread: BookSpread;
-  asLeaf?: boolean;
-}) {
-  // Sheets bow into the gutter, so the spine-side edge is shorter than the
-  // outer one — a wide, shallow elliptical radius bends the head and tail in
-  // toward the binding, and the inset shadow shades the trough it makes.
-  // Composed as one boxShadow string because two Tailwind `shadow-[…]`
-  // utilities on one element would collide rather than merge.
-  const gutterShade =
-    side === "left"
-      ? "inset -18px 0 22px -18px rgba(42,11,18,0.45)"
-      : "inset 18px 0 22px -18px rgba(42,11,18,0.45)";
-
+  src: string;
+  title?: string;
+  "aria-hidden"?: boolean;
+}>(({ side, src, title, "aria-hidden": ariaHidden }, ref) => {
   return (
     <div
-      style={{ boxShadow: asLeaf ? `${gutterShade}, 0 0 30px rgba(42,11,18,0.24)` : gutterShade }}
-      className={`relative flex h-full min-h-[330px] flex-col items-center justify-center bg-[#faf6ee] px-4 py-8 text-center sm:min-h-[500px] sm:px-8 sm:py-12 ${
-        side === "left"
-          ? "rounded-l-[4px] rounded-tr-[100%_16px] rounded-br-[100%_16px]"
-          : "rounded-r-[4px] rounded-tl-[100%_16px] rounded-bl-[100%_16px]"
-      }`}
-    >
-      <PaperGrain />
-      {/* Fanned page edges along the book's outer trim. */}
-      <div
-        aria-hidden
-        className={`absolute inset-y-1 w-[11px] bg-[repeating-linear-gradient(to_right,rgba(42,11,18,0.22)_0px,rgba(42,11,18,0.22)_1px,transparent_1px,transparent_3px)] ${
-          side === "left" ? "left-0 rounded-l-[3px]" : "right-0 rounded-r-[3px]"
+      ref={ref}
+      aria-hidden={ariaHidden}
+      className={`relative flex h-full w-full flex-col items-center justify-center bg-background overflow-hidden ${side === "left"
+        ? "rounded-l-[4px]"
+        : "rounded-r-[4px]"
         }`}
+    >
+      {title && <h3 className="sr-only">{title}</h3>}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={title}
+        className="absolute inset-0 h-full w-full object-cover"
       />
 
-      {side === "left" ? (
-        <>
-          {/* text-[...]! — see the note on the section heading above. */}
-          <h3
-            className={`${slab.className} relative whitespace-pre-line text-[18px] leading-[1.28] tracking-[-0.01em] text-[#2c1810]! sm:text-[28px]`}
-          >
-            {spread.title}
-          </h3>
-          <div className="relative mt-6 text-[#a9622f] sm:mt-9">
-            {spread.illustration}
-          </div>
-        </>
-      ) : (
-        <>
-          <CornerFlourish className="absolute top-2 left-2 sm:top-4 sm:left-4" />
-          <CornerFlourish className="absolute top-2 right-2 -scale-x-100 sm:top-4 sm:right-4" />
-          <CornerFlourish className="absolute bottom-2 left-2 -scale-y-100 sm:bottom-4 sm:left-4" />
-          <CornerFlourish className="absolute right-2 bottom-2 -scale-x-100 -scale-y-100 sm:right-4 sm:bottom-4" />
+      <PaperGrain />
 
-          {/* Decorative hop sprigs matching the reference image arrangement */}
-          <HopSprig className="absolute top-7 right-7 h-6 w-5 rotate-[25deg] sm:top-10 sm:right-12 sm:h-9 sm:w-7" />
-          <HopSprig className="absolute top-[42%] left-4 h-6 w-5 -rotate-[45deg] sm:top-[42%] sm:left-8 sm:h-8 sm:w-6" />
-          <div className="absolute top-[38%] right-5 flex items-center gap-1 sm:top-[38%] sm:right-9">
-            <HopSprig className="h-5 w-4 rotate-[60deg] sm:h-8 sm:w-6" />
-          </div>
-          <HopSprig className="absolute top-[60%] right-10 h-5 w-4 rotate-[15deg] sm:top-[60%] sm:right-14 sm:h-7 sm:w-5" />
-          <HopSprig className="absolute bottom-6 left-1/2 -translate-x-1/2 h-6 w-5 rotate-[180deg] sm:bottom-8 sm:h-8 sm:w-6" />
+      <div
+        aria-hidden
+        className={`pointer-events-none absolute inset-y-1 z-10 w-[11px] opacity-30 bg-[repeating-linear-gradient(to_right,rgba(42,11,18,0.22)_0px,rgba(42,11,18,0.22)_1px,transparent_1px,transparent_3px)] ${side === "left" ? "left-0 rounded-l-[3px]" : "right-0 rounded-r-[3px]"
+          }`}
+      />
 
-          <div className="relative flex flex-col items-center justify-center gap-1 py-4 sm:gap-2 sm:py-6">
-            {spread.lines.map((line, lineIndex) => (
-              <div key={line} className="flex flex-col items-center">
-                <p
-                  className={`${script.className} text-[clamp(28px,6vw,56px)] leading-[1.1] text-[#3d1a0d]`}
-                >
-                  {line}
-                </p>
-                {lineIndex < spread.lines.length - 1 ? (
-                  <span aria-hidden className="my-0.5 text-[#c8a26a] sm:my-1">
-                    <TinyFlourish />
-                  </span>
-                ) : null}
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+      {/* Book spine gutter shadow */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-20 mix-blend-multiply"
+        style={{
+          background: side === "left"
+            ? "linear-gradient(to right, transparent 50%, rgba(0,0,0,0.05) 85%, rgba(0,0,0,0.4) 96%, rgba(0,0,0,0.8) 100%)"
+            : "linear-gradient(to left, transparent 50%, rgba(0,0,0,0.05) 85%, rgba(0,0,0,0.4) 96%, rgba(0,0,0,0.8) 100%)"
+        }}
+      />
+
+      {/* Page Lighting curve simulating a bent page */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-20 mix-blend-overlay opacity-50"
+        style={{
+          background: side === "left"
+            ? "linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 15%, rgba(255,255,255,0) 40%)"
+            : "linear-gradient(to left, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 15%, rgba(255,255,255,0) 40%)"
+        }}
+      />
     </div>
   );
-}
+});
+PageFace.displayName = "PageFace";
 
 function PaperGrain() {
   return (
@@ -364,145 +344,6 @@ function PaperGrain() {
         <feColorMatrix type="saturate" values="0" />
       </filter>
       <rect width="100%" height="100%" filter="url(#brand-story-grain)" />
-    </svg>
-  );
-}
-
-/** Tiled brewing line-art wallpaper behind the book. */
-function BackgroundMotif() {
-  return (
-    <svg
-      aria-hidden
-      className="pointer-events-none absolute inset-0 h-full w-full text-[#c9a06a] opacity-[0.22]"
-    >
-      <defs>
-        <pattern id="brand-story-motif" width="230" height="230" patternUnits="userSpaceOnUse">
-          <g
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            {/* hop cone */}
-            <g transform="translate(18 16)">
-              <path d="M16 4v6" />
-              <path d="M16 10c-7 0-11 5-11 11s4 14 11 14 11-7 11-14-4-11-11-11z" />
-              <path d="M6 18c3-2 6-3 10-3s7 1 10 3M6 25c3-2 6-3 10-3s7 1 10 3M8 31c2-2 5-3 8-3s6 1 8 3" />
-              <path d="M16 6c-3-3-7-3-9-1 2 3 6 4 9 1z" />
-            </g>
-            {/* wheat ear */}
-            <g transform="translate(104 12)">
-              <path d="M14 52V16" />
-              <path d="M14 20c-6-1-9-5-9-10 5 0 9 3 9 8zM14 20c6-1 9-5 9-10-5 0-9 3-9 8z" />
-              <path d="M14 30c-6-1-9-5-9-10 5 0 9 3 9 8zM14 30c6-1 9-5 9-10-5 0-9 3-9 8z" />
-              <path d="M14 40c-6-1-9-5-9-10 5 0 9 3 9 8zM14 40c6-1 9-5 9-10-5 0-9 3-9 8z" />
-              <path d="M14 12c-2-4-1-8 2-10 1 4 0 8-2 10z" />
-            </g>
-            {/* beer mug */}
-            <g transform="translate(176 20)">
-              <path d="M4 14h24v28a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V14z" />
-              <path d="M28 20h6a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4h-6" />
-              <path d="M4 14c2-6 6-8 12-8s10 2 12 8" />
-              <path d="M11 22v18M20 22v18" strokeWidth="1.1" />
-            </g>
-            {/* barrel */}
-            <g transform="translate(24 108)">
-              <path d="M10 6h28c4 8 4 30 0 38H10c-4-8-4-30 0-38z" />
-              <path d="M6 16h36M6 34h36" />
-              <path d="M24 6v38" strokeWidth="1.1" />
-            </g>
-            {/* bottle */}
-            <g transform="translate(112 104)">
-              <path d="M12 4h8v12c8 5 10 10 10 18v14a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V34c0-8 2-13 10-18V4z" />
-              <path d="M2 34h28" strokeWidth="1.1" />
-              <path d="M13 2h6" strokeWidth="2.2" />
-            </g>
-            {/* kettle */}
-            <g transform="translate(178 112)">
-              <path d="M6 16c-2 12 2 22 6 26h20c4-4 8-14 6-26" />
-              <ellipse cx="22" cy="16" rx="16" ry="4" />
-              <path d="M22 12V2M17 2h10" />
-              <path d="M38 20c5 2 6 8 6 14" />
-            </g>
-            {/* pint glass */}
-            <g transform="translate(66 178)">
-              <path d="M6 6h24l-3 34a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4L6 6z" />
-              <path d="M7 16h22" strokeWidth="1.1" />
-            </g>
-            {/* funnel */}
-            <g transform="translate(150 180)">
-              <path d="M4 6h28L21 24v16h-6V24L4 6z" />
-              <path d="M4 12h28" strokeWidth="1.1" />
-            </g>
-          </g>
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#brand-story-motif)" />
-    </svg>
-  );
-}
-
-function CornerFlourish({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 100 100"
-      className={`h-10 w-10 text-[#c19056] sm:h-16 sm:w-16 ${className}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      {/* Intricate Victorian filigree corner scrollwork matching the design reference */}
-      <path d="M 8 92 V 30 C 8 18 18 8 30 8 H 92" strokeWidth="1.8" />
-      <path d="M 16 92 V 38 C 16 26 26 16 38 16 H 92" strokeWidth="1" opacity="0.6" />
-      <path d="M 30 8 C 42 20 20 42 8 30" />
-      <path d="M 22 22 C 32 12 45 25 35 35 C 25 45 12 32 22 22 Z" fill="currentColor" fillOpacity="0.15" />
-      <path d="M 55 12 C 50 25 65 30 70 20 C 75 10 60 5 55 12 Z" />
-      <path d="M 12 55 C 25 50 30 65 20 70 C 10 75 5 60 12 55 Z" />
-      <circle cx="35" cy="35" r="2" fill="currentColor" stroke="none" />
-      <circle cx="78" cy="14" r="1.5" fill="currentColor" stroke="none" />
-      <circle cx="14" cy="78" r="1.5" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function TinyFlourish() {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 64 12"
-      className="h-2 w-12 sm:h-3 sm:w-16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.3"
-      strokeLinecap="round"
-    >
-      <path d="M4 6c8-6 14 6 22 0s14-6 22 0" />
-      <circle cx="54" cy="6" r="1.4" fill="currentColor" stroke="none" />
-      <circle cx="60" cy="6" r="1" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function HopSprig({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 32 44"
-      className={`text-[#b5714a] ${className}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M16 6v6" />
-      <path d="M16 12c-7 0-11 5-11 12s4 14 11 14 11-7 11-14-4-12-11-12z" />
-      <path d="M6 20c3-2 6-3 10-3s7 1 10 3M5 27c3-2 6-3 11-3s8 1 11 3M8 34c2-2 5-3 8-3s6 1 8 3" />
-      <path d="M16 8c-3-4-8-4-11-1 3 4 8 4 11 1z" />
     </svg>
   );
 }
@@ -526,144 +367,6 @@ function FlourishRule() {
   );
 }
 
-// ─── Engraving-style illustrations ────────────────────────────────────────
-// Hatched line art in the manner of a Victorian brewing manual, matching the
-// reference frame's copper etchings.
-
-function CopperKettleEngraving() {
-  return (
-    <svg
-      viewBox="0 0 200 224"
-      className="h-[136px] w-[122px] sm:h-[240px] sm:w-[214px]"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      {/* ground */}
-      <path d="M26 210h34M68 210h24M100 210h34M142 210h20M168 210h10" strokeWidth="1.8" opacity="0.7" />
-      <path d="M38 217h28M76 217h30M116 217h28M152 217h18" strokeWidth="1.4" opacity="0.45" />
-      {/* plinth */}
-      <path d="M48 191h104a5 5 0 0 1 5 5v5a4 4 0 0 1-4 4H47a4 4 0 0 1-4-4v-5a5 5 0 0 1 5-5z" />
-      <path d="M52 198h96" strokeWidth="1.4" opacity="0.5" />
-      {/* body */}
-      <path d="M42 130c-4 26 5 47 15 59 6 6 60 6 66 0 10-12 19-33 15-59" />
-      <ellipse cx="100" cy="130" rx="58" ry="13" />
-      <path d="M43 137c14 8 100 8 114 0" strokeWidth="1.8" opacity="0.8" />
-      <path d="M50 160c16 9 84 9 100 0" strokeWidth="1.6" opacity="0.6" />
-      {/* dome + collar */}
-      <path d="M57 126c2-25 18-42 43-42s41 17 43 42" />
-      <ellipse cx="100" cy="85" rx="19" ry="5.5" />
-      {/* tall chimney */}
-      <path d="M90 84V26M110 84V26" />
-      <path d="M84 26h32" strokeWidth="3.4" />
-      <path d="M87 19h26" strokeWidth="2.6" />
-      <ellipse cx="100" cy="15" rx="15" ry="4.5" />
-      <path d="M93 84V32M107 84V32" strokeWidth="1.2" opacity="0.4" />
-      {/* outlet pipe */}
-      <path d="M153 123c17 5 23 19 23 35v31" />
-      <path d="M162 119c19 7 25 23 25 39v27" opacity="0.85" />
-      <path d="M168 205h26" strokeWidth="3" />
-      {/* spout + smoke */}
-      <path d="M134 99l16-11 7 9-14 10" />
-      <path d="M157 81c8-5 6-14-2-16M164 63c9-3 8-14 0-17M150 68c6-3 4-12-1-14" strokeWidth="1.8" opacity="0.62" />
-      {/* body hatching — denser on the shaded left flank */}
-      <path d="M53 143c-2 18 2 33 10 45M64 147c-2 17 1 31 8 42M75 150c-2 16 0 29 6 39M86 152c-1 15 0 27 4 36" strokeWidth="1.5" opacity="0.45" />
-      <path d="M140 147c2 17-1 31-8 42M130 151c1 15-1 27-5 37" strokeWidth="1.3" opacity="0.3" />
-      {/* dome hatching */}
-      <path d="M64 116c2-18 11-30 25-34M75 122c2-17 10-28 22-32M86 125c1-16 7-26 16-30" strokeWidth="1.4" opacity="0.4" />
-      {/* rivets */}
-      <circle cx="60" cy="139" r="2" fill="currentColor" stroke="none" opacity="0.75" />
-      <circle cx="100" cy="142" r="2" fill="currentColor" stroke="none" opacity="0.75" />
-      <circle cx="140" cy="139" r="2" fill="currentColor" stroke="none" opacity="0.75" />
-    </svg>
-  );
-}
-
-function HopBineEngraving() {
-  return (
-    <svg
-      viewBox="0 0 200 224"
-      className="h-[136px] w-[122px] sm:h-[240px] sm:w-[214px]"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      {/* ground */}
-      <path d="M32 210h34M74 210h28M110 210h32M150 210h18" strokeWidth="1.5" opacity="0.6" />
-      {/* main bine */}
-      <path d="M100 206c-6-40-4-78 2-116" />
-      {/* twining tendrils */}
-      <path d="M102 154c-16-4-26-16-24-30M102 118c16-5 25-18 22-32" strokeWidth="1.6" />
-      {/* leaves */}
-      <path d="M78 124c-14-3-22-13-20-24 12-1 21 9 20 24z" />
-      <path d="M78 124c-6-8-9-15-9-21" strokeWidth="1.1" opacity="0.5" />
-      <path d="M124 86c14-4 22-14 19-25-12 0-20 10-19 25z" />
-      <path d="M124 86c5-8 8-15 8-21" strokeWidth="1.1" opacity="0.5" />
-      {/* big cone */}
-      <path d="M104 32c-18 2-28 16-26 34s16 32 30 30 22-18 20-36-8-30-24-28z" />
-      <path d="M80 50c7-4 14-6 22-6s15 2 22 5M79 64c7-4 15-6 23-6s15 2 22 6M84 78c6-4 12-6 19-6s13 2 19 5M90 90c5-3 10-4 15-4s10 1 14 4" />
-      <path d="M102 34c2 20 4 41 4 62" strokeWidth="1.1" opacity="0.45" />
-      {/* small cone */}
-      <path d="M58 168c-13 1-20 12-19 25s12 23 22 22 16-13 15-26-6-22-18-21z" />
-      <path d="M41 181c5-3 10-4 16-4s11 1 16 4M41 191c5-3 11-4 17-4s11 1 15 4M45 201c4-2 8-3 13-3s9 1 12 3" />
-      {/* barley ear */}
-      <path d="M148 208V150" />
-      <path d="M148 156c-10-2-15-8-15-17 9 0 15 6 15 14zM148 156c10-2 15-8 15-17-9 0-15 6-15 14z" />
-      <path d="M148 174c-10-2-15-8-15-17 9 0 15 6 15 14zM148 174c10-2 15-8 15-17-9 0-15 6-15 14z" />
-      <path d="M148 146c-3-7-2-14 3-18 2 7 0 14-3 18z" />
-    </svg>
-  );
-}
-
-function FermentationTankEngraving() {
-  return (
-    <svg
-      viewBox="0 0 200 224"
-      className="h-[136px] w-[122px] sm:h-[240px] sm:w-[214px]"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      {/* ground */}
-      <path d="M26 212h34M68 212h26M102 212h34M144 212h22" strokeWidth="1.5" opacity="0.6" />
-      {/* legs */}
-      <path d="M62 186l-8 22M138 186l8 22" />
-      {/* conical body */}
-      <path d="M52 44h96v112l-48 52-48-52V44z" />
-      <ellipse cx="100" cy="44" rx="48" ry="11" />
-      {/* domed lid */}
-      <path d="M62 40c4-14 18-22 38-22s34 8 38 22" />
-      <ellipse cx="100" cy="18" rx="12" ry="4" />
-      <path d="M100 14V4M92 4h16" strokeWidth="2.4" />
-      {/* hoop bands */}
-      <path d="M52 74c16 7 80 7 96 0M52 112c16 7 80 7 96 0" strokeWidth="1.6" opacity="0.85" />
-      {/* sight glass */}
-      <path d="M120 60v78" strokeWidth="1.4" opacity="0.7" />
-      <path d="M114 96h12M114 118h12" strokeWidth="1.2" opacity="0.6" />
-      {/* valve + tap */}
-      <circle cx="100" cy="176" r="7" />
-      <path d="M100 183v14M92 197h16" strokeWidth="2.4" />
-      {/* pressure gauge */}
-      <circle cx="158" cy="66" r="10" />
-      <path d="M158 66l5-5" strokeWidth="1.5" />
-      <path d="M148 66h-8" />
-      {/* hatching */}
-      <path d="M64 88v52M76 92v48M88 96v42" strokeWidth="1.1" opacity="0.35" />
-      {/* rising bubbles */}
-      <circle cx="76" cy="70" r="3" opacity="0.55" />
-      <circle cx="90" cy="58" r="2.2" opacity="0.5" />
-      <circle cx="106" cy="66" r="2.6" opacity="0.5" />
-      <circle cx="116" cy="54" r="1.8" opacity="0.45" />
-    </svg>
-  );
-}
-
 function ArrowButton({
   direction,
   label,
@@ -681,12 +384,11 @@ function ArrowButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className="group relative flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#a9723f] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f9efd9] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-20 sm:h-16 sm:w-16"
+      className="group relative flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none disabled:pointer-events-none disabled:opacity-20 sm:h-16 sm:w-16"
     >
-      {/* Frameless simple rounded chevron arrow */}
       <svg
         viewBox="0 0 24 24"
-        className="h-7 w-7 fill-current text-[#a9723f] transition-all duration-200 group-hover:scale-125 group-hover:text-[#4a2c17] sm:h-10 sm:w-10"
+        className="h-7 w-7 fill-current text-primary-container transition-all duration-200 group-hover:scale-125 group-hover:text-primary sm:h-10 sm:w-10"
         stroke="currentColor"
         strokeWidth="2.5"
         strokeLinecap="round"
@@ -702,3 +404,174 @@ function ArrowButton({
     </button>
   );
 }
+
+function FlipbookToolbar({
+  pageIndex,
+  totalPages,
+  setZoomLevel,
+  isSinglePage,
+  setIsSinglePage,
+  isSoundMuted,
+  setIsSoundMuted,
+  isMoreMenuOpen,
+  setIsMoreMenuOpen,
+  sectionRef,
+  bookRef,
+  setPageIndex
+}: {
+  pageIndex: number;
+  totalPages: number;
+  setZoomLevel: React.Dispatch<React.SetStateAction<number>>;
+  isSinglePage: boolean;
+  setIsSinglePage: React.Dispatch<React.SetStateAction<boolean>>;
+  isSoundMuted: boolean;
+  setIsSoundMuted: React.Dispatch<React.SetStateAction<boolean>>;
+  isMoreMenuOpen: boolean;
+  setIsMoreMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  sectionRef: React.RefObject<HTMLElement | null>;
+  bookRef: React.RefObject<PageFlipInstance | null>;
+  setPageIndex: React.Dispatch<React.SetStateAction<number>>;
+}) {
+  const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.5, 3));
+  const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 0.5, 1));
+  
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement && sectionRef.current) {
+      sectionRef.current.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+      });
+    } else if (document.fullscreenElement) {
+      document.exitFullscreen();
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      alert("Link copied to clipboard!"); 
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  };
+
+  const goToFirstPage = () => {
+    if (bookRef.current) {
+      bookRef.current.pageFlip().turnToPage(0);
+      setPageIndex(0);
+      setIsMoreMenuOpen(false);
+    }
+  };
+
+  const goToLastPage = () => {
+    if (bookRef.current) {
+      const target = totalPages - (isSinglePage ? 1 : 2);
+      bookRef.current.pageFlip().turnToPage(target);
+      setPageIndex(target);
+      setIsMoreMenuOpen(false);
+    }
+  };
+
+  return (
+    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 sm:gap-4 rounded-full bg-[#1a080c] px-4 sm:px-6 py-2 sm:py-3 shadow-lg border border-[#2a0b12]">
+      <span className="text-[#f4f2ec] text-xs sm:text-sm font-medium mr-1 sm:mr-2 select-none whitespace-nowrap">
+        {isSinglePage ? pageIndex + 1 : Math.floor(pageIndex / 2) + 1} / {isSinglePage ? totalPages : totalPages / 2}
+      </span>
+      
+      <div className="w-[1px] h-5 bg-white/20" />
+
+      <button onClick={handleZoomIn} className="text-[#f4f2ec] hover:text-white transition-colors" aria-label="Zoom In">
+        <ZoomInIcon />
+      </button>
+      
+      <button onClick={handleZoomOut} className="text-[#f4f2ec] hover:text-white transition-colors" aria-label="Zoom Out">
+        <ZoomOutIcon />
+      </button>
+      
+      <button onClick={toggleFullscreen} className="hidden sm:block text-[#f4f2ec] hover:text-white transition-colors" aria-label="Fullscreen">
+        <FullscreenIcon />
+      </button>
+      
+      <button onClick={handleShare} className="text-[#f4f2ec] hover:text-white transition-colors" aria-label="Share">
+        <ShareIcon />
+      </button>
+      
+      <div className="relative">
+        <button onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)} className="text-[#f4f2ec] hover:text-white transition-colors" aria-label="More Options">
+          <MoreHorizontalIcon />
+        </button>
+        
+        {isMoreMenuOpen && (
+          <div className="absolute bottom-[calc(100%+16px)] right-0 w-56 rounded-lg bg-[#1a080c] border border-[#2a0b12] p-2 shadow-xl flex flex-col gap-1 z-50">
+            <a href="/BrandStory.pdf" download className="flex items-center gap-3 px-3 py-2 text-sm text-[#f4f2ec] hover:bg-white/10 rounded-md transition-colors">
+              <DownloadIcon /> Download PDF File
+            </a>
+            <button onClick={() => { 
+              if (isSinglePage) {
+                // Switching to Two Page mode: snap to the left page of the current spread
+                setPageIndex(Math.floor(pageIndex / 2) * 2);
+              }
+              setIsSinglePage(!isSinglePage); 
+              setIsMoreMenuOpen(false); 
+            }} className="flex items-center gap-3 px-3 py-2 text-sm text-[#f4f2ec] hover:bg-white/10 rounded-md transition-colors w-full text-left">
+              <SinglePageIcon /> {isSinglePage ? 'Two Page Mode' : 'Single Page Mode'}
+            </button>
+            <button onClick={goToFirstPage} className="flex items-center gap-3 px-3 py-2 text-sm text-[#f4f2ec] hover:bg-white/10 rounded-md transition-colors w-full text-left">
+              <FirstPageIcon /> Goto First Page
+            </button>
+            <button onClick={goToLastPage} className="flex items-center gap-3 px-3 py-2 text-sm text-[#f4f2ec] hover:bg-white/10 rounded-md transition-colors w-full text-left">
+              <LastPageIcon /> Goto Last Page
+            </button>
+            <button onClick={() => setIsSoundMuted(!isSoundMuted)} className="flex items-center gap-3 px-3 py-2 text-sm text-[#f4f2ec] hover:bg-white/10 rounded-md transition-colors w-full text-left">
+              {isSoundMuted ? <SoundOffIcon /> : <SoundOnIcon />} {isSoundMuted ? 'Turn on Sound' : 'Turn off Sound'}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ZoomInIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>;
+}
+
+function ZoomOutIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>;
+}
+
+function FullscreenIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>;
+}
+
+function ShareIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>;
+}
+
+function MoreHorizontalIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>;
+}
+
+function DownloadIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>;
+}
+
+function SinglePageIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>;
+}
+
+function FirstPageIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>;
+}
+
+function LastPageIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>;
+}
+
+function SoundOnIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>;
+}
+
+function SoundOffIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>;
+}
+

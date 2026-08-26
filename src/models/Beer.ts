@@ -32,6 +32,10 @@ export interface IBeer extends Document {
   ibu: number;
   shopUrl?: string;
   findLocallyUrl?: string;
+  /** Hex color (#RRGGBB) driving the homepage showcase's --color-primary for this beer. Unset falls back to the brand default at render time. */
+  themeColor?: string;
+  /** Hex color (#RRGGBB) driving the homepage showcase's --color-primary-container for this beer. Unset falls back to the brand default at render time. */
+  themeColorContainer?: string;
   /** At most one beer is featured at a time — see BeerService — and only a featured + published beer renders on the homepage hero. */
   isFeatured: boolean;
   status: BeerStatus;
@@ -59,6 +63,8 @@ const BeerSchema = new Schema<IBeer>(
     ibu: { type: Number, required: true, min: 0, max: 200 },
     shopUrl: { type: String, trim: true },
     findLocallyUrl: { type: String, trim: true },
+    themeColor: { type: String, trim: true, uppercase: true },
+    themeColorContainer: { type: String, trim: true, uppercase: true },
     isFeatured: { type: Boolean, required: true, default: false },
     status: {
       type: String,
@@ -82,6 +88,8 @@ const BeerSchema = new Schema<IBeer>(
 
 BeerSchema.index({ "translations.locale": 1 });
 BeerSchema.index({ status: 1, isFeatured: 1 });
+/** Backs BeerRepository.listShowcasePublished — status filter + createdAt sort in one index scan. */
+BeerSchema.index({ status: 1, createdAt: -1 });
 
 export const BeerModel: Model<IBeer> =
   (models.Beer as Model<IBeer>) || model<IBeer>("Beer", BeerSchema);

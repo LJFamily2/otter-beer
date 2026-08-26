@@ -243,6 +243,7 @@ export function BrandStoryForm({ initialPages, canEdit }: BrandStoryFormProps) {
                   <ImageUploadField
                     imageKey={page.imageKey}
                     onChange={(key) => updatePageImage(page.key, key)}
+                    namespace="brand-story"
                   />
                 </div>
 

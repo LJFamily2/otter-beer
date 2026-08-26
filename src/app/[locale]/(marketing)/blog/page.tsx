@@ -51,15 +51,19 @@ export default async function BlogListPage({
 
   return (
     <>
-      <section className="bg-surface-container-low px-5 py-16 text-center">
-        <h1 className="text-[clamp(40px,7vw,72px)] tracking-wide text-primary">
+      <section className="px-5 pt-18 text-center">
+        <span className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-secondary">
+          {isVi ? "Nhật ký nhà máy bia" : "The brewery journal"}
+        </span>
+        {/* Kept in title case rather than the uppercase other page headings
+            use: at this size the Vietnamese title stacks diacritics above the
+            cap height, and 0.92 leading leaves them no room. The tight leading
+            and negative tracking are what make it read as a masthead block
+            instead of the stretched single line `tracking-wide` produced. */}
+        <h1 className="mx-auto mt-4 max-w-[15ch] text-[clamp(44px,7.5vw,84px)] leading-[0.92] tracking-[-0.03em] text-primary">
           {isVi ? "Biên Niên Sử Otter" : "The Otter Chronicles"}
         </h1>
-        <p className="mx-auto mt-4 max-w-[640px] text-lg leading-relaxed text-on-surface-variant">
-          {isVi
-            ? "Câu chuyện từ vùng biển, cập nhật từ nhà máy bia, và những góc nhìn sâu về quy trình chế biến của chúng tôi."
-            : "Tales from the coastal waters, brewery updates, and deep dives into our crafting process."}
-        </p>
+        <div className="mx-auto mt-6 h-[3px] w-16 bg-secondary-fixed-dim" />
       </section>
 
       <div className="mx-auto flex max-w-[1280px] flex-col gap-16 px-5 py-16">
@@ -75,12 +79,12 @@ export default async function BlogListPage({
                   alt=""
                   fill
                   className="object-cover"
-                  sizes="100vw"
+                  sizes="(max-width: 1320px) calc(100vw - 40px), 1280px"
                   priority
                 />
               </div>
             ) : null}
-            <div className="relative flex min-h-[420px] flex-col justify-end bg-gradient-to-t from-white from-10% via-white/55 via-55% to-white/10 p-12">
+            <div className="relative flex min-h-[580px] flex-col justify-end bg-gradient-to-t from-white from-10% via-white/55 via-55% to-white/10 p-12">
               {featured.tags[0] ? (
                 <Badge variant="overlay" className="mb-2 self-start">
                   {featured.tags[0]}
