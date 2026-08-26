@@ -17,13 +17,13 @@ export default async function MarketingLayout({
 
   const navigationLinks = isVi
     ? [
-        { label: "Giới thiệu", href: `${prefix}#about` },
         { label: "Sản phẩm", href: `${prefix}#products` },
+        { label: "Blogs", href: `${prefix}/blog` },
         { label: "Tin tức", href: `${prefix}/blog` },
       ]
     : [
-        { label: "About", href: `${prefix}#about` },
         { label: "Products", href: `${prefix}#products` },
+        { label: "Blogs", href: `${prefix}/blog` },
         { label: "News", href: `${prefix}/blog` },
       ];
 

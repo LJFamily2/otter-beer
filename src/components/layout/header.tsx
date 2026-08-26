@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface HeaderLink {
   label: string;
@@ -26,8 +27,8 @@ interface HeaderProps {
  */
 export function Header({
   links = [
-    { label: "Giới thiệu", href: "#about" },
     { label: "Sản phẩm", href: "#products" },
+    { label: "Blogs", href: "/blog" },
     { label: "Tin tức", href: "#news" },
   ],
   contactHref = "#contact",
@@ -36,46 +37,57 @@ export function Header({
   onLanguageChange,
 }: HeaderProps) {
   const [languageOpen, setLanguageOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    const syncScrollState = () => setIsScrolled(window.scrollY > 0);
+
+    syncScrollState();
+    window.addEventListener("scroll", syncScrollState, { passive: true });
+    return () => window.removeEventListener("scroll", syncScrollState);
+  }, []);
 
   const handleLanguageSelect = (lang: string) => {
     setLanguageOpen(false);
     onLanguageChange?.(lang);
+
+    const isEnglish = lang === "ENG";
+    const pathWithoutLocale =
+      (pathname || "/").replace(/^\/en(?=\/|$)/, "") || "/";
+    const nextPath = isEnglish
+      ? `/en${pathWithoutLocale === "/" ? "" : pathWithoutLocale}`
+      : pathWithoutLocale;
+
+    if (nextPath !== pathname) {
+      router.push(
+        `${nextPath}${window.location.search}${window.location.hash}`,
+      );
+    }
   };
 
   return (
-    <header className="relative h-[90px] w-full bg-transparent">
-      {/* Navigation Link - "Giới thiệu" */}
-      {links[0] && (
-        <Link
-          href={links[0].href}
-          className="absolute left-[65px] top-1/2 -translate-y-1/2 text-[21px] font-normal uppercase tracking-[0.9px] text-primary transition-colors hover:text-primary-container max-[900px]:hidden"
-          style={{ fontFamily: "Hanken Grotesk, sans-serif" }}
-        >
-          {links[0].label}
-        </Link>
-      )}
-
-      {/* Navigation Link - "Sản phẩm" */}
-      {links[1] && (
-        <Link
-          href={links[1].href}
-          className="absolute left-[233px] top-1/2 -translate-y-1/2 text-[21px] font-normal uppercase tracking-[0.9px] text-primary transition-colors hover:text-primary-container max-[900px]:hidden"
-          style={{ fontFamily: "Hanken Grotesk, sans-serif" }}
-        >
-          {links[1].label}
-        </Link>
-      )}
-
-      {/* Navigation Link - "Tin tức" */}
-      {links[2] && (
-        <Link
-          href={links[2].href}
-          className="absolute left-[397px] top-1/2 -translate-y-1/2 text-[21px] font-normal uppercase tracking-[0.9px] text-primary transition-colors hover:text-primary-container max-[900px]:hidden"
-          style={{ fontFamily: "Hanken Grotesk, sans-serif" }}
-        >
-          {links[2].label}
-        </Link>
-      )}
+    <header
+      className={`relative h-[90px] w-full transition-colors duration-300 ${
+        isScrolled ? "bg-white shadow-sm" : "bg-transparent"
+      }`}
+    >
+      <nav
+        aria-label="Primary navigation"
+        className="absolute left-[65px] top-1/2 flex -translate-y-1/2 items-center gap-14 max-[900px]:hidden"
+      >
+        {links.slice(0, 3).map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={`text-[19px] font-bold uppercase tracking-[0.9px] transition-colors ${isScrolled ? "text-primary hover:text-primary-container" : "text-on-tertiary hover:text-on-tertiary-container"}`}
+            style={{ fontFamily: "sans-serif" }}
+          >
+            {link.label}
+          </Link>
+        ))}
+      </nav>
 
       {/* Centered Logo */}
       <Link
@@ -83,7 +95,9 @@ export function Header({
         aria-label="Otter Beer"
         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
       >
-        <div className="relative h-[70px] w-[110px] sm:h-[90px] sm:w-[150px]">
+        <div
+          className={`relative transition-[height,width] duration-300 ${isScrolled ? "h-[60px] w-[95px] sm:h-[78px] sm:w-[130px]" : "h-[70px] w-[110px] sm:h-[90px] sm:w-[150px]"}`}
+        >
           <Image
             src="/images/header/logo.png"
             alt="Otter Beer Logo"
@@ -102,7 +116,7 @@ export function Header({
           href="https://instagram.com/otterbeer"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex h-[40px] w-[30px] items-center justify-center transition-opacity hover:opacity-80 max-[520px]:hidden"
+          className="flex h-[38px] w-[28px] items-center justify-center transition-opacity hover:opacity-80 max-[520px]:hidden"
           aria-label="Instagram"
         >
           <Image
@@ -132,22 +146,28 @@ export function Header({
         </a>
 
         {/* Language Selector Dropdown */}
-        <div className="relative bg-surface-container">
+        <div className="relative">
           <button
             onClick={() => setLanguageOpen(!languageOpen)}
-            className="flex h-[37px] w-[64px] items-center justify-center gap-2 transition-colors hover:bg-surface-container-high"
+            className="flex h-[37px] w-[64px] items-center justify-center gap-2 transition-colors"
             aria-label="Select language"
           >
             <span
-              className="text-[16px] font-normal uppercase text-on-surface-variant"
-              style={{ fontFamily: "Inter, sans-serif" }}
+              className={
+                isScrolled
+                  ? "text-[19px] font-bold uppercase text-primary"
+                  : "text-[19px] font-bold uppercase text-on-primary"
+              }
+              style={{ fontFamily: "sans-serif" }}
             >
               {locale}
             </span>
             <svg
               className={`h-1.5 w-2.5 transition-transform ${languageOpen ? "" : "rotate-180"}`}
               viewBox="0 0 9 6"
-              fill="currentColor"
+              fill={
+                isScrolled ? "var(--color-primary)" : "var(--color-on-primary)"
+              }
             >
               <path d="M8 0L4 5L0 0H8Z" />
             </svg>
@@ -172,8 +192,8 @@ export function Header({
         {/* Contact Button */}
         <Link
           href={contactHref}
-          className="flex h-[50px] w-[120px] items-center justify-center rounded-sm bg-primary text-[18px] font-normal uppercase tracking-[0.9px] text-on-primary transition-colors hover:bg-primary-container max-[520px]:h-[42px] max-[520px]:w-[92px] max-[520px]:text-[14px]"
-          style={{ fontFamily: "Hanken Grotesk, sans-serif" }}
+          className={`flex h-[50px] w-[120px] items-center justify-center rounded-sm text-[18px] font-bold uppercase tracking-[0.9px] transition-colors max-[520px]:h-[42px] max-[520px]:w-[92px] max-[520px]:text-[14px] ${isScrolled ? "bg-primary text-on-primary hover:bg-primary-container" : "text-on-tertiary hover:text-on-tertiary-container"}`}
+          style={{ fontFamily: "sans-serif" }}
         >
           Liên hệ
         </Link>
