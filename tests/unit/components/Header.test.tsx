@@ -162,4 +162,27 @@ describe("Header", () => {
       customContactHref,
     );
   });
+
+  it("renders mobile text OTTER BEER title for mobile view", () => {
+    render(<Header />);
+
+    const mobileText = screen.getByText("OTTER BEER");
+    expect(mobileText).toBeInTheDocument();
+
+    const mobileLink = mobileText.closest("a");
+    expect(mobileLink).toHaveAttribute("href", "/");
+  });
+
+  it("toggles mobile menu drawer on circular menu button click", async () => {
+    const user = userEvent.setup();
+    render(<Header />);
+
+    const menuButton = screen.getByLabelText("Open menu");
+    expect(menuButton).toBeInTheDocument();
+
+    await user.click(menuButton);
+
+    const closeButtons = screen.getAllByLabelText("Close menu");
+    expect(closeButtons.length).toBeGreaterThan(0);
+  });
 });
