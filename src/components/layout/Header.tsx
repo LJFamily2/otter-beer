@@ -90,8 +90,8 @@ export function Header({
     <header
       className={`relative w-full transition-all duration-300 ${
         isScrolled
-          ? "h-[76px] bg-white/95 backdrop-blur-md shadow-sm"
-          : "h-[115px] sm:h-[125px] bg-gradient-to-b from-black/50 via-black/15 to-transparent"
+          ? "h-[76px] bg-white/95 backdrop-blur-md shadow-sm border-b border-surface-container-high/60"
+          : "h-[105px] bg-gradient-to-b from-black/50 via-black/15 to-transparent"
       }`}
     >
       <div className="mx-auto flex h-full max-w-[1400px] items-center justify-between px-6 sm:px-10 lg:px-16">
@@ -130,14 +130,14 @@ export function Header({
             className={`relative transition-all duration-300 ${
               isScrolled
                 ? "h-[54px] w-[90px] sm:h-[66px] sm:w-[110px]"
-                : "h-[95px] w-[150px] sm:h-[135px] sm:w-[220px]"
+                : "h-[85px] w-[135px] sm:h-[115px] sm:w-[190px]"
             }`}
           >
             <Image
               src="/images/header/logo.png"
               alt="Otter Beer Logo"
               fill
-              sizes="(max-width: 640px) 150px, 220px"
+              sizes="(max-width: 640px) 135px, 190px"
               className="object-contain"
               priority
             />

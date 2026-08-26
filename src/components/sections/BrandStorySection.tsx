@@ -8,7 +8,7 @@ interface BrandStorySectionProps {
 
 export function BrandStorySection({ locale }: BrandStorySectionProps) {
   return (
-    <section className="relative w-full bg-background">
+    <section id="story" className="relative w-full bg-background">
       {/* Desktop Version */}
       <div className="hidden lg:block w-full px-4 py-20">
         {/* Background Image for desktop */}

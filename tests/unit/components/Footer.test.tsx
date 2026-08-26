@@ -49,7 +49,7 @@ describe("Footer Component", () => {
     render(<Footer locale="en" />);
 
     const storyLink = screen.getByRole("link", { name: /our story/i });
-    expect(storyLink).toHaveAttribute("href", "/en/about");
+    expect(storyLink).toHaveAttribute("href", "/en#story");
 
     const privacyLink = screen.getByRole("link", { name: /privacy policy/i });
     expect(privacyLink).toHaveAttribute("href", "/en/privacy");

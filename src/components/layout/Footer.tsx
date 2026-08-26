@@ -26,25 +26,25 @@ export function Footer({ locale = DEFAULT_LOCALE }: FooterProps) {
             className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 md:gap-12 lg:gap-16"
           >
             <Link
-              href={`${prefix}/about`}
+              href={`${prefix}#story`}
               className="font-display text-2xl tracking-wide text-primary transition-colors duration-200 hover:text-primary-container sm:text-3xl lg:text-4xl"
             >
               OUR STORY
             </Link>
             <Link
-              href={`${prefix}/about#heritage`}
+              href={`${prefix}#story`}
               className="font-display text-2xl tracking-wide text-primary transition-colors duration-200 hover:text-primary-container sm:text-3xl lg:text-4xl"
             >
               HERITAGE
             </Link>
             <Link
-              href={`${prefix}/events`}
+              href={`${prefix}/contact`}
               className="font-display text-2xl tracking-wide text-primary transition-colors duration-200 hover:text-primary-container sm:text-3xl lg:text-4xl"
             >
               TAPROOM
             </Link>
             <Link
-              href={`${prefix}/menu`}
+              href={`${prefix}#products`}
               className="font-display text-2xl tracking-wide text-primary transition-colors duration-200 hover:text-primary-container sm:text-3xl lg:text-4xl"
             >
               SHOP
@@ -109,7 +109,7 @@ export function Footer({ locale = DEFAULT_LOCALE }: FooterProps) {
               TERMS OF SERVICE
             </Link>
             <Link
-              href={`${prefix}/wholesale`}
+              href={`${prefix}/contact`}
               className="text-[11px] font-semibold uppercase tracking-wider text-primary transition-colors duration-200 hover:text-primary-container hover:underline hover:underline-offset-4 sm:text-xs"
             >
               WHOLESALE
