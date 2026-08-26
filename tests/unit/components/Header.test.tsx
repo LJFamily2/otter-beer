@@ -1,38 +1,71 @@
 import { createElement, type ComponentProps } from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Header } from "@/components/layout/header";
+
+const mockPush = jest.fn();
+
+jest.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useRouter: () => ({ push: mockPush }),
+}));
 
 // Mock Next.js Image component
 jest.mock("next/image", () => ({
   __esModule: true,
   default: (props: ComponentProps<"img">) => {
-    // Filter out Next.js Image-specific props to prevent React 19 boolean DOM attribute warnings
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { fill, priority, placeholder, blurDataURL, ...rest } = props as Record<string, unknown>;
-    return createElement("img", rest);
+    return createElement("img", props);
   },
 }));
 
 describe("Header", () => {
   it("renders navigation links", () => {
     const links = [
-      { label: "Giới thiệu", href: "#about" },
       { label: "Sản phẩm", href: "#products" },
+      { label: "Blogs", href: "/blog" },
       { label: "Tin tức", href: "#news" },
     ];
 
     render(<Header links={links} />);
 
-    expect(screen.getByText("Giới thiệu")).toBeInTheDocument();
-    expect(screen.getByText("Sản phẩm")).toBeInTheDocument();
+    expect(
+      screen.getByRole("navigation", { name: "Primary navigation" }),
+    ).toHaveClass("gap-14");
+    expect(screen.getByText("Sản phẩm")).toHaveStyle({
+      fontFamily: "sans-serif",
+    });
+    expect(screen.getByText("Blogs")).toBeInTheDocument();
     expect(screen.getByText("Tin tức")).toBeInTheDocument();
   });
 
   it("renders the contact button with default text", () => {
     render(<Header />);
 
-    expect(screen.getByText("Liên hệ")).toBeInTheDocument();
+    expect(screen.getByText("Liên hệ")).toHaveStyle({
+      fontFamily: "sans-serif",
+    });
+  });
+
+  it("switches to a white surface when the page is scrolled", () => {
+    Object.defineProperty(window, "scrollY", {
+      configurable: true,
+      value: 120,
+    });
+
+    render(<Header />);
+
+    const header = screen.getByRole("banner");
+    const logo = screen.getByAltText("Otter Beer Logo").parentElement;
+
+    expect(header).toHaveClass("bg-white");
+    expect(screen.getByText("Liên hệ")).toHaveClass("bg-primary");
+    expect(logo).toHaveClass("h-[60px]", "w-[95px]");
+
+    Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });
+    fireEvent.scroll(window);
+
+    expect(header).toHaveClass("bg-transparent");
+    expect(logo).toHaveClass("h-[70px]", "w-[110px]");
   });
 
   it("renders the language selector with default locale", () => {
@@ -73,6 +106,17 @@ describe("Header", () => {
     await user.click(engButton);
 
     expect(mockOnLanguageChange).toHaveBeenCalledWith("ENG");
+  });
+
+  it("navigates to the English version of the current page", async () => {
+    const user = userEvent.setup();
+
+    render(<Header locale="VIE" locales={["VIE", "ENG"]} />);
+
+    await user.click(screen.getByLabelText("Select language"));
+    await user.click(screen.getByText("ENG"));
+
+    expect(mockPush).toHaveBeenCalledWith("/en");
   });
 
   it("renders social media links", () => {
