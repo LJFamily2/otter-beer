@@ -30,7 +30,7 @@ export default async function RootLayout({
   const lang = await getServerLocale();
 
   return (
-    <html lang={lang} className={`${anton.variable} ${hankenGrotesk.variable}`}>
+    <html lang={lang} className={`${anton.variable} ${hankenGrotesk.variable} scroll-smooth`}>
       <body>{children}</body>
     </html>
   );

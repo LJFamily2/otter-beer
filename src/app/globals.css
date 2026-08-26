@@ -234,6 +234,7 @@ h4 {
 }
 .marquee-track {
   animation: marquee-scroll-left var(--marquee-duration, 30s) linear infinite;
+  will-change: transform;
 }
 .marquee-track[data-direction="right"] {
   animation-name: marquee-scroll-right;
