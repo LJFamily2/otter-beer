@@ -21,9 +21,18 @@ describe("AgeVerificationGate Component", () => {
     expect(
       screen.getByRole("heading", { name: /are you 18\+\?/i })
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /yes/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /no/i })).toBeInTheDocument();
-    expect(screen.getByAltText("Otter Beer")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /yes, i'm over 18/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /no, i'm underage/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/please drink responsibly/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/badenbeer co\., ltd\./i)
+    ).toBeInTheDocument();
   });
 
   it("sets verification in localStorage and cookie on clicking YES", () => {
@@ -32,7 +41,7 @@ describe("AgeVerificationGate Component", () => {
       <AgeVerificationGate isStandalone={false} onVerified={onVerified} />
     );
 
-    const yesBtn = screen.getByRole("button", { name: /yes/i });
+    const yesBtn = screen.getByRole("button", { name: /yes, i'm over 18/i });
     fireEvent.click(yesBtn);
 
     expect(localStorage.getItem("otter_age_verified")).toBe("true");
@@ -43,7 +52,7 @@ describe("AgeVerificationGate Component", () => {
   it("shows responsible drinking restriction screen on clicking NO", () => {
     render(<AgeVerificationGate isStandalone={true} />);
 
-    const noBtn = screen.getByRole("button", { name: /no/i });
+    const noBtn = screen.getByRole("button", { name: /no, i'm underage/i });
     fireEvent.click(noBtn);
 
     expect(
@@ -64,7 +73,7 @@ describe("AgeVerificationGate Component", () => {
     render(<AgeVerificationGate isStandalone={true} />);
 
     // Deny first
-    fireEvent.click(screen.getByRole("button", { name: /no/i }));
+    fireEvent.click(screen.getByRole("button", { name: /no, i'm underage/i }));
     expect(
       screen.getByRole("heading", { name: /access restricted/i })
     ).toBeInTheDocument();
