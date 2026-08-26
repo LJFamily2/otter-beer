@@ -3,7 +3,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { blogPostService } from "@/services/BlogPostService";
 import { pickTranslation } from "@/lib/utils/BlogPostPresenter";
-import { buildBlogListMetadata, localizedPath } from "@/lib/seo";
+import {
+  buildBlogListMetadata,
+  buildBreadcrumbJsonLd,
+  buildOrganizationJsonLd,
+  buildWebSiteJsonLd,
+  jsonLdGraph,
+  localizedPath,
+} from "@/lib/seo";
 import { publicImageUrl } from "@/lib/storage/constants";
 import { Badge } from "@/components/ui/Badge";
 import { Pagination } from "@/components/ui/Pagination";
@@ -49,8 +56,22 @@ export default async function BlogListPage({
   const buildHref = (targetPage: number) =>
     `${localizedPath(locale, "/blog")}?page=${targetPage}`;
 
+  const jsonLd = jsonLdGraph([
+    buildOrganizationJsonLd(),
+    buildWebSiteJsonLd(locale),
+    buildBreadcrumbJsonLd(locale, [
+      { name: isVi ? "Trang chủ" : "Home", path: "/" },
+      { name: isVi ? "Tin tức" : "News", path: "/blog" },
+    ]),
+  ]);
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <section className="px-5 pt-18 text-center">
         <span className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-secondary">
           {isVi ? "Nhật ký nhà máy bia" : "The brewery journal"}

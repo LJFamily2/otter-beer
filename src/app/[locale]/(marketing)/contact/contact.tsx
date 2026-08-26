@@ -1,5 +1,12 @@
 interface ContactSectionProps {
   locale?: string;
+  /**
+   * Which heading tag the section title renders as. Defaults to `h1` for the
+   * standalone /contact page; the homepage embeds this same section and passes
+   * `h2`, because the page's one h1 belongs to the hero. Two h1s on a page
+   * leaves a crawler no single statement of what the page is about.
+   */
+  headingLevel?: "h1" | "h2";
 }
 
 const COPY = {
@@ -17,17 +24,17 @@ const COPY = {
     factory: "Visit our factory",
   },
   vi: {
-    heading: "Let's Talk Beer",
-    body: "Whether you're inquiring about private events, wholesale distribution, or simply want to know what's pouring, call us directly.",
-    call: "Call us",
-    message: "Message",
-    phoneLabel: "Phone numbers",
-    taproomLabel: "THE TAPROOM",
-    company: "BADENBEER Co., Ltd.",
+    heading: "Liên Hệ Otter Beer",
+    body: "Đặt bia cho sự kiện, hợp tác phân phối sỉ, hay chỉ muốn biết hôm nay nhà máy đang rót dòng bia nào — gọi thẳng cho chúng tôi.",
+    call: "Gọi ngay",
+    message: "Gửi email",
+    phoneLabel: "Số điện thoại",
+    taproomLabel: "TAPROOM TÂY NINH",
+    company: "Công ty TNHH BADENBEER",
     address:
-      "13 House, Alley 30, Lac Long Quan Street, Hiep Dinh Ward, Tay Ninh Province",
-    directions: "Get Directions",
-    factory: "Visit our factory",
+      "Số nhà 13, hẻm 30, đường Lạc Long Quân, phường Hiệp Định, tỉnh Tây Ninh",
+    directions: "Chỉ đường",
+    factory: "Tham quan nhà máy bia",
   },
 } as const;
 
@@ -80,8 +87,12 @@ function ArrowIcon() {
   );
 }
 
-export default function ContactSection({ locale = "en" }: ContactSectionProps) {
+export default function ContactSection({
+  locale = "en",
+  headingLevel = "h1",
+}: ContactSectionProps) {
   const copy = COPY[locale === "vi" ? "vi" : "en"];
+  const Heading = headingLevel;
 
   return (
     <section
@@ -100,9 +111,9 @@ export default function ContactSection({ locale = "en" }: ContactSectionProps) {
       <div className="relative mx-auto flex min-h-[760px] max-w-[1440px] items-center px-4 pb-16 pt-10 sm:px-8 lg:px-16">
         <div className="flex w-full flex-col gap-10 lg:flex-row lg:items-end">
           <div className="w-full max-w-[760px] pb-2 lg:pr-16">
-            <h1 className="!text-white font-display text-[clamp(4rem,7vw,7.2rem)] leading-[0.9] tracking-[-0.06em]">
+            <Heading className="!text-white font-display text-[clamp(4rem,7vw,7.2rem)] leading-[0.9] tracking-[-0.06em]">
               {copy.heading}
-            </h1>
+            </Heading>
 
             <p className="mt-6 max-w-[680px] text-[clamp(1.25rem,1.8vw,1.5rem)] leading-[1.33] text-[#e3e2e3]">
               {copy.body}
@@ -132,8 +143,16 @@ export default function ContactSection({ locale = "en" }: ContactSectionProps) {
                   <span>{copy.phoneLabel}</span>
                 </div>
                 <div className="space-y-1 text-[1.5rem] font-light leading-[1.65] text-white">
-                  <p>(+84) 908 790 102 ;</p>
-                  <p>(+84) 981 686 491</p>
+                  <p>
+                    <a href="tel:+84908790102" className="hover:text-[#f9e37a]">
+                      (+84) 908 790 102
+                    </a>
+                  </p>
+                  <p>
+                    <a href="tel:+84981686491" className="hover:text-[#f9e37a]">
+                      (+84) 981 686 491
+                    </a>
+                  </p>
                 </div>
               </div>
 
@@ -147,9 +166,9 @@ export default function ContactSection({ locale = "en" }: ContactSectionProps) {
                   <p>{copy.company}</p>
                 </div>
 
-                <p className="max-w-[330px] text-[1.125rem] leading-[1.65] text-[#e3e2e3]">
+                <address className="max-w-[330px] text-[1.125rem] not-italic leading-[1.65] text-[#e3e2e3]">
                   {copy.address}
-                </p>
+                </address>
 
                 <div className="flex flex-col items-start gap-3 pt-2">
                   <a

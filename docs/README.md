@@ -16,6 +16,7 @@ Welcome to the official technical documentation for the **OtterBeer** website (o
 | [Internationalization (i18n)](./internationalization.md) | VI/EN language routing and content translations |
 | [Security](./security.md) | JWT/cookie storage, input validation, CSP, rate limiting |
 | [Testing](./testing.md) | Testing strategy, AI agent workflow rule, Playwright + Jest |
+| [SEO / AEO / GEO](./seo.md) | Crawlable HTML, metadata, sitemap/robots, schema.org graph, FAQ answer surface, llms.txt |
 | [Deployment](./deployment.md) | Vercel deployment guide |
 | [Design System](./DESIGN.md) | Coastal Premium colors, fonts, tokens |
 | [Component Library](./component-library.md) | Reusable UI kit — props, variants, the "customize via props" rule |

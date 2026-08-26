@@ -1,14 +1,29 @@
 import type { Metadata } from "next";
 import { DEFAULT_LOCALE } from "@/config/locales";
-
-export const metadata: Metadata = {
-  title: "Privacy Policy | Otter Beer",
-  description:
-    "Learn about how Otter Beer collects, uses, and protects your personal information.",
-};
+import { buildStaticPageMetadata } from "@/lib/seo";
 
 interface PrivacyPageProps {
   params: Promise<{ locale: string }>;
+}
+
+// Was a hardcoded English `metadata` object with no canonical and no
+// hreflang, so the VI and EN pages served identical English titles and
+// competed with each other. The "| Otter Beer" suffix is dropped because the
+// root layout's title template already appends it.
+export async function generateMetadata({
+  params,
+}: PrivacyPageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const isVi = locale === DEFAULT_LOCALE;
+
+  return buildStaticPageMetadata({
+    locale,
+    path: "/privacy",
+    title: isVi ? "Chính Sách Bảo Mật" : "Privacy Policy",
+    description: isVi
+      ? "Cách Otter Beer thu thập, sử dụng và bảo vệ thông tin cá nhân của bạn."
+      : "How Otter Beer collects, uses, and protects your personal information.",
+  });
 }
 
 export default async function PrivacyPolicyPage({ params }: PrivacyPageProps) {

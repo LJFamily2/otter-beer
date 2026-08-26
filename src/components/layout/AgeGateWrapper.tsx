@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore, useState, type ReactNode } from "react";
+import { useSyncExternalStore, useState, useEffect, type ReactNode } from "react";
 import { AgeVerificationGate } from "@/components/ui/AgeVerificationGate";
 
 const STORAGE_KEY = "otter_age_verified";
@@ -38,6 +38,26 @@ function getServerSnapshot(): boolean {
   return false;
 }
 
+/**
+ * Puts the age gate in front of the marketing site.
+ *
+ * This used to `return <AgeVerificationGate />` INSTEAD of `children` when
+ * unverified. Because the server snapshot is always "unverified", that meant
+ * the server-rendered HTML of every marketing page was the gate and nothing
+ * else — around 7KB of "ARE YOU 18+?" where the page should be. No hero, no
+ * products, no FAQ, no footer, and no <script type="application/ld+json">
+ * either: the structured data only ever existed inside the RSC flight payload,
+ * which no crawler reads as content. Every page on the site was effectively
+ * blank to Google and to every answer engine.
+ *
+ * So the gate is now an overlay: `children` always render, and the prompt sits
+ * on top of them until the visitor confirms. This is the pattern the large
+ * drinks brands use, and it is not cloaking — the content served to a crawler
+ * is exactly the content a visitor gets once they confirm. The gate still
+ * blocks reading and interaction: the overlay is opaque and full-screen, the
+ * page behind it is `inert` (so it takes no clicks and no keyboard focus), and
+ * body scrolling is locked while it is up.
+ */
 export function AgeGateWrapper({ children, locale }: AgeGateWrapperProps) {
   const isVerifiedExternal = useSyncExternalStore(
     subscribe,
@@ -50,22 +70,38 @@ export function AgeGateWrapper({ children, locale }: AgeGateWrapperProps) {
 
   const isVerified = isVerifiedExternal || localVerified;
 
-  // If unverified, show ONLY the full-screen gate (no header, footer, or page content)
-  if (!isVerified) {
-    return (
-      <AgeVerificationGate
-        locale={locale}
-        isStandalone={true}
-        onVerified={() => {
-          setLocalVerified(true);
-          if (typeof window !== "undefined") {
-            window.dispatchEvent(new Event("otter_age_verified_change"));
-          }
-        }}
-      />
-    );
-  }
+  // Lock body scrolling while the gate is up, so the page underneath cannot be
+  // scrolled past the overlay on touch devices.
+  useEffect(() => {
+    if (isVerified) return;
 
-  // Once verified, render full layout (header, page content, footer)
-  return <>{children}</>;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [isVerified]);
+
+  return (
+    <>
+      {/* `inert` removes the whole subtree from the tab order, from the
+          accessibility tree and from pointer events — the keyboard equivalent
+          of the opaque overlay covering it. */}
+      <div inert={!isVerified}>{children}</div>
+
+      {!isVerified && (
+        <AgeVerificationGate
+          locale={locale}
+          isStandalone={true}
+          layout="overlay"
+          onVerified={() => {
+            setLocalVerified(true);
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new Event("otter_age_verified_change"));
+            }
+          }}
+        />
+      )}
+    </>
+  );
 }

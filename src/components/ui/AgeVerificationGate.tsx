@@ -7,7 +7,22 @@ import { DEFAULT_LOCALE } from "@/config/locales";
 
 interface AgeVerificationGateProps {
   locale?: string;
+  /**
+   * `true` = the parent owns the verified/unverified decision and this
+   * component just renders the prompt; `false` = it checks storage itself.
+   */
   isStandalone?: boolean;
+  /**
+   * How the gate occupies the page.
+   *
+   * - `"page"` (default): a full-height block that IS the page — used by the
+   *   standalone /age-verification route.
+   * - `"overlay"`: fixed on top of the page, which keeps the real page content
+   *   in the DOM underneath. `AgeGateWrapper` uses this so the marketing site
+   *   still server-renders its content for crawlers instead of replacing every
+   *   page with the gate.
+   */
+  layout?: "page" | "overlay";
   onVerified?: () => void;
 }
 
@@ -17,6 +32,7 @@ const COOKIE_NAME = "otter_age_verified";
 export function AgeVerificationGate({
   locale = DEFAULT_LOCALE,
   isStandalone = false,
+  layout = isStandalone ? "page" : "overlay",
   onVerified,
 }: AgeVerificationGateProps) {
   const router = useRouter();
@@ -26,6 +42,15 @@ export function AgeVerificationGate({
     isStandalone ? false : null
   );
   const [isDenied, setIsDenied] = useState(false);
+
+  /**
+   * As a full page, the prompt IS the page's heading. As an overlay it sits on
+   * top of a page that already has its own h1, so it drops to h2 — two h1s
+   * leave a crawler no single statement of what the page is about, and the
+   * gate's "ARE YOU 18+?" is emphatically not the answer for the homepage.
+   * `aria-labelledby` on the dialog keeps naming it either way.
+   */
+  const Heading = layout === "page" ? "h1" : "h2";
 
   useEffect(() => {
     if (isStandalone) {
@@ -88,7 +113,7 @@ export function AgeVerificationGate({
       aria-modal="true"
       aria-labelledby="age-verification-heading"
       className={
-        isStandalone
+        layout === "page"
           ? "relative flex min-h-dvh w-full items-center justify-center overflow-hidden bg-[#786d5c]"
           : "fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-[#786d5c]"
       }
@@ -124,12 +149,12 @@ export function AgeVerificationGate({
         {!isDenied ? (
           <>
             {/* Age Question */}
-            <h1
+            <Heading
               id="age-verification-heading"
               className="font-display text-5xl uppercase leading-tight tracking-wide text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.45)] sm:text-5xl md:text-6xl lg:text-7xl"
             >
               ARE YOU 18+?
-            </h1>
+            </Heading>
 
             {/* Buttons Row */}
             <div className="mt-6 flex w-full max-w-xs flex-row items-center justify-center gap-3 sm:mt-8 sm:max-w-none sm:gap-6">
@@ -159,12 +184,12 @@ export function AgeVerificationGate({
         ) : (
           /* Underage Denial View */
           <div className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
-            <h1
+            <Heading
               id="age-verification-heading"
               className="font-display text-4xl uppercase leading-tight tracking-wide text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.45)] sm:text-4xl md:text-5xl"
             >
               ACCESS RESTRICTED
-            </h1>
+            </Heading>
             <p className="mt-3 max-w-md text-md font-medium text-[#1B3D84]/80  sm:mt-4 sm:text-base">
               You must be 18 years of age or older to enter Otter Beer. We
               promote and support responsible drinking.

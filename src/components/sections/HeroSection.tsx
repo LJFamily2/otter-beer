@@ -10,22 +10,25 @@ import {
   type PanInfo,
 } from "framer-motion";
 
+/** Alt text describes what is actually in each frame and names the brand and
+ *  the place — image search reads these, and so does an answer engine trying
+ *  to caption the page. "Flagship Hero" described the slot, not the picture. */
 const SLIDES = [
   {
     src: "/images/otter-beer-hero.png",
-    alt: "Otter Beer – Flagship Hero",
+    alt: "Lon bia thủ công Otter Beer trên nền tối — dòng bia chủ lực nấu tại Tây Ninh",
   },
   {
     src: "/images/otter-beer-premium-lager.jpg",
-    alt: "Otter Beer – Premium Lager",
+    alt: "Bia Otter Beer Premium Lager rót ra ly, bọt mịn, màu vàng hổ phách",
   },
   {
     src: "/images/contact-hero.jpeg",
-    alt: "Otter Beer – Brewery Atmosphere",
+    alt: "Không gian taproom của nhà máy bia Otter Beer tại Tây Ninh",
   },
   {
     src: "/images/brand-story-bg.jpg",
-    alt: "Otter Beer – Brand Heritage",
+    alt: "Mạch nha vàng và hoa bia Saaz — nguyên liệu nấu bia thủ công Otter Beer",
   },
 ];
 
@@ -117,7 +120,31 @@ function SlideMedia({
   );
 }
 
-export function HeroSection() {
+/**
+ * The homepage's one <h1> — present in the markup, not painted on the slides.
+ *
+ * The hero is deliberately image-only: no type is drawn over the photography.
+ * But it is still the top of the page, and a page whose only headings are a
+ * rotating beer name and a set of section titles gives a crawler, an answer
+ * engine, and a screen-reader user no single statement of what it is. So the
+ * heading is rendered `sr-only`: invisible on screen, and read first by
+ * everything that consumes the page as text.
+ *
+ * This is not hidden keyword text — it is one honest sentence naming the
+ * entity, the product category and the place, which is exactly what the page
+ * is about and exactly what a sighted visitor sees in the images.
+ */
+const HERO_COPY = {
+  vi: { headline: "Bia thủ công Otter Beer — nấu tại Tây Ninh, Việt Nam" },
+  en: { headline: "Otter Beer craft brewery — brewed in Tay Ninh, Vietnam" },
+} as const;
+
+interface HeroSectionProps {
+  locale?: string;
+}
+
+export function HeroSection({ locale = "vi" }: HeroSectionProps) {
+  const copy = HERO_COPY[locale as keyof typeof HERO_COPY] ?? HERO_COPY.en;
   const prefersReducedMotion = useReducedMotion() ?? false;
 
   const [page, setPage] = useState(0);
@@ -379,6 +406,10 @@ export function HeroSection() {
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {`Slide ${slideIndex + 1} of ${SLIDES.length}: ${SLIDES[slideIndex].alt}`}
       </div>
+
+      {/* See HERO_COPY: the hero stays image-only on screen, but the page
+          keeps its one <h1> for crawlers and screen readers. */}
+      <h1 className="sr-only">{copy.headline}</h1>
 
       {/* Segmented progress indicators. Not a tablist — there are no tabpanels;
           it is a labelled group of jump buttons. */}

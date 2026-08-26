@@ -59,10 +59,53 @@ describe("HeroSection Component", () => {
     it("mounts the neighbouring slides so the next image is preloaded", () => {
       render(<HeroSection />);
 
-      // Window is [last, first, second] on the opening frame.
-      expect(screen.getByAltText("Otter Beer – Flagship Hero")).toBeInTheDocument();
-      expect(screen.getByAltText("Otter Beer – Premium Lager")).toBeInTheDocument();
-      expect(screen.getByAltText("Otter Beer – Brand Heritage")).toBeInTheDocument();
+      // Window is [last, first, second] on the opening frame. Matched on a
+      // substring so the assertion is about which slides are mounted, not
+      // about the exact wording of the (SEO-tuned) alt copy.
+      expect(screen.getByAltText(/dòng bia chủ lực/i)).toBeInTheDocument();
+      expect(screen.getByAltText(/Premium Lager/i)).toBeInTheDocument();
+      expect(screen.getByAltText(/hoa bia Saaz/i)).toBeInTheDocument();
+    });
+
+    it("gives every slide alt text that names the brand", () => {
+      const { container } = render(<HeroSection />);
+
+      // Queried by tag, not by role: the whole slide stage is aria-hidden
+      // (the live region announces the current slide instead), so these <img>
+      // elements expose no `img` role. Alt text is still what image search and
+      // answer engines read off this section, and a slide whose alt omits the
+      // brand is invisible to both.
+      const images = container.querySelectorAll("img");
+      expect(images.length).toBeGreaterThan(0);
+      for (const image of images) {
+        expect(image.getAttribute("alt")).toMatch(/Otter Beer/i);
+      }
+    });
+
+    it("renders the page's single h1 naming the brand and the place", () => {
+      render(<HeroSection locale="vi" />);
+
+      const headings = screen.getAllByRole("heading", { level: 1 });
+      expect(headings).toHaveLength(1);
+      expect(headings[0]).toHaveTextContent(/Otter Beer/i);
+      expect(headings[0]).toHaveTextContent(/Tây Ninh/i);
+    });
+
+    it("renders the English heading for the en locale", () => {
+      render(<HeroSection locale="en" />);
+
+      expect(
+        screen.getByRole("heading", { level: 1, name: /Otter Beer craft brewery/i })
+      ).toBeInTheDocument();
+    });
+
+    it("keeps the hero image-only — the heading is not painted on the slides", () => {
+      // The design is deliberately photography with no type over it. The h1
+      // still has to exist for crawlers and screen readers, so it is sr-only;
+      // if it ever renders visibly again, that is a design regression.
+      render(<HeroSection locale="vi" />);
+
+      expect(screen.getByRole("heading", { level: 1 })).toHaveClass("sr-only");
     });
 
     it("exposes the current slide through aria-current and a live region", () => {

@@ -19,6 +19,7 @@ const COPY = {
     abv: "NỒNG ĐỘ (ABV)",
     ibu: "ĐỘ ĐẮNG (IBU)",
     swipeHint: "Vuốt để xem các dòng bia khác",
+    sectionLabel: "Các dòng bia thủ công Otter Beer",
   },
   en: {
     shop: "SHOP NOW",
@@ -27,6 +28,7 @@ const COPY = {
     abv: "ALCOHOL (ABV)",
     ibu: "BITTERNESS (IBU)",
     swipeHint: "Swipe to explore products",
+    sectionLabel: "Otter Beer craft beer range",
   },
 } as const;
 
@@ -78,6 +80,8 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
 
   return (
     <section
+      id="products"
+      aria-label={copy.sectionLabel}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       className="relative flex min-h-[100vh] flex-col items-center justify-center overflow-hidden bg-background px-5 py-16 sm:py-20 lg:py-24 transition-colors duration-700 select-none touch-pan-y"
@@ -176,7 +180,7 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
               >
                 <Image
                   src={currentBeer.imageSrc}
-                  alt={currentBeer.style}
+                  alt={`${currentBeer.headline.replace(/\s+/g, " ").trim()} — ${currentBeer.style} Otter Beer, ${currentBeer.abv} ABV`}
                   fill
                   className="object-contain drop-shadow-[0_25px_30px_rgba(0,40,103,0.3)]"
                   sizes="(max-width: 1024px) 80vw, 360px"
@@ -219,7 +223,11 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
         {/* Right Column: Copy & Sharp Action Buttons */}
         <div className="flex flex-col items-center text-center lg:items-end lg:text-right">
           {/* Main Headline */}
-          <motion.h1
+          {/* h2, not h1: the page's h1 is the brand heading in HeroSection, and
+              this heading swaps out every time the carousel advances — an h1
+              that changes on click is a moving target for both a screen reader
+              and a crawler's outline of the page. */}
+          <motion.h2
             key={`headline-${currentBeer.id}`}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -227,7 +235,7 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
             className="font-display text-[clamp(34px,5vw,52px)] leading-[1.08] tracking-[0.12em] whitespace-pre-line text-primary uppercase"
           >
             {currentBeer.headline}
-          </motion.h1>
+          </motion.h2>
 
           {/* Description */}
           <motion.p

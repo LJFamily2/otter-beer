@@ -48,6 +48,8 @@ export async function generateMetadata({
     description: isVi
       ? "Thư viện thành phần giao diện Coastal Premium dùng trong toàn bộ website Otter Beer."
       : "The Coastal Premium component library used across the Otter Beer website.",
+    // Internal component gallery — useful to the team, noise in search results.
+    robots: { index: false, follow: false },
   };
 }
 

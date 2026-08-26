@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { blogPostService } from "@/services/BlogPostService";
 import { pickTranslation } from "@/lib/utils/BlogPostPresenter";
 import { formatDate } from "@/lib/utils/formatDate";
-import { buildBlogPostMetadata, buildArticleJsonLd, localizedPath } from "@/lib/seo";
+import { buildBlogPostMetadata, buildBlogPostJsonLd, localizedPath } from "@/lib/seo";
 import { publicImageUrl } from "@/lib/storage/constants";
 import type { PopulatedAuthor } from "@/types/blogPost";
 import { Card } from "@/components/ui/Card";
@@ -63,11 +63,15 @@ export default async function BlogDetailPage({
   ]);
 
   const author = post.authorId as unknown as PopulatedAuthor;
-  const jsonLd = buildArticleJsonLd(
+  // Full page graph (Organization + WebSite + BlogPosting + BreadcrumbList),
+  // not just the article node — see buildBlogPostJsonLd.
+  const jsonLd = buildBlogPostJsonLd(
     post,
     locale,
     translation,
-    author?.name ?? "Otter Beer"
+    author?.name ?? "Otter Beer",
+    isVi ? "Tin tức" : "News",
+    isVi ? "Trang chủ" : "Home"
   );
 
   return (
