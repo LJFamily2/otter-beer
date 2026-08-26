@@ -63,7 +63,7 @@ const POSTS = [
   },
   {
     id: "hops-of-tay-ninh",
-    imageSrc: "/images/age-verification-bg.png",
+    imageSrc: "/images/age-verification-bg.jpg",
     date: "09.04.2026",
     vi: { title: "Hoa Bia Xứ Tây Ninh", tag: "NGUYÊN LIỆU" },
     en: { title: "Hops of Tay Ninh", tag: "INGREDIENTS" },
@@ -240,7 +240,7 @@ export function NewsBlogSection({ locale = DEFAULT_LOCALE }: NewsBlogSectionProp
             tabIndex={0}
             className="flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth scroll-pl-6 pr-6 pb-4 pl-6 [scrollbar-width:none] motion-reduce:scroll-auto sm:scroll-pl-10 sm:pl-10 lg:scroll-pl-[calc(max(0px,(100vw-1280px)/2)_+_4rem)] lg:pl-[calc(max(0px,(100vw-1280px)/2)_+_4rem)] [&::-webkit-scrollbar]:hidden"
           >
-            {POSTS.map((post) => {
+            {POSTS.map((post, index) => {
               const content = post[locale as "vi" | "en"] ?? post.en;
               return (
                 <article
@@ -257,6 +257,7 @@ export function NewsBlogSection({ locale = DEFAULT_LOCALE }: NewsBlogSectionProp
                       alt=""
                       fill
                       sizes="(max-width: 640px) 264px, (max-width: 1024px) 300px, 324px"
+                      loading={index < 2 ? "eager" : undefined}
                       className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
                     />
 

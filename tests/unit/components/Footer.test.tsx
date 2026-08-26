@@ -32,6 +32,19 @@ describe("Footer Component", () => {
     expect(screen.getByLabelText("Threads / Social")).toBeInTheDocument();
   });
 
+  it("uses the theme background with primary-blue text, not a hardcoded dark fill", () => {
+    render(<Footer locale="vi" />);
+
+    const footer = screen.getByRole("contentinfo");
+    expect(footer.className).toContain("bg-background");
+    expect(footer.className).toContain("text-primary");
+    expect(footer.className).not.toContain("bg-[#002f82]");
+
+    const storyLink = screen.getByRole("link", { name: /our story/i });
+    expect(storyLink.className).toContain("text-primary");
+    expect(storyLink.className).not.toContain("text-white");
+  });
+
   it("prepends locale for non-default locale", () => {
     render(<Footer locale="en" />);
 

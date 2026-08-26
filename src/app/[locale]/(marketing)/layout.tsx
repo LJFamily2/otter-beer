@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { DEFAULT_LOCALE } from "@/config/locales";
-import { Header } from "@/components/layout/header";
+import { Header } from "@/components/layout/Header";
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { AgeGateWrapper } from "@/components/layout/AgeGateWrapper";
 import {

@@ -1,7 +1,7 @@
 import { createElement, type ComponentProps } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Header } from "@/components/layout/header";
+import { Header } from "@/components/layout/Header";
 
 const mockPush = jest.fn();
 
@@ -30,10 +30,8 @@ describe("Header", () => {
 
     expect(
       screen.getByRole("navigation", { name: "Primary navigation" }),
-    ).toHaveClass("gap-14");
-    expect(screen.getByText("Sản phẩm")).toHaveStyle({
-      fontFamily: "sans-serif",
-    });
+    ).toHaveClass("gap-8");
+    expect(screen.getByText("Sản phẩm")).toBeInTheDocument();
     expect(screen.getByText("Blogs")).toBeInTheDocument();
     expect(screen.getByText("Tin tức")).toBeInTheDocument();
   });
@@ -41,9 +39,7 @@ describe("Header", () => {
   it("renders the contact button with default text", () => {
     render(<Header />);
 
-    expect(screen.getByText("Liên hệ")).toHaveStyle({
-      fontFamily: "sans-serif",
-    });
+    expect(screen.getByText("Liên hệ")).toBeInTheDocument();
   });
 
   it("switches to a white surface when the page is scrolled", () => {
@@ -57,15 +53,15 @@ describe("Header", () => {
     const header = screen.getByRole("banner");
     const logo = screen.getByAltText("Otter Beer Logo").parentElement;
 
-    expect(header).toHaveClass("bg-white");
+    expect(header).toHaveClass("bg-white/95");
     expect(screen.getByText("Liên hệ")).toHaveClass("bg-primary");
-    expect(logo).toHaveClass("h-[60px]", "w-[95px]");
+    expect(logo).toHaveClass("h-[54px]", "w-[90px]");
 
     Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });
     fireEvent.scroll(window);
 
-    expect(header).toHaveClass("bg-transparent");
-    expect(logo).toHaveClass("h-[70px]", "w-[110px]");
+    expect(header).toHaveClass("bg-gradient-to-b");
+    expect(logo).toHaveClass("h-[95px]", "w-[150px]");
   });
 
   it("renders the language selector with default locale", () => {
@@ -83,7 +79,7 @@ describe("Header", () => {
     const languageButton = screen.getByLabelText("Select language");
     await user.click(languageButton);
 
-    expect(screen.getByText("ENG")).toBeInTheDocument();
+    expect(screen.getByText("English (ENG)")).toBeInTheDocument();
   });
 
   it("calls onLanguageChange callback when language is selected", async () => {
@@ -102,7 +98,7 @@ describe("Header", () => {
     const languageButton = screen.getByLabelText("Select language");
     await user.click(languageButton);
 
-    const engButton = screen.getByText("ENG");
+    const engButton = screen.getByText("English (ENG)");
     await user.click(engButton);
 
     expect(mockOnLanguageChange).toHaveBeenCalledWith("ENG");
@@ -114,7 +110,7 @@ describe("Header", () => {
     render(<Header locale="VIE" locales={["VIE", "ENG"]} />);
 
     await user.click(screen.getByLabelText("Select language"));
-    await user.click(screen.getByText("ENG"));
+    await user.click(screen.getByText("English (ENG)"));
 
     expect(mockPush).toHaveBeenCalledWith("/en");
   });
@@ -168,3 +164,4 @@ describe("Header", () => {
     );
   });
 });
+

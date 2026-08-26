@@ -113,6 +113,7 @@ function SlideMedia({
           sizes="100vw"
           className="object-cover"
           priority={priority}
+          loading="eager"
           draggable={false}
         />
       </div>

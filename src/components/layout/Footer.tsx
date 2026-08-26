@@ -1,33 +1,17 @@
-import Image from "next/image";
 import Link from "next/link";
 import { DEFAULT_LOCALE } from "@/config/locales";
 
 interface FooterProps {
   locale?: string;
-  bgImageSrc?: string;
 }
 
-export function Footer({
-  locale = DEFAULT_LOCALE,
-  bgImageSrc = "/images/footer-bg.png",
-}: FooterProps) {
+export function Footer({ locale = DEFAULT_LOCALE }: FooterProps) {
   const prefix = locale === DEFAULT_LOCALE ? "" : `/${locale}`;
 
   return (
-    <footer className="relative w-full overflow-hidden bg-[#002f82] text-white">
-      {/* Background Image Container */}
-      <div className="pointer-events-none absolute inset-0 z-0 select-none">
-        <Image
-          src={bgImageSrc}
-          alt=""
-          fill
-          sizes="100vw"
-          className="object-cover object-center"
-          priority={false}
-        />
-        {/* Subtle overlay */}
-        <div className="absolute inset-0 bg-[#002867]/15 mix-blend-multiply" />
-      </div>
+    <footer className="relative w-full overflow-hidden bg-background text-primary">
+      {/* Subtle brand texture, same decorative pattern used on the privacy page */}
+      <div className="heritage-pattern pointer-events-none absolute inset-0 z-0" />
 
       {/* Footer Content */}
       <div className="relative z-10 mx-auto max-w-[1400px] px-6 py-10 sm:px-10 sm:py-12 lg:px-16 lg:py-14">
@@ -43,25 +27,25 @@ export function Footer({
           >
             <Link
               href={`${prefix}/about`}
-              className="font-display text-2xl tracking-wide text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] transition-colors duration-200 hover:text-[#90adf7] sm:text-3xl lg:text-4xl"
+              className="font-display text-2xl tracking-wide text-primary transition-colors duration-200 hover:text-primary-container sm:text-3xl lg:text-4xl"
             >
               OUR STORY
             </Link>
             <Link
               href={`${prefix}/about#heritage`}
-              className="font-display text-2xl tracking-wide text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] transition-colors duration-200 hover:text-[#90adf7] sm:text-3xl lg:text-4xl"
+              className="font-display text-2xl tracking-wide text-primary transition-colors duration-200 hover:text-primary-container sm:text-3xl lg:text-4xl"
             >
               HERITAGE
             </Link>
             <Link
               href={`${prefix}/events`}
-              className="font-display text-2xl tracking-wide text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] transition-colors duration-200 hover:text-[#90adf7] sm:text-3xl lg:text-4xl"
+              className="font-display text-2xl tracking-wide text-primary transition-colors duration-200 hover:text-primary-container sm:text-3xl lg:text-4xl"
             >
               TAPROOM
             </Link>
             <Link
               href={`${prefix}/menu`}
-              className="font-display text-2xl tracking-wide text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] transition-colors duration-200 hover:text-[#90adf7] sm:text-3xl lg:text-4xl"
+              className="font-display text-2xl tracking-wide text-primary transition-colors duration-200 hover:text-primary-container sm:text-3xl lg:text-4xl"
             >
               SHOP
             </Link>
@@ -74,7 +58,7 @@ export function Footer({
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
-              className="text-white transition-transform duration-200 hover:scale-110 hover:text-[#90adf7] active:scale-95"
+              className="text-primary transition-transform duration-200 hover:scale-110 hover:text-primary-container active:scale-95"
             >
               <CameraIcon className="h-7 w-7 sm:h-8 sm:w-8" />
             </a>
@@ -82,7 +66,7 @@ export function Footer({
             <button
               type="button"
               aria-label="Scan QR Code"
-              className="cursor-pointer text-white transition-transform duration-200 hover:scale-110 hover:text-[#90adf7] active:scale-95"
+              className="cursor-pointer text-primary transition-transform duration-200 hover:scale-110 hover:text-primary-container active:scale-95"
             >
               <QrCodeIcon className="h-7 w-7 sm:h-8 sm:w-8" />
             </button>
@@ -90,7 +74,7 @@ export function Footer({
             <a
               href={`${prefix}/contact`}
               aria-label="Threads / Social"
-              className="text-white transition-transform duration-200 hover:scale-110 hover:text-[#90adf7] active:scale-95"
+              className="text-primary transition-transform duration-200 hover:scale-110 hover:text-primary-container active:scale-95"
             >
               <AtSymbolIcon className="h-7 w-7 sm:h-8 sm:w-8" />
             </a>
@@ -98,12 +82,12 @@ export function Footer({
         </div>
 
         {/* Divider Line */}
-        <div className="my-7 h-[1px] w-full bg-white/40 sm:my-8" />
+        <div className="my-7 h-[1px] w-full bg-primary/20 sm:my-8" />
 
         {/* Bottom Legal & Secondary Links */}
         <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
           {/* Copyright Notice */}
-          <p className="font-mono text-[11px] font-medium uppercase tracking-wider text-white/90 sm:text-xs">
+          <p className="font-mono text-[11px] font-medium uppercase tracking-wider text-primary/90 sm:text-xs">
             © 2024 OTTER BEER COMPANY. BREWED WITH HONOR.
           </p>
 
@@ -114,25 +98,25 @@ export function Footer({
           >
             <Link
               href={`${prefix}/privacy`}
-              className="text-[11px] font-semibold uppercase tracking-wider text-white underline underline-offset-4 decoration-white/70 transition-colors duration-200 hover:text-[#90adf7] hover:decoration-[#90adf7] sm:text-xs"
+              className="text-[11px] font-semibold uppercase tracking-wider text-primary underline underline-offset-4 decoration-primary/70 transition-colors duration-200 hover:text-primary-container hover:decoration-primary-container sm:text-xs"
             >
               PRIVACY POLICY
             </Link>
             <Link
               href={`${prefix}/terms`}
-              className="text-[11px] font-semibold uppercase tracking-wider text-white transition-colors duration-200 hover:text-[#90adf7] hover:underline hover:underline-offset-4 sm:text-xs"
+              className="text-[11px] font-semibold uppercase tracking-wider text-primary transition-colors duration-200 hover:text-primary-container hover:underline hover:underline-offset-4 sm:text-xs"
             >
               TERMS OF SERVICE
             </Link>
             <Link
               href={`${prefix}/wholesale`}
-              className="text-[11px] font-semibold uppercase tracking-wider text-white transition-colors duration-200 hover:text-[#90adf7] hover:underline hover:underline-offset-4 sm:text-xs"
+              className="text-[11px] font-semibold uppercase tracking-wider text-primary transition-colors duration-200 hover:text-primary-container hover:underline hover:underline-offset-4 sm:text-xs"
             >
               WHOLESALE
             </Link>
             <Link
               href={`${prefix}/contact`}
-              className="text-[11px] font-semibold uppercase tracking-wider text-white transition-colors duration-200 hover:text-[#90adf7] hover:underline hover:underline-offset-4 sm:text-xs"
+              className="text-[11px] font-semibold uppercase tracking-wider text-primary transition-colors duration-200 hover:text-primary-container hover:underline hover:underline-offset-4 sm:text-xs"
             >
               CONTACT
             </Link>
