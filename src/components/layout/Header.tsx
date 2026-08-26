@@ -225,17 +225,18 @@ export function Header({
             >
               <button
                 onClick={() => setLanguageOpen(!languageOpen)}
-                className={`flex h-9 items-center justify-center gap-1.5 rounded-full px-3 text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-200 ${
+                className={`group relative flex h-9 items-center justify-center gap-1.5 px-3 text-xs sm:text-sm font-extrabold uppercase tracking-wider transition-all duration-200 ${
                   mobileMenuOpen || !isScrolled
-                    ? "text-white hover:bg-white/20 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
-                    : "text-primary hover:bg-primary/10"
+                    ? "text-white hover:text-amber-300 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
+                    : "text-primary hover:text-primary-container"
                 }`}
                 aria-label="Select language"
+                aria-expanded={languageOpen}
               >
                 <span>{locale}</span>
                 <svg
-                  className={`h-3 w-3 transition-transform duration-200 ${
-                    languageOpen ? "rotate-180" : ""
+                  className={`h-3.5 w-3.5 transition-transform duration-300 ${
+                    languageOpen ? "rotate-180 text-amber-500" : ""
                   }`}
                   viewBox="0 0 12 12"
                   fill="none"
@@ -243,29 +244,67 @@ export function Header({
                   <path
                     d="M2.5 4.5L6 8L9.5 4.5"
                     stroke="currentColor"
-                    strokeWidth="1.8"
+                    strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
                 </svg>
+
+                {/* Subtle golden underline indicator when open */}
+                <span
+                  className={`absolute -bottom-1 left-3 right-3 h-[2px] rounded-full transition-all duration-300 ${
+                    languageOpen
+                      ? "bg-amber-400 opacity-100 scale-x-100"
+                      : "bg-transparent opacity-0 scale-x-0 group-hover:bg-amber-400/50 group-hover:opacity-100 group-hover:scale-x-75"
+                  }`}
+                />
               </button>
 
-              {/* Language Dropdown Menu */}
+              {/* Luxury Light Editorial Language Dropdown Menu */}
               {languageOpen && (
-                <div className="absolute right-0 top-full mt-2 w-32 overflow-hidden rounded-xl border border-surface-container-high/80 bg-white/95 py-1.5 shadow-lg backdrop-blur-md transition-all duration-200 z-50">
-                  {locales.map((lang) => (
-                    <button
-                      key={lang}
-                      onClick={() => handleLanguageSelect(lang)}
-                      className={`block w-full px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider transition-colors ${
-                        lang === locale
-                          ? "bg-primary/10 text-primary font-bold"
-                          : "text-on-surface hover:bg-primary/5 hover:text-primary"
-                      }`}
-                    >
-                      {lang === "VIE" ? "Tiếng Việt" : "English"} ({lang})
-                    </button>
-                  ))}
+                <div className="absolute right-0 top-full mt-2.5 w-48 overflow-hidden rounded-2xl border border-amber-900/10 bg-gradient-to-b from-slate-50/98 to-amber-50/95 p-1.5 shadow-2xl shadow-zinc-900/15 backdrop-blur-xl transition-all duration-300 animate-in fade-in slide-in-from-top-2 z-50">
+                  {locales.map((lang) => {
+                    const isSelected = lang === locale;
+                    return (
+                      <button
+                        key={lang}
+                        onClick={() => handleLanguageSelect(lang)}
+                        className={`flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs font-semibold transition-all duration-200 ${
+                          isSelected
+                            ? "bg-amber-500/15 text-amber-950 font-extrabold shadow-sm"
+                            : "text-zinc-700 hover:bg-white/80 hover:text-zinc-950"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          {isSelected && (
+                            <svg
+                              className="h-3.5 w-3.5 text-amber-700"
+                              viewBox="0 0 16 16"
+                              fill="none"
+                            >
+                              <path
+                                d="M13.5 4.5L6.5 11.5L3 8"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          )}
+                          <span>{lang === "VIE" ? "Tiếng Việt" : "English"}</span>
+                        </span>
+                        <span
+                          className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md ${
+                            isSelected
+                              ? "bg-amber-500/20 text-amber-900"
+                              : "bg-zinc-200/60 text-zinc-500"
+                          }`}
+                        >
+                          {lang}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>

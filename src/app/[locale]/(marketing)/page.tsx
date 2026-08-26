@@ -59,11 +59,11 @@ export default async function HomePage({ params }: HomePageProps) {
       <MarqueeSection locale={locale} />
       {beers.length > 0 ? <ProductShowcase locale={locale} beers={beers} /> : null}
       <NewsBlogSection locale={locale} />
-      <FaqSection locale={locale} />
       <ContactCtaSection locale={locale} />
       {/* The page's single <h1> lives in HeroSection, so the contact block
           renders at h2 here — on /contact it keeps its own h1. */}
       <ContactSection locale={locale} headingLevel="h2" />
+      <FaqSection locale={locale} />
     </>
   );
 }

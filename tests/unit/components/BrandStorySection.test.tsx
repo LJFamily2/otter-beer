@@ -96,4 +96,85 @@ describe("BrandStorySection", () => {
 
     expect(screen.getByText("Trang 5 / 5")).toBeInTheDocument();
   });
+
+  describe("chapter page-edge stack", () => {
+    const chapterTabs = () => screen.queryAllByRole("button", { name: /^Mở chương / });
+
+    it("renders one page-edge tab per chapter, the first marked current", () => {
+      render(<BrandStorySection locale="vi" />);
+
+      const tabs = chapterTabs();
+      expect(tabs).toHaveLength(5);
+      expect(tabs[0]).toHaveAttribute("aria-current", "true");
+      expect(tabs[1]).not.toHaveAttribute("aria-current");
+    });
+
+    it("drops read chapters out of the stack as the reader advances", async () => {
+      const user = userEvent.setup();
+      render(<BrandStorySection locale="vi" />);
+
+      await user.click(screen.getAllByRole("button", { name: "Trang sau" })[0]);
+      await user.click(screen.getAllByRole("button", { name: "Trang sau" })[0]);
+
+      const tabs = chapterTabs();
+      expect(tabs).toHaveLength(3);
+      expect(tabs[0]).toHaveAccessibleName("Mở chương Brewing");
+      expect(screen.queryByRole("button", { name: "Mở chương Our Story" })).not.toBeInTheDocument();
+    });
+
+    it("restores read chapters to the stack when the reader goes back", async () => {
+      const user = userEvent.setup();
+      render(<BrandStorySection locale="vi" />);
+
+      await user.click(screen.getAllByRole("button", { name: "Trang sau" })[0]);
+      expect(chapterTabs()).toHaveLength(4);
+
+      await user.click(screen.getAllByRole("button", { name: "Trang trước" })[0]);
+      expect(chapterTabs()).toHaveLength(5);
+    });
+
+    it("jumps to a chapter when its tab is clicked", async () => {
+      const user = userEvent.setup();
+      render(<BrandStorySection locale="vi" />);
+
+      await user.click(screen.getByRole("button", { name: "Mở chương Community" }));
+
+      expect(screen.getByText("Trang 4 / 5")).toBeInTheDocument();
+      expect(chapterTabs()).toHaveLength(2);
+    });
+  });
+
+  describe("keyboard and chrome copy", () => {
+    it("turns pages with the arrow keys", async () => {
+      const user = userEvent.setup();
+      render(<BrandStorySection locale="vi" />);
+
+      const book = screen.getByRole("group", { name: "Cuốn sách câu chuyện thương hiệu" });
+      book.focus();
+
+      await user.keyboard("{ArrowRight}");
+      expect(screen.getByText("Trang 2 / 5")).toBeInTheDocument();
+
+      await user.keyboard("{ArrowLeft}");
+      expect(screen.getByText("Trang 1 / 5")).toBeInTheDocument();
+    });
+
+    it("renders the localized feature list and instruction bar", () => {
+      render(<BrandStorySection locale="vi" />);
+
+      expect(screen.getByText("LẬT SÁCH MƯỢT MÀ")).toBeInTheDocument();
+      expect(screen.getByText("BỐ CỤC TỰ DO")).toBeInTheDocument();
+      expect(screen.getByText("TRẢI NGHIỆM TỰ NHIÊN")).toBeInTheDocument();
+      expect(screen.getByText("CLICK / ARROW KEY")).toBeInTheDocument();
+      expect(screen.getByText("Vuốt trái / phải trên mobile")).toBeInTheDocument();
+    });
+
+    it("falls back to English feature and instruction copy", () => {
+      render(<BrandStorySection locale="fr" />);
+
+      expect(screen.getByText("SMOOTH PAGE TURNS")).toBeInTheDocument();
+      expect(screen.getByText("Drag the mouse to turn the page")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Open chapter Our Story" })).toBeInTheDocument();
+    });
+  });
 });

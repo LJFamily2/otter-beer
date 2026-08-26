@@ -16,6 +16,19 @@ const COPY = {
     prev: "Trang trước",
     next: "Trang sau",
     pageOf: (page: number, total: number) => `Trang ${page} / ${total}`,
+    bookLabel: "Cuốn sách câu chuyện thương hiệu",
+    goToChapter: (title: string) => `Mở chương ${title}`,
+    turnHint: "KÉO HOẶC CLICK ĐỂ LẬT TRANG",
+    features: [
+      { label: "LẬT SÁCH MƯỢT MÀ", hint: "Kéo hoặc click để lật trang" },
+      { label: "BỐ CỤC TỰ DO", hint: "Mỗi trang một cảm giác khác nhau" },
+      { label: "TRẢI NGHIỆM TỰ NHIÊN", hint: "Như đang đọc một cuốn tạp chí thật sự" },
+    ],
+    toolbar: [
+      { label: "DRAG", hint: "Kéo chuột để lật trang" },
+      { label: "CLICK / ARROW KEY", hint: "Click hoặc dùng phím ← →" },
+      { label: "SWIPE", hint: "Vuốt trái / phải trên mobile" },
+    ],
   },
   en: {
     kicker: "BRAND STORY",
@@ -24,6 +37,19 @@ const COPY = {
     prev: "Previous page",
     next: "Next page",
     pageOf: (page: number, total: number) => `Page ${page} of ${total}`,
+    bookLabel: "Brand story book",
+    goToChapter: (title: string) => `Open chapter ${title}`,
+    turnHint: "DRAG OR CLICK TO TURN THE PAGE",
+    features: [
+      { label: "SMOOTH PAGE TURNS", hint: "Drag or click to turn the page" },
+      { label: "FREE-FORM LAYOUT", hint: "Every page has a feel of its own" },
+      { label: "NATURAL EXPERIENCE", hint: "Like reading a real magazine" },
+    ],
+    toolbar: [
+      { label: "DRAG", hint: "Drag the mouse to turn the page" },
+      { label: "CLICK / ARROW KEY", hint: "Click or use the ← → keys" },
+      { label: "SWIPE", hint: "Swipe left / right on mobile" },
+    ],
   },
 } as const;
 
@@ -34,6 +60,11 @@ const SPREADS = [
   { title: "Community", left: "/images/otter-beer-premium-lager.jpg", right: "/images/contact-hero.jpeg" },
   { title: "Journal", left: "/images/otter-beer-hero.png", right: "/images/otter-beer-single-3d.png" },
 ];
+
+/* Fore-edge of the un-read page block: hairline rules stacked so the part of
+   the tab column that chapters have vacated still reads as paper, not a gap. */
+const FORE_EDGE =
+  "bg-[repeating-linear-gradient(to_right,rgba(42,11,18,0.16)_0px,rgba(42,11,18,0.16)_1px,transparent_1px,transparent_4px)]";
 
 interface PageFlipInstance {
   pageFlip: () => {
@@ -57,14 +88,14 @@ export function BrandStoryDesktop({ locale }: BrandStoryDesktopProps) {
   const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
   const [pageIndex, setPageIndex] = useState(0);
   const bookRef = useRef<PageFlipInstance | null>(null);
-  
+
   const currentSpreadIndex = Math.floor(pageIndex / 2);
   const isFirst = pageIndex === 0;
   const isLast = pageIndex >= SPREADS.length * 2 - 2;
 
   function turn(direction: "next" | "prev") {
     if (!bookRef.current) return;
-    
+
     if (direction === "next" && !isLast) {
       bookRef.current.pageFlip().flipNext();
       playPageTurn();
@@ -86,163 +117,319 @@ export function BrandStoryDesktop({ locale }: BrandStoryDesktopProps) {
     setPageIndex(targetPage);
   }
 
+  function onKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      turn("next");
+    } else if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      turn("prev");
+    }
+  }
+
   const onPageFlip = (e: PageFlipEvent) => {
     setPageIndex(e.data);
   };
 
   return (
-    <div className="relative mx-auto flex w-full max-w-[1400px] items-center gap-10">
-      
-      {/* Left Title Section */}
-      <div className="flex w-[240px] shrink-0 flex-col gap-4 pt-4">
-        <span className="text-[10px] font-bold tracking-[0.2em] text-[#002867] uppercase mb-4">
-          {copy.kicker}
-        </span>
-        <h2 className="font-display text-[64px] sm:text-[72px] leading-[0.85] tracking-tight text-[#002867] uppercase">
-          {copy.heading.split(' ').map((word, i) => (
-            <React.Fragment key={i}>
-              {word}<br/>
-            </React.Fragment>
-          ))}
-        </h2>
-        <p className="mt-8 text-[13px] text-[#4a5568] leading-[1.8] opacity-80">
-          {copy.subtitle}
-        </p>
-      </div>
+    <div className="relative mx-auto flex w-full max-w-[1400px] flex-col gap-14">
+      <div className="flex items-start gap-16">
+        {/* Left Title Section */}
+        <div className="flex w-[260px] shrink-0 flex-col pt-6">
+          <span className="mb-5 text-[10px] font-bold tracking-[0.24em] text-[#f5f1ea]/50 uppercase">
+            {copy.kicker}
+          </span>
+          <h2 className="font-display text-[56px] leading-[0.86] tracking-tight text-[#f5f1ea] uppercase">
+            {copy.heading.split(" ").map((word, i) => (
+              <React.Fragment key={i}>
+                {word}
+                <br />
+              </React.Fragment>
+            ))}
+          </h2>
+          <p className="mt-8 text-[13px] leading-[1.8] text-[#f5f1ea]/55">{copy.subtitle}</p>
 
-      {/* Right Book Section */}
-      <div className="relative flex-1 min-w-0 pr-16 perspective-[1200px]">
-        {/* Deep ground shadow */}
-        <div
-          aria-hidden
-          className="absolute inset-x-20 -bottom-10 h-20 rounded-[50%] bg-black/50 blur-2xl transition-transform duration-1000"
-        />
-
-        {/* The Hardcover Container */}
-        <div className="relative mx-auto w-full max-w-[960px] aspect-[8/5] rounded-[10px] bg-[#2a0b12] p-2 pb-3 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.7),inset_0_1px_1px_rgba(255,255,255,0.1)] border border-[#1a060a]">
-          
-          {/* Paper Stack Edge */}
-          <div className="absolute inset-2 bg-[#f4f2ec] rounded-[3px] shadow-[inset_0_0_8px_rgba(0,0,0,0.1)]">
-            <div className="absolute inset-x-0 bottom-0 h-2 bg-[repeating-linear-gradient(to_bottom,rgba(0,0,0,0.06)_0px,rgba(0,0,0,0.06)_1px,transparent_1px,transparent_2px)] rounded-b-[3px]" />
-          </div>
-
-          {/* Center Spine Binding */}
-          <div
-            aria-hidden
-            className="absolute inset-y-0 left-1/2 w-12 -translate-x-1/2 rounded-sm bg-[linear-gradient(to_right,rgba(0,0,0,0.7),rgba(255,255,255,0.08)_40%,rgba(255,255,255,0.12)_50%,rgba(255,255,255,0.08)_60%,rgba(0,0,0,0.7))] shadow-[inset_0_0_15px_rgba(0,0,0,0.8)] z-0"
-          />
-
-          <div className="relative w-full aspect-[8/5] z-10 -mt-[2px] -mb-[2px]">
-            <FlipBook
-              width={480}
-              height={600}
-              size="stretch"
-              minWidth={300}
-              maxWidth={480}
-              minHeight={375}
-              maxHeight={600}
-              maxShadowOpacity={0.5}
-              showCover={false}
-              usePortrait={false}
-              mobileScrollSupport={false}
-              flippingTime={1000}
-              onFlip={onPageFlip}
-              className="mx-auto h-full w-full"
-              ref={bookRef}
-            >
-              {SPREADS.flatMap((spread, sIndex) => {
-                const isCurrentSpread = currentSpreadIndex === sIndex;
-                return [
-                  <PageFace
-                    key={`${spread.title}-left`}
-                    src={spread.left}
-                    title={spread.title}
-                    side="left"
-                    aria-hidden={!isCurrentSpread}
-                  />,
-                  <PageFace
-                    key={`${spread.title}-right`}
-                    src={spread.right}
-                    side="right"
-                    aria-hidden={!isCurrentSpread}
-                  />
-                ];
-              })}
-            </FlipBook>
-          </div>
-
-          {/* Side Tabs */}
-          <div className="absolute top-12 -right-[36px] flex flex-col gap-1 z-0">
-            {SPREADS.map((spread, index) => {
-              const isActive = currentSpreadIndex === index;
-              return (
-                <button
-                  key={spread.title}
-                  onClick={() => turnToChapter(index)}
-                  className={`group relative flex flex-col items-center justify-start h-28 w-9 shrink-0 overflow-hidden rounded-r-[4px] border border-l-0 border-[#d3cdbe] shadow-[2px_2px_5px_rgba(0,0,0,0.1)] transition-all duration-300 cursor-pointer pt-3 ${
-                    isActive ? "bg-[#f5f1ea] text-[#002867] w-11" : "bg-[#ebe6df] text-[#4a5568] hover:w-11"
-                  }`}
+          {/* Feature list — circled icon + label + hint, as in the reference */}
+          <ul className="mt-12 flex flex-col gap-6">
+            {copy.features.map((feature, index) => (
+              <li key={feature.label} className="flex items-start gap-4">
+                <span
+                  aria-hidden
+                  className="mt-[2px] flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#f5f1ea]/25 text-[#f5f1ea]/70"
                 >
-                  <span className="relative z-10 text-[9px] font-bold tracking-wider mb-2">
-                    {String(index + 1).padStart(2, '0')}
+                  <FeatureIcon index={index} />
+                </span>
+                <span className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold tracking-[0.16em] text-[#f5f1ea] uppercase">
+                    {feature.label}
                   </span>
-                  <div className="relative z-10 w-[1px] h-3 bg-[#4a5568]/20 mb-2" />
-                  <span 
-                    className="relative z-10 text-[9px] font-bold tracking-widest uppercase whitespace-nowrap"
-                    style={{ writingMode: 'vertical-rl', transform: 'rotate(-180deg)' }}
-                  >
-                    {spread.title}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+                  <span className="text-[11px] leading-[1.6] text-[#f5f1ea]/45">{feature.hint}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        {/* Simplified Toolbar & Instructions */}
-        <div className="mt-8 flex w-full flex-col items-center gap-4">
-          <div className="flex items-center gap-8">
+        {/* Right Book Section */}
+        <div
+          className="perspective-[1600px] relative min-w-0 flex-1 rounded-[8px] focus-visible:ring-2 focus-visible:ring-[#f5f1ea]/40 focus-visible:outline-none"
+          role="group"
+          aria-label={copy.bookLabel}
+          tabIndex={0}
+          onKeyDown={onKeyDown}
+        >
+          {/* Deep ground shadow */}
+          <div
+            aria-hidden
+            className="absolute inset-x-24 -bottom-8 h-16 rounded-[50%] bg-black/60 blur-2xl"
+          />
+
+          {/* The Hardcover Container */}
+          <div className="relative mx-auto aspect-[25/13] w-full max-w-[1000px] rounded-[8px] border border-[#150506] bg-[#2a0b12] p-[7px] shadow-[0_30px_60px_-18px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.08)]">
+            {/* Paper block that both the spread and the chapter tabs sit on */}
+            <div
+              aria-hidden
+              className="absolute inset-[7px] rounded-[3px] bg-[#efeade] shadow-[inset_0_0_10px_rgba(0,0,0,0.12)]"
+            />
+
+            <div className="relative flex h-full w-full">
+              {/* The open spread */}
+              <div className="relative h-full min-w-0 flex-1">
+                {/* Center Spine Binding */}
+                <div
+                  aria-hidden
+                  className="absolute inset-y-0 left-1/2 z-0 w-12 -translate-x-1/2 rounded-sm bg-[linear-gradient(to_right,rgba(0,0,0,0.7),rgba(255,255,255,0.08)_40%,rgba(255,255,255,0.12)_50%,rgba(255,255,255,0.08)_60%,rgba(0,0,0,0.7))] shadow-[inset_0_0_15px_rgba(0,0,0,0.8)]"
+                />
+
+                <div className="relative z-10 h-full w-full">
+                  <FlipBook
+                    width={378}
+                    height={504}
+                    size="stretch"
+                    minWidth={260}
+                    maxWidth={420}
+                    minHeight={347}
+                    maxHeight={560}
+                    maxShadowOpacity={0.5}
+                    showCover={false}
+                    usePortrait={false}
+                    mobileScrollSupport={false}
+                    flippingTime={1000}
+                    onFlip={onPageFlip}
+                    className="mx-auto h-full w-full"
+                    ref={bookRef}
+                  >
+                    {SPREADS.flatMap((spread, sIndex) => {
+                      const isCurrentSpread = currentSpreadIndex === sIndex;
+                      return [
+                        <PageFace
+                          key={`${spread.title}-left`}
+                          src={spread.left}
+                          title={spread.title}
+                          side="left"
+                          aria-hidden={!isCurrentSpread}
+                        />,
+                        <PageFace
+                          key={`${spread.title}-right`}
+                          src={spread.right}
+                          side="right"
+                          aria-hidden={!isCurrentSpread}
+                        />,
+                      ];
+                    })}
+                  </FlipBook>
+                </div>
+
+                {/* Turn hint sitting on the spread, as in the reference */}
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute right-5 bottom-4 z-20 rounded-[2px] bg-[#f5f1ea]/85 px-2 py-1 text-[8px] font-bold tracking-[0.16em] text-[#2a0b12]/70 uppercase"
+                >
+                  {copy.turnHint}
+                </span>
+              </div>
+
+              {/* Un-read chapter block: full-height page edges standing to the
+                  right of the spread. Chapters already read collapse away, so
+                  the stack thins out as the reader advances. */}
+              <div className="relative flex h-full w-[236px] shrink-0 justify-end overflow-hidden rounded-r-[3px] bg-[#e7e1d3]">
+                <div aria-hidden className={`absolute inset-0 opacity-60 ${FORE_EDGE}`} />
+                {SPREADS.map((spread, index) => {
+                  const isRead = index < currentSpreadIndex;
+                  const isCurrent = index === currentSpreadIndex;
+                  return (
+                    <button
+                      key={spread.title}
+                      type="button"
+                      onClick={() => turnToChapter(index)}
+                      aria-hidden={isRead || undefined}
+                      tabIndex={isRead ? -1 : undefined}
+                      aria-current={isCurrent ? "true" : undefined}
+                      aria-label={copy.goToChapter(spread.title)}
+                      className={`group relative flex h-full shrink-0 cursor-pointer flex-col items-center overflow-hidden border-l border-[#cfc7b4] pt-6 shadow-[-4px_0_8px_-3px_rgba(0,0,0,0.28)] transition-[width,background-color] duration-500 ease-out ${
+                        isRead
+                          ? "pointer-events-none w-0 border-l-0"
+                          : isCurrent
+                            ? "w-[104px] bg-[#f7f3ea]"
+                            : "w-[33px] bg-[#ebe5d7] hover:w-[42px] hover:bg-[#f2ede2]"
+                      }`}
+                    >
+                      {isCurrent ? (
+                        <span className="flex w-full flex-col items-center px-3">
+                          <span className="text-center text-[9px] leading-[1.5] font-bold tracking-[0.16em] text-[#2a0b12]/80 uppercase">
+                            {spread.title}
+                          </span>
+                          <span aria-hidden className="mt-3 h-px w-6 bg-[#2a0b12]/40" />
+                        </span>
+                      ) : (
+                        <>
+                          <span className="text-[9px] font-bold tracking-[0.1em] text-[#2a0b12]/60">
+                            {String(index + 1).padStart(2, "0")}
+                          </span>
+                          <span aria-hidden className="mt-3 h-3 w-px bg-[#2a0b12]/20" />
+                          <span
+                            className="mt-3 text-[9px] font-bold tracking-[0.18em] whitespace-nowrap text-[#2a0b12]/55 uppercase"
+                            style={{ writingMode: "vertical-rl" }}
+                          >
+                            {spread.title}
+                          </span>
+                        </>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Arrows + dot pagination */}
+          <div className="mt-10 flex items-center justify-center gap-6">
             <button
+              type="button"
               onClick={() => turn("prev")}
               disabled={isFirst}
-              className="text-[#002867] hover:opacity-70 disabled:opacity-30 p-2"
+              className="cursor-pointer p-2 text-[#f5f1ea]/70 hover:text-[#f5f1ea] disabled:opacity-25"
               aria-label={copy.prev}
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             </button>
-            <p
-              aria-live="polite"
-              className="text-[12px] font-bold tracking-[0.2em] text-[#002867] uppercase"
-            >
-              {copy.pageOf(currentSpreadIndex + 1, SPREADS.length)}
-            </p>
+
+            <div aria-hidden className="flex items-center gap-2">
+              {SPREADS.map((spread, index) => (
+                <span
+                  key={spread.title}
+                  className={`h-[5px] w-[5px] rounded-full transition-colors duration-300 ${
+                    index === currentSpreadIndex ? "bg-[#f5f1ea]" : "bg-[#f5f1ea]/25"
+                  }`}
+                />
+              ))}
+            </div>
+
             <button
+              type="button"
               onClick={() => turn("next")}
               disabled={isLast}
-              className="text-[#002867] hover:opacity-70 disabled:opacity-30 p-2"
+              className="cursor-pointer p-2 text-[#f5f1ea]/70 hover:text-[#f5f1ea] disabled:opacity-25"
               aria-label={copy.next}
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
             </button>
-          </div>
 
-          <div className="flex items-center gap-10 mt-2">
-            <div className="flex items-center gap-2 text-[9px] font-bold tracking-widest uppercase text-[#002867]/60">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="7"></rect><line x1="12" y1="6" x2="12" y2="10"></line></svg>
-              <span>DRAG</span>
-            </div>
-            <div className="flex items-center gap-2 text-[9px] font-bold tracking-widest uppercase text-[#002867]/60">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M12 8v8"></path><path d="M8 12h8"></path></svg>
-              <span>CLICK / ARROW KEY</span>
-            </div>
-            <div className="flex items-center gap-2 text-[9px] font-bold tracking-widest uppercase text-[#002867]/60">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 17a4 4 0 0 0 8 0v-4"></path><path d="M8 17a4 4 0 0 1-8 0v-4"></path><path d="M14 10V6a2 2 0 1 0-4 0v4"></path></svg>
-              <span>SWIPE</span>
-            </div>
+            <p aria-live="polite" className="sr-only">
+              {copy.pageOf(currentSpreadIndex + 1, SPREADS.length)}
+            </p>
           </div>
         </div>
       </div>
+
+      {/* Bottom instruction bar spanning the section */}
+      <div className="flex items-center justify-center gap-16 border-t border-[#f5f1ea]/10 pt-8">
+        {copy.toolbar.map((item, index) => (
+          <div key={item.label} className="flex items-center gap-3">
+            <span aria-hidden className="text-[#f5f1ea]/60">
+              <ToolbarIcon index={index} />
+            </span>
+            <span className="text-[10px] font-bold tracking-[0.18em] text-[#f5f1ea] uppercase">
+              {item.label}
+            </span>
+            <span className="text-[11px] text-[#f5f1ea]/40">{item.hint}</span>
+          </div>
+        ))}
+      </div>
     </div>
+  );
+}
+
+function FeatureIcon({ index }: { index: number }) {
+  const common = {
+    width: 14,
+    height: 14,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.8,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
+  if (index === 0) {
+    return (
+      <svg {...common}>
+        <path d="M4 5h6a2 2 0 0 1 2 2v12a2 2 0 0 0-2-2H4z" />
+        <path d="M20 5h-6a2 2 0 0 0-2 2v12a2 2 0 0 1 2-2h6z" />
+      </svg>
+    );
+  }
+  if (index === 1) {
+    return (
+      <svg {...common}>
+        <rect x="3" y="3" width="7" height="18" rx="1" />
+        <rect x="14" y="3" width="7" height="8" rx="1" />
+        <rect x="14" y="15" width="7" height="6" rx="1" />
+      </svg>
+    );
+  }
+  return (
+    <svg {...common}>
+      <path d="M3 6c3-1 6-1 9 1 3-2 6-2 9-1v12c-3-1-6-1-9 1-3-2-6-2-9-1z" />
+      <path d="M12 7v12" />
+    </svg>
+  );
+}
+
+function ToolbarIcon({ index }: { index: number }) {
+  const common = {
+    width: 13,
+    height: 13,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
+  if (index === 0) {
+    return (
+      <svg {...common}>
+        <rect x="5" y="2" width="14" height="20" rx="7" />
+        <line x1="12" y1="6" x2="12" y2="10" />
+      </svg>
+    );
+  }
+  if (index === 1) {
+    return (
+      <svg {...common}>
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <path d="M12 8v8" />
+        <path d="M8 12h8" />
+      </svg>
+    );
+  }
+  return (
+    <svg {...common}>
+      <path d="M11 17a4 4 0 0 0 8 0v-4" />
+      <path d="M8 17a4 4 0 0 1-8 0v-4" />
+      <path d="M14 10V6a2 2 0 1 0-4 0v4" />
+    </svg>
   );
 }
 
@@ -256,7 +443,7 @@ const PageFace = React.forwardRef<HTMLDivElement, {
     <div
       ref={ref}
       aria-hidden={ariaHidden}
-      className={`relative flex h-full w-full flex-col items-center justify-center bg-background overflow-hidden ${
+      className={`relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-[#f4f2ec] ${
         side === "left" ? "rounded-l-[4px]" : "rounded-r-[4px]"
       }`}
     >
@@ -315,62 +502,5 @@ function PaperGrain() {
       </filter>
       <rect width="100%" height="100%" filter="url(#brand-story-grain-desktop)" />
     </svg>
-  );
-}
-
-function FlourishRule() {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 180 14"
-      className="h-4 w-40"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.3"
-      strokeLinecap="round"
-    >
-      <path d="M4 7h56" />
-      <path d="M120 7h56" />
-      <path d="M68 7c6-6 12 6 18 0s12-6 18 0" />
-      <circle cx="90" cy="7" r="1.8" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function ArrowButton({
-  direction,
-  label,
-  disabled,
-  onClick,
-}: {
-  direction: "prev" | "next";
-  label: string;
-  disabled: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={label}
-      className="group relative flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none disabled:pointer-events-none disabled:opacity-20"
-    >
-      <svg
-        viewBox="0 0 24 24"
-        className="h-8 w-8 fill-current text-primary-container transition-all duration-200 group-hover:scale-125 group-hover:text-primary"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden
-      >
-        {direction === "prev" ? (
-          <path d="M 17.5 4.5 L 5.5 12 L 17.5 19.5 L 14.2 12 Z" />
-        ) : (
-          <path d="M 6.5 4.5 L 18.5 12 L 6.5 19.5 L 9.8 12 Z" />
-        )}
-      </svg>
-    </button>
   );
 }
