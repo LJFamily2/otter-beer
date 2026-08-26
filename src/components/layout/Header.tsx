@@ -24,8 +24,8 @@ interface HeaderProps {
 /**
  * Marketing site header with centered logo, navigation links,
  * social icons, language selector, and contact button.
- * Desktop: Centered logo image, left nav, right socials + lang + contact.
- * Mobile: OTTER BEER title, language selector, and creative beer pint menu dropdown.
+ * Mobile: OTTER BEER title, language selector, and menu dropdown
+ * where the menu button and close X occupy the EXACT same on-screen position.
  */
 export function Header({
   links = [
@@ -104,8 +104,10 @@ export function Header({
   return (
     <>
       <header
-        className={`relative w-full transition-all duration-300 ${
-          isScrolled
+        className={`relative z-50 w-full transition-all duration-300 ${
+          mobileMenuOpen
+            ? "h-[76px] sm:h-[105px] bg-transparent"
+            : isScrolled
             ? "h-[76px] bg-white/95 backdrop-blur-md shadow-sm"
             : "h-[105px] bg-gradient-to-b from-black/50 via-black/15 to-transparent"
         }`}
@@ -121,36 +123,42 @@ export function Header({
                 key={`${link.href}-${link.label}`}
                 href={link.href}
                 className={`group relative text-[15px] lg:text-[16px] font-semibold uppercase tracking-[0.12em] transition-colors duration-200 ${
-                  isScrolled
-                    ? "text-primary hover:text-primary-container"
-                    : "text-white hover:text-secondary-fixed drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
+                  mobileMenuOpen || !isScrolled
+                    ? "text-white hover:text-secondary-fixed drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
+                    : "text-primary hover:text-primary-container"
                 }`}
               >
                 {link.label}
                 <span
                   className={`absolute -bottom-1 left-0 h-[2px] w-full origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100 ${
-                    isScrolled ? "bg-primary" : "bg-white"
+                    mobileMenuOpen || !isScrolled ? "bg-white" : "bg-primary"
                   }`}
                 />
               </Link>
             ))}
           </nav>
 
-          {/* Mobile Title (Mobile view only: OTTER BEER) */}
+          {/* Mobile Title (OTTER BEER brand title) */}
           <Link
             href="/"
+            onClick={() => setMobileMenuOpen(false)}
             aria-label="Otter Beer Home"
-            className="flex items-center group transition-opacity hover:opacity-90 min-[900px]:hidden z-10"
+            className="flex flex-col items-start justify-center group transition-opacity hover:opacity-90 min-[900px]:hidden z-10"
           >
             <span
-              className={`font-black text-xl sm:text-2xl uppercase tracking-[0.2em] transition-colors duration-300 ${
-                isScrolled
-                  ? "text-primary"
-                  : "text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
+              className={`font-black text-2xl sm:text-3xl uppercase tracking-[0.18em] transition-colors duration-300 leading-none ${
+                mobileMenuOpen || !isScrolled
+                  ? "text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
+                  : "text-primary"
               }`}
             >
               OTTER BEER
             </span>
+            {mobileMenuOpen && (
+              <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em] text-amber-400 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] mt-1">
+                EST. 2024 • CRAFT BREWERY
+              </span>
+            )}
           </Link>
 
           {/* Centered Logo Image (Desktop view only) */}
@@ -178,7 +186,7 @@ export function Header({
             <span className="sr-only">Otter Beer</span>
           </Link>
 
-          {/* Right-side group: Social icons, Language selector, Contact button, Beer Pint Menu button */}
+          {/* Right-side group: Social icons, Language selector, Contact button, Mobile Menu button */}
           <div className="ml-auto flex items-center gap-3 sm:gap-4 z-10">
             {/* Social Icon - Instagram (Desktop only) */}
             <a
@@ -186,9 +194,9 @@ export function Header({
               target="_blank"
               rel="me noopener noreferrer"
               className={`flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95 max-[900px]:hidden ${
-                isScrolled
-                  ? "text-primary hover:bg-primary/10 hover:text-primary-container"
-                  : "text-white hover:bg-white/20 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
+                mobileMenuOpen || !isScrolled
+                  ? "text-white hover:bg-white/20 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
+                  : "text-primary hover:bg-primary/10 hover:text-primary-container"
               }`}
               aria-label="Instagram"
             >
@@ -201,23 +209,26 @@ export function Header({
               target="_blank"
               rel="me noopener noreferrer"
               className={`flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95 max-[900px]:hidden ${
-                isScrolled
-                  ? "text-primary hover:bg-primary/10 hover:text-primary-container"
-                  : "text-white hover:bg-white/20 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
+                mobileMenuOpen || !isScrolled
+                  ? "text-white hover:bg-white/20 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
+                  : "text-primary hover:bg-primary/10 hover:text-primary-container"
               }`}
               aria-label="Facebook"
             >
               <FacebookIcon className="h-5 w-5" />
             </a>
 
-            {/* Language Selector Dropdown (Desktop & Mobile) */}
-            <div className="relative" ref={languageRef}>
+            {/* Language Selector Dropdown (Desktop & Mobile when menu closed) */}
+            <div
+              className={`relative ${mobileMenuOpen ? "max-[900px]:hidden" : ""}`}
+              ref={languageRef}
+            >
               <button
                 onClick={() => setLanguageOpen(!languageOpen)}
                 className={`flex h-9 items-center justify-center gap-1.5 rounded-full px-3 text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-200 ${
-                  isScrolled
-                    ? "text-primary hover:bg-primary/10"
-                    : "text-white hover:bg-white/20 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
+                  mobileMenuOpen || !isScrolled
+                    ? "text-white hover:bg-white/20 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
+                    : "text-primary hover:bg-primary/10"
                 }`}
                 aria-label="Select language"
               >
@@ -241,7 +252,7 @@ export function Header({
 
               {/* Language Dropdown Menu */}
               {languageOpen && (
-                <div className="absolute right-0 top-full mt-2 w-32 overflow-hidden rounded-xl border border-surface-container-high/80 bg-white/95 py-1.5 shadow-lg backdrop-blur-md transition-all duration-200">
+                <div className="absolute right-0 top-full mt-2 w-32 overflow-hidden rounded-xl border border-surface-container-high/80 bg-white/95 py-1.5 shadow-lg backdrop-blur-md transition-all duration-200 z-50">
                   {locales.map((lang) => (
                     <button
                       key={lang}
@@ -263,29 +274,29 @@ export function Header({
             <Link
               href={contactHref}
               className={`flex h-9 sm:h-10 items-center justify-center rounded-full px-4 sm:px-6 text-xs sm:text-sm font-bold uppercase tracking-[0.1em] transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] max-[900px]:hidden ${
-                isScrolled
-                  ? "bg-primary text-on-primary shadow-sm hover:bg-primary-container hover:shadow-md"
-                  : "bg-white/90 text-primary shadow-md backdrop-blur-sm hover:bg-white hover:text-primary-container"
+                mobileMenuOpen || !isScrolled
+                  ? "bg-white/90 text-primary shadow-md backdrop-blur-sm hover:bg-white hover:text-primary-container"
+                  : "bg-primary text-on-primary shadow-sm hover:bg-primary-container hover:shadow-md"
               }`}
             >
               Liên hệ
             </Link>
 
-            {/* Creative Craft Beer Pint Menu Button (Mobile view only) */}
+            {/* Luxury Editorial Circular Menu Button - Single source of truth button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className={`flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 hover:scale-110 active:scale-95 min-[900px]:hidden ${
-                isScrolled
-                  ? "text-primary hover:bg-primary/10"
-                  : "text-white hover:bg-white/20 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
+                mobileMenuOpen || !isScrolled
+                  ? "text-white hover:bg-white/20 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
+                  : "text-primary hover:bg-primary/10"
               }`}
               aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileMenuOpen}
             >
               {mobileMenuOpen ? (
-                <ClosePintIcon className="h-8 w-8" />
+                <CloseCircleIcon className="h-8 w-8" />
               ) : (
-                <BeerPintMenuIcon className="h-8 w-8" />
+                <EditorialCircleMenuIcon className="h-8 w-8" />
               )}
             </button>
           </div>
@@ -294,32 +305,9 @@ export function Header({
 
       {/* Craft Brewery Mobile Navigation Drawer */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-between bg-[#0f0e0c]/98 p-6 sm:p-10 backdrop-blur-2xl transition-all duration-300 min-[900px]:hidden text-white border-l border-amber-500/20 shadow-2xl">
-          {/* Drawer Header */}
-          <div className="flex items-center justify-between border-b border-amber-500/20 pb-6">
-            <Link
-              href="/"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex flex-col"
-            >
-              <span className="font-black text-xl uppercase tracking-[0.2em] text-white">
-                OTTER BEER
-              </span>
-              <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-amber-500/90">
-                EST. 2024 • CRAFT BREWERY
-              </span>
-            </Link>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex h-10 w-10 items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-              aria-label="Close menu"
-            >
-              <ClosePintIcon className="h-8 w-8" />
-            </button>
-          </div>
-
+        <div className="fixed inset-0 z-40 flex flex-col justify-between bg-[#0f0e0c]/98 pt-[90px] sm:pt-[110px] pb-8 px-6 sm:px-10 backdrop-blur-2xl transition-all duration-300 min-[900px]:hidden text-white border-l border-amber-500/20 shadow-2xl">
           {/* Drawer Main Craft Navigation */}
-          <nav className="my-auto flex flex-col items-start gap-5 py-6">
+          <nav className="my-auto flex flex-col items-start gap-6 py-4">
             {links.map((link, idx) => (
               <Link
                 key={`${link.href}-${link.label}`}
@@ -339,15 +327,15 @@ export function Header({
             <Link
               href={contactHref}
               onClick={() => setMobileMenuOpen(false)}
-              className="mt-6 flex h-12 w-full max-w-xs items-center justify-center rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 text-sm font-extrabold uppercase tracking-[0.15em] shadow-lg shadow-amber-500/20 transition-all hover:brightness-110 active:scale-95"
+              className="mt-4 flex h-12 w-full max-w-xs items-center justify-center rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 text-sm font-extrabold uppercase tracking-[0.15em] shadow-lg shadow-amber-500/20 transition-all hover:brightness-110 active:scale-95"
             >
               Liên hệ
             </Link>
           </nav>
 
-          {/* Drawer Footer: Language switch & Craft Tagline */}
-          <div className="flex items-center justify-between border-t border-amber-500/20 pt-6">
-            <div className="flex items-center gap-2.5">
+          {/* Drawer Footer: Equal Spanning Language Switcher */}
+          <div className="border-t border-amber-500/20 pt-6 w-full">
+            <div className="grid grid-cols-2 gap-3 w-full">
               {locales.map((lang) => (
                 <button
                   key={lang}
@@ -355,20 +343,16 @@ export function Header({
                     handleLanguageSelect(lang);
                     setMobileMenuOpen(false);
                   }}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
+                  className={`flex h-11 items-center justify-center rounded-full text-xs sm:text-sm font-extrabold uppercase tracking-wider transition-all w-full text-center px-4 ${
                     lang === locale
-                      ? "bg-amber-500 text-zinc-950 shadow-md font-extrabold"
-                      : "text-white/70 hover:text-white hover:bg-white/10"
+                      ? "bg-amber-500 text-zinc-950 shadow-lg shadow-amber-500/20"
+                      : "bg-white/5 border border-white/10 text-white/80 hover:text-white hover:bg-white/15"
                   }`}
                 >
                   {lang === "VIE" ? "Tiếng Việt" : "English"} ({lang})
                 </button>
               ))}
             </div>
-
-            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-500/70">
-              TÂY NINH, VN
-            </span>
           </div>
         </div>
       )}
@@ -378,8 +362,8 @@ export function Header({
 
 // ─── SVG Vector Icons ──────────────────────────────────────────────────────
 
-/** Creative Beer Pint & Foam Menu Icon for Brewery Mobile View */
-function BeerPintMenuIcon({ className = "h-8 w-8" }: { className?: string }) {
+/** Luxury Editorial Circular 3-Line Menu Icon (Pizza 4P's reference style) */
+function EditorialCircleMenuIcon({ className = "h-8 w-8" }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 40 40"
@@ -391,47 +375,43 @@ function BeerPintMenuIcon({ className = "h-8 w-8" }: { className?: string }) {
       <circle
         cx="20"
         cy="20"
-        r="18.5"
+        r="18"
         stroke="currentColor"
         strokeWidth="1.5"
-        className="opacity-40"
+        className="opacity-60"
       />
-      <path
-        d="M14 13L15.5 27.5C15.7 29.5 17 31 19 31H21C23 31 24.3 29.5 24.5 27.5L26 13"
+      <line
+        x1="12"
+        y1="15"
+        x2="28"
+        y2="15"
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
       />
-      <path
-        d="M12.5 13C13.5 11.5 15.5 11.5 17 12.5C18.5 11.5 21.5 11.5 23 12.5C24.5 11.5 26.5 11.5 27.5 13"
+      <line
+        x1="12"
+        y1="20"
+        x2="28"
+        y2="20"
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
-        strokeLinejoin="round"
       />
       <line
-        x1="16.5"
-        y1="18"
-        x2="23.5"
-        y2="18"
+        x1="12"
+        y1="25"
+        x2="28"
+        y2="25"
         stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <line
-        x1="17"
-        y1="22"
-        x2="23"
-        y2="22"
-        stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="1.8"
         strokeLinecap="round"
       />
     </svg>
   );
 }
 
-function ClosePintIcon({ className = "h-8 w-8" }: { className?: string }) {
+function CloseCircleIcon({ className = "h-8 w-8" }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 40 40"
@@ -443,10 +423,10 @@ function ClosePintIcon({ className = "h-8 w-8" }: { className?: string }) {
       <circle
         cx="20"
         cy="20"
-        r="18.5"
+        r="18"
         stroke="currentColor"
         strokeWidth="1.5"
-        className="opacity-50"
+        className="opacity-60"
       />
       <path
         d="M14 14L26 26M26 14L14 26"
