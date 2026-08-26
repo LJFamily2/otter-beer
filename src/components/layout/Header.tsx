@@ -88,11 +88,10 @@ export function Header({
 
   return (
     <header
-      className={`relative w-full transition-all duration-300 ${
-        isScrolled
-          ? "h-[76px] bg-white/95 backdrop-blur-md shadow-sm border-b border-surface-container-high/60"
+      className={`relative w-full transition-all duration-300 ${isScrolled
+          ? "h-[76px] bg-white/95 backdrop-blur-md shadow-sm"
           : "h-[105px] bg-gradient-to-b from-black/50 via-black/15 to-transparent"
-      }`}
+        }`}
     >
       <div className="mx-auto flex h-full max-w-[1400px] items-center justify-between px-6 sm:px-10 lg:px-16">
         {/* Left Navigation Links */}
@@ -104,17 +103,15 @@ export function Header({
             <Link
               key={`${link.href}-${link.label}`}
               href={link.href}
-              className={`group relative text-[15px] lg:text-[16px] font-semibold uppercase tracking-[0.12em] transition-colors duration-200 ${
-                isScrolled
+              className={`group relative text-[15px] lg:text-[16px] font-semibold uppercase tracking-[0.12em] transition-colors duration-200 ${isScrolled
                   ? "text-primary hover:text-primary-container"
                   : "text-white hover:text-secondary-fixed drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
-              }`}
+                }`}
             >
               {link.label}
               <span
-                className={`absolute -bottom-1 left-0 h-[2px] w-full origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100 ${
-                  isScrolled ? "bg-primary" : "bg-white"
-                }`}
+                className={`absolute -bottom-1 left-0 h-[2px] w-full origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100 ${isScrolled ? "bg-primary" : "bg-white"
+                  }`}
               />
             </Link>
           ))}
@@ -127,11 +124,10 @@ export function Header({
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-transform duration-300 hover:scale-105"
         >
           <div
-            className={`relative transition-all duration-300 ${
-              isScrolled
+            className={`relative transition-all duration-300 ${isScrolled
                 ? "h-[54px] w-[90px] sm:h-[66px] sm:w-[110px]"
                 : "h-[85px] w-[135px] sm:h-[115px] sm:w-[190px]"
-            }`}
+              }`}
           >
             <Image
               src="/images/header/logo.png"
@@ -154,11 +150,10 @@ export function Header({
             // rel="me" marks this as a profile the site's owner controls — the
             // same claim the Organization `sameAs` array makes, stated in HTML.
             rel="me noopener noreferrer"
-            className={`flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95 max-[520px]:hidden ${
-              isScrolled
+            className={`flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95 max-[520px]:hidden ${isScrolled
                 ? "text-primary hover:bg-primary/10 hover:text-primary-container"
                 : "text-white hover:bg-white/20 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
-            }`}
+              }`}
             aria-label="Instagram"
           >
             <InstagramIcon className="h-5 w-5" />
@@ -169,11 +164,10 @@ export function Header({
             href={FACEBOOK_URL}
             target="_blank"
             rel="me noopener noreferrer"
-            className={`flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95 max-[520px]:hidden ${
-              isScrolled
+            className={`flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95 max-[520px]:hidden ${isScrolled
                 ? "text-primary hover:bg-primary/10 hover:text-primary-container"
                 : "text-white hover:bg-white/20 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
-            }`}
+              }`}
             aria-label="Facebook"
           >
             <FacebookIcon className="h-5 w-5" />
@@ -183,18 +177,16 @@ export function Header({
           <div className="relative" ref={languageRef}>
             <button
               onClick={() => setLanguageOpen(!languageOpen)}
-              className={`flex h-9 items-center justify-center gap-1.5 rounded-full px-3 text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-200 ${
-                isScrolled
+              className={`flex h-9 items-center justify-center gap-1.5 rounded-full px-3 text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-200 ${isScrolled
                   ? "text-primary hover:bg-primary/10"
                   : "text-white hover:bg-white/20 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
-              }`}
+                }`}
               aria-label="Select language"
             >
               <span>{locale}</span>
               <svg
-                className={`h-3 w-3 transition-transform duration-200 ${
-                  languageOpen ? "rotate-180" : ""
-                }`}
+                className={`h-3 w-3 transition-transform duration-200 ${languageOpen ? "rotate-180" : ""
+                  }`}
                 viewBox="0 0 12 12"
                 fill="none"
               >
@@ -215,11 +207,10 @@ export function Header({
                   <button
                     key={lang}
                     onClick={() => handleLanguageSelect(lang)}
-                    className={`block w-full px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider transition-colors ${
-                      lang === locale
+                    className={`block w-full px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider transition-colors ${lang === locale
                         ? "bg-primary/10 text-primary font-bold"
                         : "text-on-surface hover:bg-primary/5 hover:text-primary"
-                    }`}
+                      }`}
                   >
                     {lang === "VIE" ? "Tiếng Việt" : "English"} ({lang})
                   </button>
@@ -231,11 +222,10 @@ export function Header({
           {/* Contact Button */}
           <Link
             href={contactHref}
-            className={`flex h-9 sm:h-10 items-center justify-center rounded-full px-4 sm:px-6 text-xs sm:text-sm font-bold uppercase tracking-[0.1em] transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] ${
-              isScrolled
+            className={`flex h-9 sm:h-10 items-center justify-center rounded-full px-4 sm:px-6 text-xs sm:text-sm font-bold uppercase tracking-[0.1em] transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] ${isScrolled
                 ? "bg-primary text-on-primary shadow-sm hover:bg-primary-container hover:shadow-md"
                 : "bg-white/90 text-primary shadow-md backdrop-blur-sm hover:bg-white hover:text-primary-container"
-            }`}
+              }`}
           >
             Liên hệ
           </Link>

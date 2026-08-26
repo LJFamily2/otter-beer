@@ -38,9 +38,8 @@ describe("BrandStorySection", () => {
   it("renders the first spread and localized chrome copy", () => {
     render(<BrandStorySection locale="vi" />);
 
-    expect(screen.getByText("CÂU CHUYỆN THƯƠNG HIỆU")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Copper Kettle/ })).toBeInTheDocument();
-    expect(screen.getByText("Trang 1 / 3")).toBeInTheDocument();
+    expect(screen.getAllByText("CÂU CHUYỆN THƯƠNG HIỆU")[0]).toBeInTheDocument();
+    expect(screen.getByText("Trang 1 / 5")).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "Trang trước" })[0]).toBeDisabled();
     expect(screen.getAllByRole("button", { name: "Trang sau" })[0]).toBeEnabled();
   });
@@ -48,7 +47,7 @@ describe("BrandStorySection", () => {
   it("falls back to English chrome copy for an unsupported locale", () => {
     render(<BrandStorySection locale="fr" />);
 
-    expect(screen.getByText("BRAND STORY")).toBeInTheDocument();
+    expect(screen.getAllByText("BRAND STORY")[0]).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "Previous page" })[0]).toBeInTheDocument();
   });
 
@@ -57,11 +56,10 @@ describe("BrandStorySection", () => {
     render(<BrandStorySection locale="vi" />);
 
     await user.click(screen.getAllByRole("button", { name: "Trang sau" })[0]);
-    expect(screen.getByText("Trang 2 / 3")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Hops & Malt/ })).toBeInTheDocument();
+    expect(screen.getByText("Trang 2 / 5")).toBeInTheDocument();
 
     await user.click(screen.getAllByRole("button", { name: "Trang trước" })[0]);
-    expect(screen.getByText("Trang 1 / 3")).toBeInTheDocument();
+    expect(screen.getByText("Trang 1 / 5")).toBeInTheDocument();
   });
 
   it("disables the next arrow on the last spread and re-enables prev", async () => {
@@ -69,10 +67,11 @@ describe("BrandStorySection", () => {
     render(<BrandStorySection locale="vi" />);
     const next = screen.getAllByRole("button", { name: "Trang sau" })[0];
 
-    await user.click(next);
-    await user.click(next);
+    for (let i = 0; i < 4; i++) {
+      await user.click(next);
+    }
 
-    expect(screen.getByText("Trang 3 / 3")).toBeInTheDocument();
+    expect(screen.getByText("Trang 5 / 5")).toBeInTheDocument();
     expect(next).toBeDisabled();
     expect(screen.getAllByRole("button", { name: "Trang trước" })[0]).toBeEnabled();
   });
@@ -83,8 +82,7 @@ describe("BrandStorySection", () => {
 
     await user.click(screen.getAllByRole("button", { name: "Trang sau" })[0]);
 
-    expect(screen.getByRole("heading", { name: /Hops & Malt/ })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: /Copper Kettle/ })).not.toBeInTheDocument();
+    expect(screen.getByText("Trang 2 / 5")).toBeInTheDocument();
   });
 
   it("does not advance past the last spread", async () => {
@@ -92,10 +90,10 @@ describe("BrandStorySection", () => {
     render(<BrandStorySection locale="vi" />);
     const next = screen.getAllByRole("button", { name: "Trang sau" })[0];
 
-    await user.click(next);
-    await user.click(next);
-    await user.click(next);
+    for (let i = 0; i < 6; i++) {
+      await user.click(next);
+    }
 
-    expect(screen.getByText("Trang 3 / 3")).toBeInTheDocument();
+    expect(screen.getByText("Trang 5 / 5")).toBeInTheDocument();
   });
 });

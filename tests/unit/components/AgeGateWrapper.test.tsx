@@ -19,7 +19,7 @@ function renderGate() {
 }
 
 const gateHeading = () =>
-  screen.queryByRole("heading", { name: /are you 18\+\?/i });
+  screen.queryByRole("heading", { name: /bạn đã đủ 18 tuổi chưa|are you 18\+\?/i });
 
 describe("AgeGateWrapper Component", () => {
   beforeEach(() => {
@@ -75,7 +75,7 @@ describe("AgeGateWrapper Component", () => {
     it("removes the gate and releases the content", () => {
       const { container } = renderGate();
 
-      fireEvent.click(screen.getByRole("button", { name: /yes/i }));
+      fireEvent.click(screen.getByRole("button", { name: /xác nhận đủ 18 tuổi|yes/i }));
 
       expect(gateHeading()).not.toBeInTheDocument();
       expect(container.querySelector("div[inert]")).not.toBeInTheDocument();

@@ -214,7 +214,7 @@ export function BrandStoryDesktop({ locale }: BrandStoryDesktopProps) {
               aria-live="polite"
               className="text-[12px] font-bold tracking-[0.2em] text-[#002867] uppercase"
             >
-              TRANG {currentSpreadIndex + 1} / {SPREADS.length}
+              {copy.pageOf(currentSpreadIndex + 1, SPREADS.length)}
             </p>
             <button
               onClick={() => turn("next")}

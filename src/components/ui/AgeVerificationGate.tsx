@@ -143,9 +143,9 @@ export function AgeVerificationGate({
       aria-modal="true"
       aria-labelledby="age-verification-heading"
       className={
-        isStandalone
-          ? "relative flex min-h-dvh w-full flex-col overflow-hidden sm:grid sm:grid-rows-2"
-          : "fixed inset-0 z-50 flex flex-col overflow-hidden bg-[#1B3D84] sm:grid sm:grid-rows-2"
+        layout === "overlay"
+          ? "fixed inset-0 z-50 flex flex-col overflow-hidden bg-[#1B3D84] sm:grid sm:grid-rows-2"
+          : "relative flex min-h-dvh w-full flex-col overflow-hidden sm:grid sm:grid-rows-2"
       }
     >
       {/* Background Photo */}
