@@ -209,6 +209,52 @@ h4 {
 }
 
 
+/* Brand marquee — see src/components/sections/MarqueeSection.tsx.
+   Two rows, each rendering its item list twice back-to-back and animating
+   exactly one half-width of translateX, so the loop is seamless regardless
+   of viewport width. `data-direction="right"` reverses which half a row
+   starts from, so the two rows visibly scroll toward each other. Frozen
+   under reduced motion, matching the hero indicator / brand-leaf convention
+   below. */
+@keyframes marquee-scroll-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes marquee-scroll-right {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.marquee-track {
+  animation: marquee-scroll-left var(--marquee-duration, 30s) linear infinite;
+}
+.marquee-track[data-direction="right"] {
+  animation-name: marquee-scroll-right;
+}
+.marquee-fade-mask {
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 8%,
+    black 92%,
+    transparent
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+    transform: translateX(0);
+  }
+}
+
 /* Hero carousel indicator fill — see src/components/sections/HeroSection.tsx.
    The active segment fills left-to-right across one autoplay dwell. The
    component re-mounts the fill via a React `key` change on every slide change
