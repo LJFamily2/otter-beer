@@ -1,5 +1,13 @@
 import type { Metadata } from "next";
 import ContactSection from "./contact";
+import {
+  buildBreadcrumbJsonLd,
+  buildBreweryJsonLd,
+  buildOrganizationJsonLd,
+  buildStaticPageMetadata,
+  jsonLdGraph,
+} from "@/lib/seo";
+import { ADDRESS, CONTACT } from "@/config/brand";
 
 interface ContactPageProps {
   params: Promise<{ locale: string }>;
@@ -11,16 +19,45 @@ export async function generateMetadata({
   const { locale } = await params;
   const isVi = locale === "vi";
 
-  return {
-    title: isVi ? "Liên hệ | Otter Beer" : "Contact | Otter Beer",
+  return buildStaticPageMetadata({
+    locale,
+    path: "/contact",
+    // The hardcoded "| Otter Beer" suffix is gone, and the brand is left out
+    // of the title itself: the root layout's template appends it, so either
+    // one would render the brand twice and eat the ~60 characters Google shows.
+    title: isVi ? "Liên Hệ" : "Contact",
     description: isVi
-      ? "Liên hệ với Otter Beer để đặt câu hỏi về sự kiện, phân phối sỉ, hoặc các thông tin về bia."
-      : "Contact Otter Beer for private events, wholesale inquiries, and brewery details.",
-  };
+      ? `Liên hệ nhà máy bia thủ công Otter Beer tại ${ADDRESS.addressRegion}: đặt bia cho sự kiện, phân phối sỉ, tham quan nhà máy. Gọi ${CONTACT.phonesDisplay[0]} hoặc email ${CONTACT.email}.`
+      : `Contact the Otter Beer craft brewery in ${ADDRESS.addressRegion} about private events, wholesale distribution and brewery visits. Call ${CONTACT.phonesDisplay[0]} or email ${CONTACT.email}.`,
+    imagePath: "/images/contact-hero.jpeg",
+  });
 }
 
 export default async function ContactPage({ params }: ContactPageProps) {
   const { locale } = await params;
+  const isVi = locale === "vi";
 
-  return <ContactSection locale={locale} />;
+  /**
+   * The contact page is where "where is Otter Beer / how do I reach them"
+   * gets answered, so it carries the Brewery node (full NAP, hours, geo)
+   * plus a breadcrumb trail back to the homepage.
+   */
+  const jsonLd = jsonLdGraph([
+    buildOrganizationJsonLd(),
+    buildBreweryJsonLd(locale),
+    buildBreadcrumbJsonLd(locale, [
+      { name: isVi ? "Trang chủ" : "Home", path: "/" },
+      { name: isVi ? "Liên hệ" : "Contact", path: "/contact" },
+    ]),
+  ]);
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ContactSection locale={locale} />
+    </>
+  );
 }

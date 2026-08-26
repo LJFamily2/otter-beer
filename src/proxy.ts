@@ -87,5 +87,13 @@ export const config = {
   // /images/*.jpg) — without this they get rewritten to /vi/images/*.jpg
   // by the locale-routing fallback below and 404, since that rewrite only
   // makes sense for actual [locale]-segment page routes, not static assets.
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|images).*)"],
+  //
+  // The SEO files need the same exemption for the same reason, and did not
+  // have it: /sitemap.xml, /robots.txt and /llms.txt live at the root of the
+  // app tree, outside the [locale] segment, so the fallback rewrote them to
+  // /vi/sitemap.xml etc. and every one of them 404'd. A sitemap a crawler
+  // cannot fetch is a sitemap that does not exist.
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|images|sitemap.xml|robots.txt|llms.txt|manifest.webmanifest).*)",
+  ],
 };

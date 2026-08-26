@@ -31,6 +31,15 @@ const envSchema = z.object({
   R2_SECRET_ACCESS_KEY: z.string().optional(),
   R2_BUCKET_NAME: z.string().optional(),
 
+  /**
+   * Public origin of the site, e.g. https://otterbeer.vn — no trailing slash.
+   *
+   * Every canonical URL, hreflang alternate, sitemap entry, OpenGraph image
+   * and schema.org `@id` is built from this (see src/lib/seo.ts), so a
+   * production deploy that leaves it at the localhost default publishes a
+   * whole site of canonicals pointing at localhost. `assertProductionSiteUrl`
+   * below refuses to let that happen quietly.
+   */
   NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:3000"),
 });
 
@@ -76,7 +85,29 @@ function loadEnv(): Env {
       .join("\n");
     throw new Error(`Invalid environment variables:\n${issues}`);
   }
+  assertProductionSiteUrl(parsed.data);
   return parsed.data;
+}
+
+/**
+ * A localhost NEXT_PUBLIC_SITE_URL in production is silently catastrophic
+ * rather than loudly broken: the site renders fine, and every canonical tag,
+ * hreflang alternate, sitemap <loc> and JSON-LD @id it serves to Google points
+ * at http://localhost:3000. Fail the boot instead.
+ */
+function assertProductionSiteUrl(parsedEnv: Env): void {
+  if (parsedEnv.NODE_ENV !== "production") return;
+
+  const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(
+    parsedEnv.NEXT_PUBLIC_SITE_URL
+  );
+  if (!isLocalhost) return;
+
+  throw new Error(
+    "NEXT_PUBLIC_SITE_URL is still the localhost default in production. " +
+      "Set it to the public origin (e.g. https://otterbeer.vn) — every " +
+      "canonical URL, hreflang, sitemap entry and JSON-LD @id is built from it."
+  );
 }
 
 let cached: Env | undefined;

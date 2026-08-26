@@ -7,7 +7,22 @@ import { DEFAULT_LOCALE } from "@/config/locales";
 
 interface AgeVerificationGateProps {
   locale?: string;
+  /**
+   * `true` = the parent owns the verified/unverified decision and this
+   * component just renders the prompt; `false` = it checks storage itself.
+   */
   isStandalone?: boolean;
+  /**
+   * How the gate occupies the page.
+   *
+   * - `"page"` (default): a full-height block that IS the page — used by the
+   *   standalone /age-verification route.
+   * - `"overlay"`: fixed on top of the page, which keeps the real page content
+   *   in the DOM underneath. `AgeGateWrapper` uses this so the marketing site
+   *   still server-renders its content for crawlers instead of replacing every
+   *   page with the gate.
+   */
+  layout?: "page" | "overlay";
   onVerified?: () => void;
 }
 
@@ -46,6 +61,7 @@ const COPY = {
 export function AgeVerificationGate({
   locale = DEFAULT_LOCALE,
   isStandalone = false,
+  layout = isStandalone ? "page" : "overlay",
   onVerified,
 }: AgeVerificationGateProps) {
   const router = useRouter();
@@ -56,6 +72,15 @@ export function AgeVerificationGate({
     isStandalone ? false : null
   );
   const [isDenied, setIsDenied] = useState(false);
+
+  /**
+   * As a full page, the prompt IS the page's heading. As an overlay it sits on
+   * top of a page that already has its own h1, so it drops to h2 — two h1s
+   * leave a crawler no single statement of what the page is about, and the
+   * gate's "ARE YOU 18+?" is emphatically not the answer for the homepage.
+   * `aria-labelledby` on the dialog keeps naming it either way.
+   */
+  const Heading = layout === "page" ? "h1" : "h2";
 
   useEffect(() => {
     if (isStandalone) {

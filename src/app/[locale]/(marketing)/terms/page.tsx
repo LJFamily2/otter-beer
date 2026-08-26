@@ -1,15 +1,27 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DEFAULT_LOCALE } from "@/config/locales";
-
-export const metadata: Metadata = {
-  title: "Terms of Service | Otter Beer",
-  description:
-    "Review the Terms of Service and legal guidelines for accessing and using Otter Beer.",
-};
+import { buildStaticPageMetadata } from "@/lib/seo";
 
 interface TermsPageProps {
   params: Promise<{ locale: string }>;
+}
+
+// See the note in privacy/page.tsx — same fix, same reasons.
+export async function generateMetadata({
+  params,
+}: TermsPageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const isVi = locale === DEFAULT_LOCALE;
+
+  return buildStaticPageMetadata({
+    locale,
+    path: "/terms",
+    title: isVi ? "Điều Khoản Sử Dụng" : "Terms of Service",
+    description: isVi
+      ? "Điều khoản sử dụng và hướng dẫn pháp lý khi truy cập website Otter Beer."
+      : "The Terms of Service and legal guidelines for accessing and using the Otter Beer website.",
+  });
 }
 
 export default async function TermsOfServicePage({ params }: TermsPageProps) {

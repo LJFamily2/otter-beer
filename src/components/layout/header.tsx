@@ -4,6 +4,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { SOCIAL_PROFILES } from "@/config/brand";
+
+// Same array the Organization `sameAs` JSON-LD emits, so the profiles the site
+// links to and the profiles it claims to own are one list, not two.
+const [FACEBOOK_URL, INSTAGRAM_URL] = SOCIAL_PROFILES;
 
 interface HeaderLink {
   label: string;
@@ -113,9 +118,11 @@ export function Header({
       <div className="absolute right-[41px] top-1/2 flex -translate-y-1/2 items-center gap-4 max-[900px]:right-4 max-[900px]:gap-2">
         {/* Social Icon - Instagram */}
         <a
-          href="https://instagram.com/otterbeer"
+          href={INSTAGRAM_URL}
           target="_blank"
-          rel="noopener noreferrer"
+          // rel="me" marks this as a profile the site's owner controls — the
+          // same claim the Organization `sameAs` array makes, stated in HTML.
+          rel="me noopener noreferrer"
           className="flex h-[38px] w-[28px] items-center justify-center transition-opacity hover:opacity-80 max-[520px]:hidden"
           aria-label="Instagram"
         >
@@ -130,9 +137,9 @@ export function Header({
 
         {/* Social Icon - Facebook */}
         <a
-          href="https://facebook.com/otterbeer"
+          href={FACEBOOK_URL}
           target="_blank"
-          rel="noopener noreferrer"
+          rel="me noopener noreferrer"
           className="flex h-[29px] w-[29px] items-center justify-center transition-opacity hover:opacity-80 max-[520px]:hidden"
           aria-label="Facebook"
         >

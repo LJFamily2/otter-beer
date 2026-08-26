@@ -30,6 +30,18 @@ Before submitting any change that touches user data or API routes:
 → Full security guide: `docs/security.md`
 → Full testing guide: `docs/testing.md`
 
+## MANDATORY: Keep pages crawlable
+
+Everything a search engine or LLM needs must be in the **server-rendered
+HTML** — not the RSC payload, not after hydration. Before shipping a public
+page: `curl` it, strip `<script>` blocks, and check the content is still there.
+
+Brand facts (NAP, socials, FAQ) live in `src/config/brand.ts` and
+`src/config/faq.ts` — read from those, never restate them, so visible copy and
+structured data cannot disagree.
+
+→ Full SEO/AEO/GEO guide: `docs/seo.md`
+
 ## MANDATORY: Reusable UI components — customize via props, not by editing
 
 `src/components/ui/*` is a shared component library (Button, Input, Card,
