@@ -8,7 +8,7 @@
 
 jest.mock("@/auth", () => ({ auth: jest.fn() }));
 jest.mock("@/services/BrandStoryService", () => ({
-  brandStoryService: { get: jest.fn(), replacePages: jest.fn() },
+  brandStoryService: { get: jest.fn(), replaceChapters: jest.fn() },
 }));
 
 import { NextRequest } from "next/server";
@@ -60,17 +60,17 @@ describe("GET /api/brand-story", () => {
     expect(res.status).toBe(404);
   });
 
-  it("returns the current pages when authorized", async () => {
+  it("returns the current chapters when authorized", async () => {
     grantSession({ view: true });
     (brandStoryService.get as jest.Mock).mockResolvedValue({
-      pages: [{ imageKey: "k1", translations: [] }],
+      chapters: [{ images: ["k1"], translations: [] }],
     });
 
     const res = await GET(new NextRequest("http://localhost/api/brand-story"), {});
 
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.pages).toHaveLength(1);
+    expect(body.chapters).toHaveLength(1);
   });
 
   it("returns an empty array when the document has never been saved", async () => {
@@ -80,7 +80,7 @@ describe("GET /api/brand-story", () => {
     const res = await GET(new NextRequest("http://localhost/api/brand-story"), {});
 
     const body = await res.json();
-    expect(body.pages).toEqual([]);
+    expect(body.chapters).toEqual([]);
   });
 });
 
@@ -90,7 +90,7 @@ describe("PUT /api/brand-story", () => {
   it("returns 401 when unauthenticated", async () => {
     (auth as jest.Mock).mockResolvedValue(null);
 
-    const res = await PUT(putRequest({ pages: [] }), {});
+    const res = await PUT(putRequest({ chapters: [] }), {});
 
     expect(res.status).toBe(401);
   });
@@ -98,7 +98,7 @@ describe("PUT /api/brand-story", () => {
   it("returns 404 when the session lacks edit permission", async () => {
     grantSession({ view: true, edit: false });
 
-    const res = await PUT(putRequest({ pages: [] }), {});
+    const res = await PUT(putRequest({ chapters: [] }), {});
 
     expect(res.status).toBe(404);
   });
@@ -106,24 +106,24 @@ describe("PUT /api/brand-story", () => {
   it("returns 400 for an invalid payload", async () => {
     grantSession({ view: true, edit: true });
 
-    const res = await PUT(putRequest({ pages: [{ imageKey: "", translations: [] }] }), {});
+    const res = await PUT(putRequest({ chapters: [{ images: [], translations: [] }] }), {});
 
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body.details).toBeDefined();
   });
 
-  it("replaces the pages and returns 200 for a valid payload", async () => {
+  it("replaces the chapters and returns 200 for a valid payload", async () => {
     grantSession({ view: true, edit: true });
-    const page = {
-      imageKey: "k1",
-      translations: [{ locale: "vi", title: "Tiêu đề", caption: "Nội dung" }],
+    const chapter = {
+      images: ["k1"],
+      translations: [{ locale: "vi", title: "Our Story" }],
     };
-    (brandStoryService.replacePages as jest.Mock).mockResolvedValue({ pages: [page] });
+    (brandStoryService.replaceChapters as jest.Mock).mockResolvedValue({ chapters: [chapter] });
 
-    const res = await PUT(putRequest({ pages: [page] }), {});
+    const res = await PUT(putRequest({ chapters: [chapter] }), {});
 
     expect(res.status).toBe(200);
-    expect(brandStoryService.replacePages).toHaveBeenCalledWith({ pages: [page] }, "user-1");
+    expect(brandStoryService.replaceChapters).toHaveBeenCalledWith({ chapters: [chapter] }, "user-1");
   });
 });

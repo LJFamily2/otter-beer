@@ -11,11 +11,11 @@ export class BrandStoryService {
     return this.repository.get();
   }
 
-  async replacePages(
+  async replaceChapters(
     input: BrandStoryUpdateInput,
     actorId: string
   ): Promise<IBrandStory> {
-    return this.repository.replacePages(input.pages, actorId);
+    return this.repository.replaceChapters(input.chapters, actorId);
   }
 
   // ─── Public reads (Server Components can call this directly — no HTTP

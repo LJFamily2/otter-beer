@@ -8,17 +8,15 @@ interface BrandStorySectionProps {
 
 export function BrandStorySection({ locale }: BrandStorySectionProps) {
   return (
-    <section id="story" className="relative w-full bg-background">
-      {/* Desktop Version — dark stage so the cream book reads as the light source */}
-      <div className="relative hidden w-full overflow-hidden bg-[#0e0c0b] px-10 py-24 lg:block">
-        {/* Background Image for desktop */}
-        <div
-          className="absolute inset-0 z-0 bg-[url('/images/brand-story-bg.jpg')] bg-cover bg-fixed bg-center opacity-[0.07]"
-          aria-hidden="true"
-        />
-        <div className="relative z-10">
-          <BrandStoryDesktop locale={locale} />
-        </div>
+    /* scroll-mt keeps the fixed header from covering the section when the nav
+       jumps to #story — and from swallowing clicks on the book's controls. */
+    <section id="story" className="relative w-full scroll-mt-24 bg-background">
+      {/* Desktop Version — a flat dark stage, deliberately unpatterned so the
+          cream book is the only light source in the section. The old
+          brand-story-bg line-art sat behind the book and fought it for
+          attention; keep this background plain. */}
+      <div className="relative hidden w-full overflow-hidden bg-[#0e0c0b] px-6 py-24 lg:block 2xl:px-10">
+        <BrandStoryDesktop locale={locale} />
       </div>
 
       {/* Mobile Version */}

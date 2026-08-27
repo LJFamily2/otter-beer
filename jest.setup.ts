@@ -63,6 +63,23 @@ if (!globalThis.ResizeObserver) {
   } as unknown as typeof ResizeObserver;
 }
 
+// BrandStoryMobile tracks its active slide with an IntersectionObserver; jsdom
+// ships none either. Nothing ever intersects here, so components keep whatever
+// in-view state they initialise with — enough to render and be queried.
+if (!globalThis.IntersectionObserver) {
+  globalThis.IntersectionObserver = class {
+    readonly root = null;
+    readonly rootMargin = "";
+    readonly thresholds: ReadonlyArray<number> = [];
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords(): IntersectionObserverEntry[] {
+      return [];
+    }
+  } as unknown as typeof IntersectionObserver;
+}
+
 // Motion is allowed by default; tests opt into reduced motion explicitly.
 afterEach(() => {
   setPrefersReducedMotion(false);
