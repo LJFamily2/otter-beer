@@ -75,7 +75,7 @@ export default async function BlogDetailPage({
   );
 
   return (
-    <div className="mx-auto grid max-w-[1280px] grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] gap-16 px-5 py-16 max-[900px]:grid-cols-1">
+    <div className="mx-auto grid max-w-[1280px] grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] gap-16 px-5 pt-28 sm:pt-36 lg:pt-40 pb-16 max-[900px]:grid-cols-1">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

@@ -94,4 +94,30 @@ test.describe("Public blog", () => {
     );
     expect(hasOverflow).toBe(false);
   });
+
+  test("blog top kicker sits below fixed header with sufficient padding", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/blog");
+    const kicker = page.getByText(/nhật ký nhà máy bia|the brewery journal/i);
+    await expect(kicker).toBeVisible();
+    const kickerBox = await kicker.boundingBox();
+    // Desktop fixed header height is ~88px; top padding ensures kicker starts below 88px.
+    expect(kickerBox!.y).toBeGreaterThanOrEqual(88);
+  });
+
+  test("footer on blog page renders Facebook and Instagram social links", async ({
+    page,
+  }) => {
+    await page.goto("/blog");
+    const footer = page.getByRole("contentinfo");
+    const fbLink = footer.getByRole("link", { name: "Facebook" });
+    const igLink = footer.getByRole("link", { name: "Instagram" });
+
+    await expect(fbLink).toBeVisible();
+    await expect(igLink).toBeVisible();
+    await expect(fbLink).toHaveAttribute("href", /facebook\.com/);
+    await expect(igLink).toHaveAttribute("href", /instagram\.com/);
+  });
 });

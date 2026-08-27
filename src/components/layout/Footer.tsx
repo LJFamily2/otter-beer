@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { DEFAULT_LOCALE } from "@/config/locales";
+import { SOCIAL_PROFILES } from "@/config/brand";
+
+const [FACEBOOK_URL, INSTAGRAM_URL] = SOCIAL_PROFILES;
 
 interface FooterProps {
   locale?: string;
@@ -81,32 +84,26 @@ export function Footer({ locale = DEFAULT_LOCALE }: FooterProps) {
             </Link>
           </nav>
 
-          {/* Right Social & Utility Icons */}
-          <div className="flex items-center gap-5 sm:gap-6">
+          {/* Right Social Icons (Facebook & Instagram) */}
+          <div className="flex items-center gap-4 sm:gap-5">
             <a
-              href="https://instagram.com"
+              href={FACEBOOK_URL}
               target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Instagram"
-              className="text-primary transition-transform duration-200 hover:scale-110 hover:text-primary-container active:scale-95"
+              rel="me noopener noreferrer"
+              aria-label="Facebook"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-primary transition-all duration-200 hover:scale-110 hover:bg-primary/10 hover:text-primary-container active:scale-95"
             >
-              <CameraIcon className="h-7 w-7 sm:h-8 sm:w-8" />
+              <FacebookIcon className="h-6 w-6" />
             </a>
 
-            <button
-              type="button"
-              aria-label="Scan QR Code"
-              className="cursor-pointer text-primary transition-transform duration-200 hover:scale-110 hover:text-primary-container active:scale-95"
-            >
-              <QrCodeIcon className="h-7 w-7 sm:h-8 sm:w-8" />
-            </button>
-
             <a
-              href={`${prefix}/contact`}
-              aria-label="Threads / Social"
-              className="text-primary transition-transform duration-200 hover:scale-110 hover:text-primary-container active:scale-95"
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="me noopener noreferrer"
+              aria-label="Instagram"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-primary transition-all duration-200 hover:scale-110 hover:bg-primary/10 hover:text-primary-container active:scale-95"
             >
-              <AtSymbolIcon className="h-7 w-7 sm:h-8 sm:w-8" />
+              <InstagramIcon className="h-6 w-6" />
             </a>
           </div>
         </div>
@@ -128,7 +125,7 @@ export function Footer({ locale = DEFAULT_LOCALE }: FooterProps) {
           >
             <Link
               href={`${prefix}/privacy`}
-              className="text-[11px] font-semibold uppercase tracking-wider text-primary underline underline-offset-4 decoration-primary/70 transition-colors duration-200 hover:text-primary-container hover:decoration-primary-container sm:text-xs"
+              className="text-[11px] font-semibold uppercase tracking-wider text-primary transition-colors duration-200 hover:text-primary-container hover:underline hover:underline-offset-4 sm:text-xs"
             >
               {copy.privacyPolicy}
             </Link>
@@ -159,60 +156,28 @@ export function Footer({ locale = DEFAULT_LOCALE }: FooterProps) {
 
 // ─── SVG Icons ─────────────────────────────────────────────────────────────
 
-function CameraIcon({ className = "w-6 h-6" }: { className?: string }) {
+function FacebookIcon({ className = "w-6 h-6" }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
       fill="currentColor"
-      aria-hidden="true"
       className={className}
+      aria-hidden="true"
     >
-      <path
-        fillRule="evenodd"
-        d="M4 6a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h16a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3h-2.382l-1.106-2.21A2 2 0 0 0 14.724 2H9.276a2 2 0 0 0-1.788 1.79L6.382 6H4zm8 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0-2a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm6.5-7a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"
-        clipRule="evenodd"
-      />
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
     </svg>
   );
 }
 
-function QrCodeIcon({ className = "w-6 h-6" }: { className?: string }) {
+function InstagramIcon({ className = "w-6 h-6" }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
       fill="currentColor"
-      aria-hidden="true"
       className={className}
-    >
-      {/* Top Left Finder */}
-      <path d="M2 2h7v7H2V2zm2 2v3h3V4H4z" />
-      <path d="M5 5h1v1H5V5z" />
-      {/* Top Right Finder */}
-      <path d="M15 2h7v7h-7V2zm2 2v3h3V4h-3z" />
-      <path d="M18 5h1v1h-1V5z" />
-      {/* Bottom Left Finder */}
-      <path d="M2 15h7v7H2v-7zm2 2v3h3v-3H4z" />
-      <path d="M5 18h1v1H5v-1z" />
-      {/* QR Data modules */}
-      <path d="M11 2h2v3h-2V2zm0 6h2v3h-2V8zm-8 4h3v2H3v-2zm8 3h2v2h-2v-2zm-3 3h2v3H8v-3zm3 1h2v3h-2v-3zm4-7h3v2h-3v-2zm3 3h2v2h-2v-2zm-3 3h3v2h-3v-2zm3 3h2v2h-2v-2zm2-9h2v2h-2V9zm-5 7h2v2h-2v-2z" />
-    </svg>
-  );
-}
-
-function AtSymbolIcon({ className = "w-6 h-6" }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
       aria-hidden="true"
-      className={className}
     >
-      <circle cx="12" cy="12" r="4" />
-      <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94" />
+      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
     </svg>
   );
 }

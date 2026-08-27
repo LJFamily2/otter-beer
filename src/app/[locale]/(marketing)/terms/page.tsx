@@ -32,7 +32,7 @@ export default async function TermsOfServicePage({ params }: TermsPageProps) {
   return (
     <div className="relative min-h-screen bg-surface text-on-surface antialiased flex flex-col">
       {/* Main Content */}
-      <main className="flex-1 w-full max-w-[1280px] mx-auto px-6 py-12 md:py-20">
+      <main className="flex-1 w-full max-w-[1280px] mx-auto px-6 pt-28 sm:pt-36 lg:pt-40 pb-12 md:pb-20">
         <header className="mb-10 border-b border-surface-variant pb-6">
           <h1 className="font-display text-4xl md:text-6xl text-primary uppercase tracking-tight">
             {isVi ? "Điều Khoản Dịch Vụ" : "Terms of Service"}
