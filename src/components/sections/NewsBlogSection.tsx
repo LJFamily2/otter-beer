@@ -28,7 +28,7 @@ interface NewsBlogSectionProps {
 const COPY = {
   vi: {
     kicker: "TIN TỨC & BLOG",
-    heading: "CHUYỆN NHÀ OTTER",
+    heading: "NHẬT KÝ BIA CHÚ RÁI CÁ",
     viewAll: "XEM TẤT CẢ BÀI VIẾT",
     prev: "Bài viết trước",
     next: "Bài viết tiếp theo",
@@ -38,7 +38,7 @@ const COPY = {
   },
   en: {
     kicker: "NEWS & BLOG",
-    heading: "THE OTTER JOURNAL",
+    heading: "OTTER BEER JOURNAL",
     viewAll: "VIEW ALL STORIES",
     prev: "Previous story",
     next: "Next story",

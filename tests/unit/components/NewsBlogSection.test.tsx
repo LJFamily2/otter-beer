@@ -78,7 +78,7 @@ describe("NewsBlogSection Component", () => {
     render(<NewsBlogSection locale="en" posts={enPosts()} />);
 
     expect(
-      screen.getByRole("heading", { name: /the otter journal/i })
+      screen.getByRole("heading", { name: /otter beer journal/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/news & blog/i)).toBeInTheDocument();
 
@@ -95,7 +95,7 @@ describe("NewsBlogSection Component", () => {
     render(<NewsBlogSection locale="vi" posts={viPosts()} />);
 
     expect(
-      screen.getByRole("heading", { name: /chuyện nhà otter/i })
+      screen.getByRole("heading", { name: /nhật ký bia chú rái cá/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /nhật ký nhà nấu/i })

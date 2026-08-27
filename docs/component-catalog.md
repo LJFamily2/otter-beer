@@ -64,7 +64,7 @@ Bilingual (vi default with no prefix, en under `/en`), public, SEO-tracked
 | Route | File | Description |
 |---|---|---|
 | `/` | `page.tsx` | Homepage — renders `HeroSection` (ported from Figma node 28:877, "Main Hero Section" / the "Production List" section), then `BrandStorySection`, `TaglineSection`, `MarqueeSection`, `ProductShowcase`, `NewsBlogSection` and the contact form |
-| `/blog` | `blog/page.tsx` | Public blog list ("The Otter Chronicles" / "Biên Niên Sử Otter") — hero, featured post, tag filter, pagination |
+| `/blog` | `blog/page.tsx` | Public blog list ("Otter Beer Journal" / "Nhật Ký Bia Chú Rái Cá") — hero, featured post, tag filter, pagination |
 | `/blog/[slug]` | `blog/[slug]/page.tsx` | Public blog detail — article body, author card, recent posts, topics, JSON-LD |
 | `/design-system` | `design-system/page.tsx` | Live showcase of every `src/components/ui/*` component, grouped like the Figma "Coastal Premium UI Library" batches. `noindex` — internal tooling |
 | `/contact` | `contact/page.tsx` | Contact page — renders `ContactSection` at `h1`, plus an Organization + Brewery + BreadcrumbList JSON-LD graph |

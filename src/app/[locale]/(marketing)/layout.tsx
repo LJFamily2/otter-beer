@@ -25,11 +25,13 @@ export default async function MarketingLayout({
 
   const navigationLinks = isVi
     ? [
-        { label: "Sản phẩm", href: `${prefix}#products` },
+        { label: "Sản phẩm", href: `${prefix || "/"}#products` },
+        { label: "Câu chuyện", href: `${prefix || "/"}#story` },
         { label: "Tin tức", href: `${prefix}/blog` },
       ]
     : [
-        { label: "Products", href: `${prefix}#products` },
+        { label: "Products", href: `${prefix || "/"}#products` },
+        { label: "Our Story", href: `${prefix || "/"}#story` },
         { label: "News", href: `${prefix}/blog` },
       ];
 

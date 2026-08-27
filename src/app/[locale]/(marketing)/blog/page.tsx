@@ -73,16 +73,13 @@ export default async function BlogListPage({
       />
 
       <section className="px-5 pt-28 sm:pt-36 lg:pt-40 text-center">
-        <span className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-secondary">
-          {isVi ? "Nhật ký nhà máy bia" : "The brewery journal"}
-        </span>
         {/* Kept in title case rather than the uppercase other page headings
             use: at this size the Vietnamese title stacks diacritics above the
             cap height, and 0.92 leading leaves them no room. The tight leading
             and negative tracking are what make it read as a masthead block
             instead of the stretched single line `tracking-wide` produced. */}
-        <h1 className="mx-auto mt-4 max-w-[15ch] text-[clamp(44px,7.5vw,84px)] leading-[0.92] tracking-[-0.03em] text-primary">
-          {isVi ? "Biên Niên Sử Otter" : "The Otter Chronicles"}
+        <h1 className="mx-auto max-w-3xl text-[clamp(36px,5.5vw,52px)] leading-[0.95] tracking-[-0.02em] text-primary">
+          {isVi ? "Nhật Ký Bia Chú Rái Cá" : "Otter Beer Journal"}
         </h1>
         <div className="mx-auto mt-6 h-[3px] w-16 bg-secondary-fixed-dim" />
       </section>
