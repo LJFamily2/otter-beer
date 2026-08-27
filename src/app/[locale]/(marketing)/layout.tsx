@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { AgeGateWrapper } from "@/components/layout/AgeGateWrapper";
 import { MobileContactBar } from "@/components/layout/MobileContactBar";
+import { cookies } from "next/headers";
 
 interface MarketingLayoutProps {
   children: ReactNode;
@@ -19,6 +20,9 @@ export default async function MarketingLayout({
   const prefix = locale === DEFAULT_LOCALE ? "" : `/${locale}`;
   const isVi = locale === DEFAULT_LOCALE;
 
+  const cookieStore = await cookies();
+  const isVerifiedInitial = cookieStore.get("otter_age_verified")?.value === "true";
+
   const navigationLinks = isVi
     ? [
         { label: "Sản phẩm", href: `${prefix}#products` },
@@ -30,7 +34,7 @@ export default async function MarketingLayout({
       ];
 
   return (
-    <AgeGateWrapper locale={locale}>
+    <AgeGateWrapper locale={locale} isVerifiedInitial={isVerifiedInitial}>
       <div className="relative flex min-h-dvh flex-col pb-[56px] md:pb-0">
         <div className="fixed inset-x-0 top-0 z-30">
           <Header

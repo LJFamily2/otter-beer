@@ -33,7 +33,7 @@ const COPY = {
   vi: {
     heading: "BẠN ĐÃ ĐỦ 18 TUỔI CHƯA?",
     yesButton: "Xác nhận đủ 18 tuổi",
-    noButton: "Chưa đủ 18 tuổi",
+    noButton: "Chưa đủ",
     responsibleDrinking: "SỬ DỤNG RƯỢU BIA CÓ TRÁCH NHIỆM",
     address:
       "BADENBEER Co., Ltd. — 13 nhà, Hẻm 30, Đường Lạc Long Quân, Phường Hiệp Định, Tỉnh Tây Ninh",
@@ -156,10 +156,10 @@ export function AgeVerificationGate({
           fill
           priority
           sizes="100vw"
-          className="object-cover object-center"
+          className="object-cover object-bottom"
         />
         {/* Tint so white text stays readable regardless of what's behind it */}
-        <div className="absolute inset-0 bg-[#1B3D84]/55" />
+        <div className="absolute inset-0 bg-black/50" aria-hidden />
       </div>
 
       {/* Top spacer — collapses on mobile so content centers full-height,
@@ -174,7 +174,7 @@ export function AgeVerificationGate({
               {/* Age Question */}
               <Heading
                 id="age-verification-heading"
-                className="font-display text-6xl uppercase leading-tight tracking-wide text-white"
+                className="font-display text-6xl uppercase leading-tight tracking-wide !text-white"
               >
                 {content.heading}
               </Heading>
@@ -185,7 +185,7 @@ export function AgeVerificationGate({
                 <button
                   type="button"
                   onClick={handleConfirmAge}
-                  className="group inline-flex cursor-pointer items-center gap-2 rounded-full border-2 border-white bg-white px-6 py-3 font-display text-sm font-bold tracking-wider text-[#1B3D84] shadow-[0_4px_14px_rgba(0,0,0,0.15)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(0,0,0,0.35)] active:translate-y-0 active:scale-95 sm:px-8 sm:py-3.5 sm:text-base"
+                  className="group inline-flex cursor-pointer items-center gap-2 rounded-full border-2 border-white bg-white px-6 py-3 font-sans text-sm font-bold tracking-wider text-black shadow-[0_4px_14px_rgba(0,0,0,0.15)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(0,0,0,0.35)] active:translate-y-0 active:scale-95 sm:px-8 sm:py-3.5 sm:text-base"
                 >
                   {content.yesButton}
                 </button>
@@ -194,7 +194,7 @@ export function AgeVerificationGate({
                 <button
                   type="button"
                   onClick={handleDenyAge}
-                  className="group inline-flex cursor-pointer items-center gap-2 rounded-full border-2 border-white/70 bg-transparent px-6 py-3 font-display text-sm font-bold tracking-wider text-white shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-white/10 hover:shadow-[0_8px_24px_rgba(0,0,0,0.25)] active:translate-y-0 active:scale-95 sm:px-8 sm:py-3.5 sm:text-base"
+                  className="group inline-flex cursor-pointer items-center gap-2 rounded-full border-2 border-white bg-white px-6 py-3 font-sans text-sm font-bold tracking-wider text-black shadow-[0_4px_14px_rgba(0,0,0,0.15)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(0,0,0,0.35)] active:translate-y-0 active:scale-95 sm:px-8 sm:py-3.5 sm:text-base"
                 >
                   {content.noButton}
                 </button>
@@ -213,7 +213,7 @@ export function AgeVerificationGate({
             <div className="animate-in fade-in slide-in-from-bottom-2 flex flex-col items-center duration-200">
               <Heading
                 id="age-verification-heading"
-                className="font-display text-6xl uppercase leading-tight tracking-wide text-white"
+                className="font-display text-6xl uppercase leading-tight tracking-wide !text-white"
               >
                 {content.deniedHeading}
               </Heading>
@@ -226,7 +226,7 @@ export function AgeVerificationGate({
                   href="https://www.responsibility.org"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-2 rounded-full border-2 border-white bg-white px-6 py-3 font-display text-sm font-bold tracking-wider text-[#1B3D84] shadow-[0_4px_14px_rgba(0,0,0,0.15)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(0,0,0,0.35)] active:translate-y-0 active:scale-95 sm:px-8 sm:py-3.5 sm:text-base"
+                  className="group inline-flex items-center gap-2 rounded-full border-2 border-white bg-white px-6 py-3 font-sans text-sm font-bold tracking-wider text-black shadow-[0_4px_14px_rgba(0,0,0,0.15)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(0,0,0,0.35)] active:translate-y-0 active:scale-95 sm:px-8 sm:py-3.5 sm:text-base"
                 >
                   {content.learnMore}
                 </a>

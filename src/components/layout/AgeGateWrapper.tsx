@@ -9,6 +9,7 @@ const COOKIE_NAME = "otter_age_verified";
 interface AgeGateWrapperProps {
   children: ReactNode;
   locale: string;
+  isVerifiedInitial?: boolean;
 }
 
 function subscribe(callback: () => void) {
@@ -34,8 +35,8 @@ function getClientSnapshot(): boolean {
   }
 }
 
-function getServerSnapshot(): boolean {
-  return false;
+function getServerSnapshot(initial: boolean): boolean {
+  return initial;
 }
 
 /**
@@ -58,11 +59,11 @@ function getServerSnapshot(): boolean {
  * page behind it is `inert` (so it takes no clicks and no keyboard focus), and
  * body scrolling is locked while it is up.
  */
-export function AgeGateWrapper({ children, locale }: AgeGateWrapperProps) {
+export function AgeGateWrapper({ children, locale, isVerifiedInitial = false }: AgeGateWrapperProps) {
   const isVerifiedExternal = useSyncExternalStore(
     subscribe,
     getClientSnapshot,
-    getServerSnapshot
+    () => getServerSnapshot(isVerifiedInitial)
   );
 
   // Local state for immediate React-level unlock before storage event fires
