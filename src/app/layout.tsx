@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Anton, Hanken_Grotesk } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { getServerLocale } from "@/lib/utils/getServerLocale";
 import { env } from "@/lib/env";
 import { BRAND_NAME, LEGAL_NAME } from "@/config/brand";
@@ -95,7 +96,10 @@ export default async function RootLayout({
 
   return (
     <html lang={lang} className={`${anton.variable} ${hankenGrotesk.variable} scroll-smooth`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        {env.NEXT_PUBLIC_GA_ID && <GoogleAnalytics gaId={env.NEXT_PUBLIC_GA_ID} />}
+      </body>
     </html>
   );
 }
