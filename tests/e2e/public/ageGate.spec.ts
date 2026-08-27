@@ -10,13 +10,13 @@ test.describe("Age Verification Gate E2E", () => {
     await page.goto("/");
     await expect(page.getByRole("dialog")).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "ARE YOU 18+?" })
+      page.getByRole("heading", { name: "BẠN ĐÃ ĐỦ 18 TUỔI CHƯA?" })
     ).toBeVisible();
   });
 
   test("clicking YES confirms age and unveils home page", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: "YES" }).click();
+    await page.getByRole("button", { name: /Xác nhận đủ 18 tuổi/i }).click();
     await page.reload();
 
     // After clicking YES, dialog should vanish and site content becomes visible
@@ -25,14 +25,14 @@ test.describe("Age Verification Gate E2E", () => {
 
   test("clicking NO displays access restricted view", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: "NO" }).click();
+    await page.getByRole("button", { name: /Chưa đủ 18 tuổi/i }).click();
 
     await expect(
-      page.getByRole("heading", { name: "ACCESS RESTRICTED" })
+      page.getByRole("heading", { name: "TRUY CẬP BỊ HẠN CHẾ" })
     ).toBeVisible();
-    await expect(page.getByRole("link", { name: "LEARN MORE" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "TÌM HIỂU THÊM" })).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /i made a mistake/i })
+      page.getByRole("button", { name: /chọn nhầm/i })
     ).toBeVisible();
   });
 });

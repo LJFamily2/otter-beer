@@ -14,7 +14,7 @@ test.describe("Public homepage — News & Blog rail", () => {
     ).toBeVisible();
 
     await expect(
-      page.getByRole("heading", { name: "Nhật Ký Nhà Nấu" })
+      page.locator('[data-news-card]').first()
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: /XEM TẤT CẢ BÀI VIẾT/ })
@@ -95,7 +95,7 @@ test.describe("Public homepage — News & Blog rail", () => {
       page.getByRole("heading", { name: "THE OTTER JOURNAL" })
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Brewhouse Diary" })
+      page.locator('[data-news-card]').first()
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: /VIEW ALL STORIES/ })

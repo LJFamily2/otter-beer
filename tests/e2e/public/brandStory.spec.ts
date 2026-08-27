@@ -80,7 +80,7 @@ test.describe("Public homepage — Brand Story flipbook", () => {
       await openStory(page);
 
       await expect(chapterTabs(page)).toHaveCount(5);
-      await expect(page.getByRole("button", { name: "Mở chương Our Story" })).toHaveAttribute(
+      await expect(page.getByRole("button", { name: "Mở chương Câu Chuyện" })).toHaveAttribute(
         "aria-current",
         "true"
       );
@@ -90,53 +90,54 @@ test.describe("Public homepage — Brand Story flipbook", () => {
       await openStory(page);
       const next = book(page).getByRole("button", { name: "Trang sau" });
 
-      // "Our Story" holds 3 images, so one turn must NOT hand over to the next tab.
+      // "Câu Chuyện" holds 3 images, so one turn must NOT hand over to the next tab.
       await clickControl(next);
       await expect(spreadCounter(page)).toHaveText("Trang 2 / 8");
-      await expect(page.getByRole("button", { name: "Mở chương Our Story" })).toHaveAttribute(
+      await expect(page.getByRole("button", { name: "Mở chương Câu Chuyện" })).toHaveAttribute(
         "aria-current",
         "true"
       );
 
       // The second turn exhausts the chapter and the next tab takes over.
       await clickControl(next);
-      await expect(page.getByRole("button", { name: "Mở chương Ingredients" })).toHaveAttribute(
+      await expect(page.getByRole("button", { name: "Mở chương Nguyên Liệu" })).toHaveAttribute(
         "aria-current",
         "true"
       );
-      await expect(page.getByRole("button", { name: "Mở chương Our Story" })).toHaveCount(0);
+      await expect(page.getByRole("button", { name: "Mở chương Câu Chuyện" })).not.toHaveAttribute("aria-current", "true");
     });
 
     test("keeps a 4-image chapter current for two page-turns", async ({ page }) => {
       await openStory(page);
 
-      await clickControl(page.getByRole("button", { name: "Mở chương Brewing" }));
+      await clickControl(page.getByRole("button", { name: "Mở chương Nấu Bia" }));
       await expect(spreadCounter(page)).toHaveText("Trang 4 / 8");
 
       await clickControl(book(page).getByRole("button", { name: "Trang sau" }));
       await expect(spreadCounter(page)).toHaveText("Trang 5 / 8");
-      await expect(page.getByRole("button", { name: "Mở chương Brewing" })).toHaveAttribute(
+      await expect(page.getByRole("button", { name: "Mở chương Nấu Bia" })).toHaveAttribute(
         "aria-current",
         "true"
       );
 
       await clickControl(book(page).getByRole("button", { name: "Trang sau" }));
-      await expect(page.getByRole("button", { name: "Mở chương Community" })).toHaveAttribute(
+      await expect(page.getByRole("button", { name: "Mở chương Cộng Đồng" })).toHaveAttribute(
         "aria-current",
         "true"
       );
     });
 
-    test("thins the stack out as chapters are read, and restores it on the way back", async ({
+    test("moves read chapters to the left stack and restores them on the way back", async ({
       page,
     }) => {
       await openStory(page);
 
-      await clickControl(page.getByRole("button", { name: "Mở chương Community" }));
-      await expect(chapterTabs(page)).toHaveCount(2);
+      await clickControl(page.getByRole("button", { name: "Mở chương Cộng Đồng" }));
+      await expect(page.getByRole("button", { name: "Mở chương Cộng Đồng" })).toHaveAttribute("aria-current", "true");
+      await expect(page.getByRole("button", { name: "Mở chương Câu Chuyện" })).not.toHaveAttribute("aria-current", "true");
 
       await clickControl(book(page).getByRole("button", { name: "Trang trước" }));
-      await expect(chapterTabs(page)).toHaveCount(3);
+      await expect(page.getByRole("button", { name: "Mở chương Nấu Bia" })).toHaveAttribute("aria-current", "true");
     });
   });
 
