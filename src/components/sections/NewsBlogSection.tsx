@@ -7,6 +7,7 @@ import { Playfair_Display } from "next/font/google";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { DEFAULT_LOCALE } from "@/config/locales";
 import { localizedPath } from "@/lib/seo";
+import type { NewsCardItem } from "@/lib/utils/BlogPostPresenter";
 
 const playfair = Playfair_Display({
   subsets: ["latin", "vietnamese"],
@@ -17,6 +18,11 @@ const playfair = Playfair_Display({
 
 interface NewsBlogSectionProps {
   locale?: string;
+  /** Only render this section when there is at least one post — a scroll-linked
+   *  parallax effect is bound to the section's own root, so an empty render
+   *  (never mounting that root) breaks it. Callers gate on posts.length, same
+   *  as ProductShowcase gates on beers.length. */
+  posts: NewsCardItem[];
 }
 
 const COPY = {
@@ -42,53 +48,11 @@ const COPY = {
   },
 } as const;
 
-// Placeholder editorial content — this section is layout-only for now.
-// TODO: swap for blogPostService.listPublished() + pickTranslation() and
-// point `href` at the real per-locale slug when the section is wired up
-// (same pending wiring as HeroSection/BrandStorySection).
-const POSTS = [
-  {
-    id: "brewhouse-diary",
-    imageSrc: "/images/otter-beer-premium-lager.jpg",
-    date: "12.05.2026",
-    vi: { title: "Nhật Ký Nhà Nấu", tag: "HẬU TRƯỜNG" },
-    en: { title: "Brewhouse Diary", tag: "BEHIND THE SCENES" },
-  },
-  {
-    id: "coastal-nights",
-    imageSrc: "/images/contact-hero.jpeg",
-    date: "28.04.2026",
-    vi: { title: "Đêm Bên Bờ Biển", tag: "SỰ KIỆN" },
-    en: { title: "Coastal Nights", tag: "EVENTS" },
-  },
-  {
-    id: "hops-of-tay-ninh",
-    imageSrc: "/images/age-verification-bg.jpg",
-    date: "09.04.2026",
-    vi: { title: "Hoa Bia Xứ Tây Ninh", tag: "NGUYÊN LIỆU" },
-    en: { title: "Hops of Tay Ninh", tag: "INGREDIENTS" },
-  },
-  {
-    id: "the-golden-pour",
-    imageSrc: "/images/brand-story-bg.jpg",
-    date: "21.03.2026",
-    vi: { title: "Rót Một Ly Vàng Óng", tag: "SẢN PHẨM" },
-    en: { title: "The Golden Pour", tag: "PRODUCT" },
-  },
-  {
-    id: "craft-community",
-    imageSrc: "/images/footer-bg.png",
-    date: "02.03.2026",
-    vi: { title: "Cộng Đồng Thủ Công", tag: "CON NGƯỜI" },
-    en: { title: "The Craft Community", tag: "PEOPLE" },
-  },
-] as const;
-
 /** How far a single arrow click nudges the rail when a card can't be measured. */
 const FALLBACK_SCROLL_RATIO = 0.8;
 const CARD_GAP_PX = 20;
 
-export function NewsBlogSection({ locale = DEFAULT_LOCALE }: NewsBlogSectionProps) {
+export function NewsBlogSection({ locale = DEFAULT_LOCALE, posts }: NewsBlogSectionProps) {
   const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
   const sectionRef = useRef<HTMLElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
@@ -240,8 +204,7 @@ export function NewsBlogSection({ locale = DEFAULT_LOCALE }: NewsBlogSectionProp
             tabIndex={0}
             className="flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth scroll-pl-6 pr-6 pb-4 pl-6 [scrollbar-width:none] motion-reduce:scroll-auto sm:scroll-pl-10 sm:pl-10 lg:scroll-pl-[calc(max(0px,(100vw-1280px)/2)_+_4rem)] lg:pl-[calc(max(0px,(100vw-1280px)/2)_+_4rem)] [&::-webkit-scrollbar]:hidden"
           >
-            {POSTS.map((post, index) => {
-              const content = post[locale as "vi" | "en"] ?? post.en;
+            {posts.map((post, index) => {
               return (
                 <article
                   key={post.id}
@@ -249,7 +212,7 @@ export function NewsBlogSection({ locale = DEFAULT_LOCALE }: NewsBlogSectionProp
                   className="w-[280px] shrink-0 snap-start sm:w-[340px] lg:w-[370px]"
                 >
                   <Link
-                    href={localizedPath(locale, "/blog")}
+                    href={post.href}
                     className="group relative block aspect-[5/6] overflow-hidden rounded-2xl no-underline shadow-lg ring-1 ring-white/10 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl hover:ring-white/25 focus-visible:-translate-y-1.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-secondary-fixed-dim"
                   >
                     <Image
@@ -264,20 +227,23 @@ export function NewsBlogSection({ locale = DEFAULT_LOCALE }: NewsBlogSectionProp
                     {/* Smooth bottom backdrop blur & gradient scrim */}
                     <div
                       aria-hidden
-                      className="absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-black/80 via-black/40 to-transparent backdrop-blur-md [mask-image:linear-gradient(to_top,black_50%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_50%,transparent_100%)]"
+                      className="absolute inset-x-0 bottom-0 h-[45%] bg-gradient-to-t from-black/85 via-black/45 to-transparent backdrop-blur-md [mask-image:linear-gradient(to_top,black_60%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,black_60%,transparent_100%)]"
                     />
 
                     {/* Clean, high-contrast caption area */}
-                    <div className="absolute inset-x-0 bottom-0 flex flex-col items-start p-5 sm:p-6">
+                    <div className="absolute inset-x-0 bottom-0 flex flex-col items-start p-5 sm:p-6 w-full overflow-hidden">
                       <h3
-                        className={`${playfair.className} text-2xl sm:text-[28px] font-normal italic leading-snug !text-white drop-shadow-sm transition-transform duration-300 group-hover:translate-x-1`}
+                        title={post.title}
+                        className={`${playfair.className} w-full truncate text-xl sm:text-2xl font-normal italic leading-snug !text-white drop-shadow-sm transition-transform duration-300 group-hover:translate-x-1`}
                       >
-                        {content.title}
+                        {post.title}
                       </h3>
 
-                      <span className="mt-3 inline-flex items-center rounded-full border border-white/20 bg-white/20 px-3.5 py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur-md transition-colors duration-300 group-hover:bg-white/30">
-                        {content.tag}
-                      </span>
+                      {post.tag ? (
+                        <span className="mt-2.5 inline-flex items-center rounded-full border border-white/20 bg-white/20 px-3.5 py-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur-md transition-colors duration-300 group-hover:bg-white/30">
+                          {post.tag}
+                        </span>
+                      ) : null}
                     </div>
                   </Link>
                 </article>

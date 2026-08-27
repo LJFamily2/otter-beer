@@ -20,6 +20,8 @@ const COPY = {
     ibu: "ĐỘ ĐẮNG (IBU)",
     swipeHint: "Vuốt để xem các dòng bia khác",
     sectionLabel: "Các dòng bia thủ công Otter Beer",
+    prevProduct: "Sản phẩm trước",
+    nextProduct: "Sản phẩm tiếp theo",
   },
   en: {
     shop: "SHOP NOW",
@@ -29,6 +31,8 @@ const COPY = {
     ibu: "BITTERNESS (IBU)",
     swipeHint: "Swipe to explore products",
     sectionLabel: "Otter Beer craft beer range",
+    prevProduct: "Previous Product",
+    nextProduct: "Next Product",
   },
 } as const;
 
@@ -289,7 +293,7 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
           <button
             type="button"
             onClick={handlePrev}
-            aria-label="Previous Product"
+            aria-label={copy.prevProduct}
             className="group flex cursor-pointer items-center p-2 text-primary transition-all duration-200 hover:opacity-100 active:scale-95"
           >
             <svg
@@ -315,7 +319,7 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
           <button
             type="button"
             onClick={handleNext}
-            aria-label="Next Product"
+            aria-label={copy.nextProduct}
             className="group flex cursor-pointer items-center p-2 text-primary transition-all duration-200 hover:opacity-100 active:scale-95"
           >
             <svg

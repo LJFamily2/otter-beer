@@ -1,4 +1,6 @@
 import { DEFAULT_LOCALE } from "@/config/locales";
+import { localizedPath } from "@/lib/seo";
+import { publicMediaUrl } from "@/lib/storage/constants";
 import type { IBlogPost, IBlogPostTranslation } from "@/models/BlogPost";
 
 /**
@@ -17,4 +19,35 @@ export function pickTranslation(
     post.translations[0] ??
     null
   );
+}
+
+const FALLBACK_IMAGE_SRC = "/images/otter-beer-premium-lager.jpg";
+
+/** Plain, serializable shape NewsBlogSection (a Client Component) can receive as a prop. */
+export interface NewsCardItem {
+  id: string;
+  imageSrc: string;
+  title: string;
+  /** The post's first tag, verbatim — tags are locale-agnostic across the app (see the public /blog list). Omitted when the post has none. */
+  tag?: string;
+  href: string;
+}
+
+/**
+ * Maps a published BlogPost to the plain shape NewsBlogSection's rail
+ * renders. Returns null when the post has no usable translation for any
+ * locale (data integrity guard — translations is required to have at least
+ * one entry at the schema level, so this should not happen for a saved post).
+ */
+export function toNewsCardItem(post: IBlogPost, locale: string): NewsCardItem | null {
+  const translation = pickTranslation(post, locale);
+  if (!translation) return null;
+
+  return {
+    id: String(post._id),
+    imageSrc: post.coverImageKey ? publicMediaUrl(post.coverImageKey) : FALLBACK_IMAGE_SRC,
+    title: translation.title,
+    tag: post.tags[0],
+    href: localizedPath(locale, `/blog/${translation.slug}`),
+  };
 }

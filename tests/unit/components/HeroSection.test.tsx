@@ -245,6 +245,39 @@ describe("HeroSection Component", () => {
     });
   });
 
+  describe("slides prop", () => {
+    it("renders the given slides instead of the fallback set when non-empty", () => {
+      render(
+        <HeroSection
+          slides={[
+            { src: "/api/media/public/hero/a.jpg", alt: "Otter Beer slide A", mediaType: "image" },
+            { src: "/api/media/public/hero/b.jpg", alt: "Otter Beer slide B", mediaType: "image" },
+          ]}
+        />
+      );
+
+      expect(indicators()).toHaveLength(2);
+      expect(screen.getByAltText("Otter Beer slide A")).toBeInTheDocument();
+    });
+
+    it("falls back to the sample slides when given an empty array", () => {
+      render(<HeroSection slides={[]} />);
+      expect(indicators()).toHaveLength(SLIDE_COUNT);
+    });
+
+    it("renders a video element for a video-type slide", () => {
+      const { container } = render(
+        <HeroSection
+          slides={[
+            { src: "/api/media/public/hero/clip.mp4", alt: "Otter Beer clip", mediaType: "video" },
+          ]}
+        />
+      );
+
+      expect(container.querySelector("video")).toBeInTheDocument();
+    });
+  });
+
   describe("reduced motion", () => {
     it("cross-fades instead of sliding and disables autoplay", () => {
       jest.useFakeTimers();

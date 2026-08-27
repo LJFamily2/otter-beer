@@ -17,7 +17,7 @@ export class HeroSectionRepository extends BaseRepository<IHeroSection> {
     return model.findOne().exec();
   }
 
-  /** Upserts the singleton — whole-array replace, mirroring BrandStoryRepository.replacePages. */
+  /** Upserts the singleton — whole-array replace, mirroring BrandStoryRepository.replaceChapters. */
   async replaceSlides(
     slides: IHeroSlide[],
     actorId: string

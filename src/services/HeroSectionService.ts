@@ -19,13 +19,12 @@ export class HeroSectionService {
   }
 
   // ─── Public reads (Server Components can call these directly — no HTTP
-  // round trip — once the homepage carousel is wired to real data) ────────
+  // round trip) ─────────────────────────────────────────────────────────
 
   /**
-   * Published slides only, in admin-defined order. This is what the public
-   * hero will render; drafts stay admin-only. Not called by any page yet —
-   * HeroSection.tsx still renders its hardcoded SLIDES array, and wiring it
-   * up is deliberately out of scope for this change.
+   * Published slides only, in admin-defined order. Drafts stay admin-only.
+   * Called from the homepage (`page.tsx`), mapped through
+   * HeroSectionPresenter.toSlideItem() and passed to HeroSection as `slides`.
    */
   async listPublishedSlides(): Promise<IHeroSlide[]> {
     const heroSection = await this.repository.get();

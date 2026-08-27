@@ -10,10 +10,18 @@ import {
   type PanInfo,
 } from "framer-motion";
 
+export interface HeroSlideItem {
+  src: string;
+  alt: string;
+  mediaType?: "image" | "video";
+}
+
 /** Alt text describes what is actually in each frame and names the brand and
  *  the place — image search reads these, and so does an answer engine trying
- *  to caption the page. "Flagship Hero" described the slot, not the picture. */
-const SLIDES = [
+ *  to caption the page. "Flagship Hero" described the slot, not the picture.
+ *  Rendered only as a fallback — see `slides` prop — when the backend has no
+ *  published hero slides yet, so the section is never empty. */
+const FALLBACK_SLIDES: HeroSlideItem[] = [
   {
     src: "/images/otter-beer-hero.png",
     alt: "Lon bia thủ công Otter Beer trên nền tối — dòng bia chủ lực nấu tại Tây Ninh",
@@ -76,8 +84,8 @@ function isKeyboardFocus(target: EventTarget | null) {
  *  That is what lets the track translate to a single ever-decreasing offset
  *  instead of teleporting back to zero after each slide, which is where the old
  *  `AnimatePresence` implementation produced its visible hitch. */
-function slideIndexFor(page: number) {
-  return ((page % SLIDES.length) + SLIDES.length) % SLIDES.length;
+function slideIndexFor(page: number, slideCount: number) {
+  return ((page % slideCount) + slideCount) % slideCount;
 }
 
 /**
@@ -92,7 +100,7 @@ function SlideMedia({
   slide,
   priority,
 }: {
-  slide: (typeof SLIDES)[number];
+  slide: HeroSlideItem;
   priority: boolean;
 }) {
   return (
@@ -106,16 +114,29 @@ function SlideMedia({
           width: "calc(100dvh * 16 / 9)",
         }}
       >
-        <Image
-          src={slide.src}
-          alt={slide.alt}
-          fill
-          sizes="100vw"
-          className="object-cover"
-          priority={priority}
-          loading="eager"
-          draggable={false}
-        />
+        {slide.mediaType === "video" ? (
+          <video
+            src={slide.src}
+            aria-label={slide.alt}
+            className="absolute inset-0 h-full w-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            draggable={false}
+          />
+        ) : (
+          <Image
+            src={slide.src}
+            alt={slide.alt}
+            fill
+            sizes="100vw"
+            className="object-cover"
+            priority={priority}
+            loading="eager"
+            draggable={false}
+          />
+        )}
       </div>
     </div>
   );
@@ -136,15 +157,18 @@ function SlideMedia({
  * is about and exactly what a sighted visitor sees in the images.
  */
 const HERO_COPY = {
-  vi: { headline: "Bia thủ công Otter Beer — nấu tại Tây Ninh, Việt Nam" },
-  en: { headline: "Otter Beer craft brewery — brewed in Tay Ninh, Vietnam" },
+  vi: { headline: "Bia thủ công Otter Beer, nấu tại Tây Ninh, Việt Nam" },
+  en: { headline: "Otter Beer craft brewery, brewed in Tay Ninh, Vietnam" },
 } as const;
 
 interface HeroSectionProps {
   locale?: string;
+  /** Published hero slides from the backend. Falls back to a static sample set when omitted or empty, so the section is never blank. */
+  slides?: HeroSlideItem[];
 }
 
-export function HeroSection({ locale = "vi" }: HeroSectionProps) {
+export function HeroSection({ locale = "vi", slides: slidesProp = [] }: HeroSectionProps) {
+  const slides = slidesProp.length > 0 ? slidesProp : FALLBACK_SLIDES;
   const copy = HERO_COPY[locale as keyof typeof HERO_COPY] ?? HERO_COPY.en;
   const prefersReducedMotion = useReducedMotion() ?? false;
 
@@ -188,7 +212,7 @@ export function HeroSection({ locale = "vi" }: HeroSectionProps) {
   const releaseVelocityRef = useRef(0);
 
   const x = useMotionValue(0);
-  const slideIndex = slideIndexFor(page);
+  const slideIndex = slideIndexFor(page, slides.length);
 
   useEffect(() => {
     pageRef.current = page;
@@ -294,13 +318,13 @@ export function HeroSection({ locale = "vi" }: HeroSectionProps) {
   /** Jump to a slide by index, taking the shorter way around the loop. */
   const handleIndicator = useCallback((target: number) => {
     setPage((p) => {
-      const half = SLIDES.length / 2;
-      let delta = target - slideIndexFor(p);
-      if (delta > half) delta -= SLIDES.length;
-      if (delta < -half) delta += SLIDES.length;
+      const half = slides.length / 2;
+      let delta = target - slideIndexFor(p, slides.length);
+      if (delta > half) delta -= slides.length;
+      if (delta < -half) delta += slides.length;
       return p + delta;
     });
-  }, []);
+  }, [slides.length]);
 
   const handleIndicatorKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -335,7 +359,7 @@ export function HeroSection({ locale = "vi" }: HeroSectionProps) {
         {prefersReducedMotion ? (
           /* Reduced motion: no travel, no scale — slides cross-fade in place. */
           <div className="absolute inset-0" data-testid="hero-crossfade">
-            {SLIDES.map((slide, i) => (
+            {slides.map((slide, i) => (
               <div
                 key={slide.src}
                 className="absolute inset-0 transition-opacity duration-300"
@@ -376,7 +400,7 @@ export function HeroSection({ locale = "vi" }: HeroSectionProps) {
                   animate={{ scale: p === page ? 1 : OFFSCREEN_SCALE }}
                   transition={SLIDE_SPRING}
                 >
-                  <SlideMedia slide={SLIDES[slideIndexFor(p)]} priority={p === 0} />
+                  <SlideMedia slide={slides[slideIndexFor(p, slides.length)]} priority={p === 0} />
                 </motion.div>
               </div>
             ))}
@@ -405,7 +429,7 @@ export function HeroSection({ locale = "vi" }: HeroSectionProps) {
       />
 
       <div aria-live="polite" aria-atomic="true" className="sr-only">
-        {`Slide ${slideIndex + 1} of ${SLIDES.length}: ${SLIDES[slideIndex].alt}`}
+        {`Slide ${slideIndex + 1} of ${slides.length}: ${slides[slideIndex].alt}`}
       </div>
 
       {/* See HERO_COPY: the hero stays image-only on screen, but the page
@@ -425,7 +449,7 @@ export function HeroSection({ locale = "vi" }: HeroSectionProps) {
         className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 sm:bottom-8 sm:gap-3"
         style={{ "--hero-dwell": `${AUTO_PLAY_INTERVAL}ms` } as React.CSSProperties}
       >
-        {SLIDES.map((slide, i) => (
+        {slides.map((slide, i) => (
           <button
             key={slide.src}
             type="button"
