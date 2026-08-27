@@ -25,7 +25,7 @@ test.describe("Age Verification Gate E2E", () => {
 
   test("clicking NO displays access restricted view", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: /Chưa đủ 18 tuổi/i }).click();
+    await page.getByRole("button", { name: /Chưa đủ/i }).click();
 
     await expect(
       page.getByRole("heading", { name: "TRUY CẬP BỊ HẠN CHẾ" })
