@@ -42,6 +42,13 @@ describe("Header", () => {
     expect(screen.getByText("Liên hệ")).toBeInTheDocument();
   });
 
+  it("renders the contact button in English when locale is ENG", () => {
+    render(<Header locale="ENG" locales={["VIE", "ENG"]} />);
+
+    expect(screen.getByText("Contact")).toBeInTheDocument();
+    expect(screen.queryByText("Liên hệ")).not.toBeInTheDocument();
+  });
+
   it("switches to a white surface when the page is scrolled", () => {
     Object.defineProperty(window, "scrollY", {
       configurable: true,
@@ -55,7 +62,12 @@ describe("Header", () => {
 
     expect(header).toHaveClass("bg-white/95");
     expect(screen.getByText("Liên hệ")).toHaveClass("bg-primary");
-    expect(logo).toHaveClass("h-[54px]", "w-[90px]");
+    expect(logo).toHaveClass(
+      "h-[45px]",
+      "w-[75px]",
+      "sm:h-[54px]",
+      "sm:w-[90px]",
+    );
 
     Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });
     fireEvent.scroll(window);
@@ -111,7 +123,19 @@ describe("Header", () => {
     await user.click(screen.getByLabelText("Select language"));
     await user.click(screen.getByText(/ENG/));
 
-    expect(mockPush).toHaveBeenCalledWith("/en");
+    expect(mockPush).toHaveBeenCalledWith("/en", { scroll: false });
+  });
+
+  it("does not scroll to top when switching language", async () => {
+    const user = userEvent.setup();
+
+    render(<Header locale="VIE" locales={["VIE", "ENG"]} />);
+
+    await user.click(screen.getByLabelText("Select language"));
+    await user.click(screen.getByText(/ENG/));
+
+    const [, options] = mockPush.mock.calls[0];
+    expect(options).toEqual({ scroll: false });
   });
 
   it("renders social media links", () => {

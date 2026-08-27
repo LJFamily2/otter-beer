@@ -2,8 +2,30 @@ import { render, screen } from "@testing-library/react";
 import { Footer } from "@/components/layout/Footer";
 
 describe("Footer Component", () => {
-  it("renders main navigation links in display typography", () => {
+  it("renders main navigation links in Vietnamese for the default locale", () => {
     render(<Footer locale="vi" />);
+
+    expect(screen.getByRole("link", { name: /câu chuyện/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /di sản/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /ghé thăm/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /sản phẩm/i })).toBeInTheDocument();
+  });
+
+  it("renders Vietnamese copyright notice and secondary links", () => {
+    render(<Footer locale="vi" />);
+
+    expect(
+      screen.getByText(/© 2024 OTTER BEER COMPANY. NẤU BẰNG DANH DỰ./i)
+    ).toBeInTheDocument();
+
+    expect(screen.getByRole("link", { name: /chính sách bảo mật/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /điều khoản dịch vụ/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /phân phối sỉ/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /liên hệ/i })).toBeInTheDocument();
+  });
+
+  it("renders main navigation links in English for the en locale", () => {
+    render(<Footer locale="en" />);
 
     expect(screen.getByRole("link", { name: /our story/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /heritage/i })).toBeInTheDocument();
@@ -11,8 +33,8 @@ describe("Footer Component", () => {
     expect(screen.getByRole("link", { name: /shop/i })).toBeInTheDocument();
   });
 
-  it("renders copyright notice and secondary links", () => {
-    render(<Footer locale="vi" />);
+  it("renders English copyright notice and secondary links", () => {
+    render(<Footer locale="en" />);
 
     expect(
       screen.getByText(/© 2024 OTTER BEER COMPANY. BREWED WITH HONOR./i)
@@ -40,7 +62,7 @@ describe("Footer Component", () => {
     expect(footer.className).toContain("text-primary");
     expect(footer.className).not.toContain("bg-[#002f82]");
 
-    const storyLink = screen.getByRole("link", { name: /our story/i });
+    const storyLink = screen.getByRole("link", { name: /câu chuyện/i });
     expect(storyLink.className).toContain("text-primary");
     expect(storyLink.className).not.toContain("text-white");
   });

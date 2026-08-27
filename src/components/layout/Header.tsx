@@ -8,6 +8,12 @@ import { SOCIAL_PROFILES } from "@/config/brand";
 
 const [FACEBOOK_URL, INSTAGRAM_URL] = SOCIAL_PROFILES;
 
+/** Keyed by the header's own VIE/ENG display codes (see `locale`/`locales` props). */
+const CONTACT_LABEL: Record<string, string> = {
+  VIE: "Liên hệ",
+  ENG: "Contact",
+};
+
 interface HeaderLink {
   label: string;
   href: string;
@@ -41,17 +47,33 @@ export function Header({
   const [languageOpen, setLanguageOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
   const languageRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    const syncScrollState = () => setIsScrolled(window.scrollY > 10);
+    let lastScrollY = window.scrollY;
 
-    syncScrollState();
-    window.addEventListener("scroll", syncScrollState, { passive: true });
-    return () => window.removeEventListener("scroll", syncScrollState);
-  }, []);
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      setIsScrolled(currentScrollY > 10);
+      
+      // Hide when scrolling down (if past the top), show when scrolling up
+      if (currentScrollY > lastScrollY && currentScrollY > 100 && !mobileMenuOpen && !languageOpen) {
+        setIsHidden(true);
+      } else if (currentScrollY < lastScrollY || currentScrollY <= 100) {
+        setIsHidden(false);
+      }
+      
+      lastScrollY = currentScrollY;
+    };
+
+    handleScroll(); // Initial check
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [mobileMenuOpen, languageOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -67,6 +89,7 @@ export function Header({
   }, []);
 
   const [prevPathname, setPrevPathname] = useState(pathname);
+  const contactLabel = CONTACT_LABEL[locale] ?? "Contact";
   if (prevPathname !== pathname) {
     setPrevPathname(pathname);
     setMobileMenuOpen(false);
@@ -97,6 +120,7 @@ export function Header({
     if (nextPath !== pathname) {
       router.push(
         `${nextPath}${window.location.search}${window.location.hash}`,
+        { scroll: false },
       );
     }
   };
@@ -106,11 +130,11 @@ export function Header({
       <header
         className={`relative z-50 w-full transition-all duration-300 ${
           mobileMenuOpen
-            ? "h-[76px] sm:h-[105px] bg-transparent"
+            ? "h-[64px] sm:h-[88px] bg-transparent"
             : isScrolled
-            ? "h-[76px] bg-white/95 backdrop-blur-md shadow-sm"
-            : "h-[105px] bg-gradient-to-b from-black/50 via-black/15 to-transparent"
-        }`}
+            ? "h-[60px] sm:h-[72px] bg-white/95 backdrop-blur-md shadow-sm"
+            : "h-[72px] sm:h-[88px] bg-gradient-to-b from-black/50 via-black/15 to-transparent"
+        } ${isHidden ? "-translate-y-full" : "translate-y-0"}`}
       >
         <div className="mx-auto flex h-full max-w-[1400px] items-center justify-between px-6 sm:px-10 lg:px-16">
           {/* Left Navigation Links (Desktop only) */}
@@ -142,7 +166,7 @@ export function Header({
           <Link
             href="/"
             onClick={() => setMobileMenuOpen(false)}
-            aria-label="Otter Beer Home"
+            aria-label="Otter Beer"
             className="flex flex-col items-start justify-center group transition-opacity hover:opacity-90 min-[900px]:hidden z-10"
           >
             <span
@@ -170,8 +194,8 @@ export function Header({
             <div
               className={`relative transition-all duration-300 ${
                 isScrolled
-                  ? "h-[54px] w-[90px] sm:h-[66px] sm:w-[110px]"
-                  : "h-[85px] w-[135px] sm:h-[115px] sm:w-[190px]"
+                  ? "h-[45px] w-[75px] sm:h-[54px] sm:w-[90px]"
+                  : "h-[60px] w-[100px] sm:h-[80px] sm:w-[130px]"
               }`}
             >
               <Image
@@ -318,7 +342,7 @@ export function Header({
                   : "bg-primary text-on-primary shadow-sm hover:bg-primary-container hover:shadow-md"
               }`}
             >
-              Liên hệ
+              {contactLabel}
             </Link>
 
             {/* Luxury Editorial Circular Menu Button - Single source of truth button */}
@@ -344,7 +368,7 @@ export function Header({
 
       {/* Craft Brewery Mobile Navigation Drawer */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-40 flex flex-col justify-between bg-[#0f0e0c]/98 pt-[90px] sm:pt-[110px] pb-8 px-6 sm:px-10 backdrop-blur-2xl transition-all duration-300 min-[900px]:hidden text-white border-l border-amber-500/20 shadow-2xl">
+        <div className="fixed inset-0 z-40 flex flex-col justify-between bg-[#0f0e0c]/98 pt-[80px] sm:pt-[100px] pb-8 px-6 sm:px-10 backdrop-blur-2xl transition-all duration-300 min-[900px]:hidden text-white border-l border-amber-500/20 shadow-2xl">
           {/* Drawer Main Craft Navigation */}
           <nav className="my-auto flex flex-col items-start gap-6 py-4">
             {links.map((link, idx) => (
@@ -368,7 +392,7 @@ export function Header({
               onClick={() => setMobileMenuOpen(false)}
               className="mt-4 flex h-12 w-full max-w-xs items-center justify-center rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 text-sm font-extrabold uppercase tracking-[0.15em] shadow-lg shadow-amber-500/20 transition-all hover:brightness-110 active:scale-95"
             >
-              Liên hệ
+              {contactLabel}
             </Link>
           </nav>
 

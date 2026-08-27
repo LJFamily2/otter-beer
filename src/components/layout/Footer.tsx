@@ -5,8 +5,38 @@ interface FooterProps {
   locale?: string;
 }
 
+const COPY = {
+  vi: {
+    navLabel: "Điều hướng chân trang",
+    ourStory: "CÂU CHUYỆN",
+    heritage: "DI SẢN",
+    taproom: "GHÉ THĂM",
+    shop: "SẢN PHẨM",
+    copyright: "© 2024 OTTER BEER COMPANY. NẤU BẰNG DANH DỰ.",
+    legalLabel: "Liên kết pháp lý và liên hệ",
+    privacyPolicy: "CHÍNH SÁCH BẢO MẬT",
+    termsOfService: "ĐIỀU KHOẢN DỊCH VỤ",
+    wholesale: "PHÂN PHỐI SỈ",
+    contact: "LIÊN HỆ",
+  },
+  en: {
+    navLabel: "Footer Navigation",
+    ourStory: "OUR STORY",
+    heritage: "HERITAGE",
+    taproom: "TAPROOM",
+    shop: "SHOP",
+    copyright: "© 2024 OTTER BEER COMPANY. BREWED WITH HONOR.",
+    legalLabel: "Legal and Contact Links",
+    privacyPolicy: "PRIVACY POLICY",
+    termsOfService: "TERMS OF SERVICE",
+    wholesale: "WHOLESALE",
+    contact: "CONTACT",
+  },
+} as const;
+
 export function Footer({ locale = DEFAULT_LOCALE }: FooterProps) {
   const prefix = locale === DEFAULT_LOCALE ? "" : `/${locale}`;
+  const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
 
   return (
     <footer className="relative w-full overflow-hidden bg-background text-primary">
@@ -22,32 +52,32 @@ export function Footer({ locale = DEFAULT_LOCALE }: FooterProps) {
 
           {/* Center Main Nav Links */}
           <nav
-            aria-label="Footer Navigation"
+            aria-label={copy.navLabel}
             className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 md:gap-12 lg:gap-16"
           >
             <Link
               href={`${prefix}#story`}
               className="font-display text-2xl tracking-wide text-primary transition-colors duration-200 hover:text-primary-container sm:text-3xl lg:text-4xl"
             >
-              OUR STORY
+              {copy.ourStory}
             </Link>
             <Link
               href={`${prefix}#story`}
               className="font-display text-2xl tracking-wide text-primary transition-colors duration-200 hover:text-primary-container sm:text-3xl lg:text-4xl"
             >
-              HERITAGE
+              {copy.heritage}
             </Link>
             <Link
               href={`${prefix}/contact`}
               className="font-display text-2xl tracking-wide text-primary transition-colors duration-200 hover:text-primary-container sm:text-3xl lg:text-4xl"
             >
-              TAPROOM
+              {copy.taproom}
             </Link>
             <Link
               href={`${prefix}#products`}
               className="font-display text-2xl tracking-wide text-primary transition-colors duration-200 hover:text-primary-container sm:text-3xl lg:text-4xl"
             >
-              SHOP
+              {copy.shop}
             </Link>
           </nav>
 
@@ -88,37 +118,37 @@ export function Footer({ locale = DEFAULT_LOCALE }: FooterProps) {
         <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
           {/* Copyright Notice */}
           <p className="font-mono text-[11px] font-medium uppercase tracking-wider text-primary/90 sm:text-xs">
-            © 2024 OTTER BEER COMPANY. BREWED WITH HONOR.
+            {copy.copyright}
           </p>
 
           {/* Secondary Utility Links */}
           <nav
-            aria-label="Legal and Contact Links"
+            aria-label={copy.legalLabel}
             className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8"
           >
             <Link
               href={`${prefix}/privacy`}
               className="text-[11px] font-semibold uppercase tracking-wider text-primary underline underline-offset-4 decoration-primary/70 transition-colors duration-200 hover:text-primary-container hover:decoration-primary-container sm:text-xs"
             >
-              PRIVACY POLICY
+              {copy.privacyPolicy}
             </Link>
             <Link
               href={`${prefix}/terms`}
               className="text-[11px] font-semibold uppercase tracking-wider text-primary transition-colors duration-200 hover:text-primary-container hover:underline hover:underline-offset-4 sm:text-xs"
             >
-              TERMS OF SERVICE
+              {copy.termsOfService}
             </Link>
             <Link
               href={`${prefix}/contact`}
               className="text-[11px] font-semibold uppercase tracking-wider text-primary transition-colors duration-200 hover:text-primary-container hover:underline hover:underline-offset-4 sm:text-xs"
             >
-              WHOLESALE
+              {copy.wholesale}
             </Link>
             <Link
               href={`${prefix}/contact`}
               className="text-[11px] font-semibold uppercase tracking-wider text-primary transition-colors duration-200 hover:text-primary-container hover:underline hover:underline-offset-4 sm:text-xs"
             >
-              CONTACT
+              {copy.contact}
             </Link>
           </nav>
         </div>
