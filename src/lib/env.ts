@@ -41,6 +41,12 @@ const envSchema = z.object({
    * below refuses to let that happen quietly.
    */
   NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:3000"),
+
+  /**
+   * Google Analytics 4 Measurement ID (e.g. G-XXXXXXXXXX).
+   * Optional — if unset, Google Analytics tracking scripts will not be loaded.
+   */
+  NEXT_PUBLIC_GA_ID: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
