@@ -54,8 +54,8 @@ function hreflangAlternates(
 export function buildBlogListMetadata(locale: string): Metadata {
   const isVi = locale === "vi";
   const title = isVi
-    ? "Biên niên sử Otter — Tin tức & Blog"
-    : "The Otter Chronicles — News & Blog";
+    ? "Nhật ký bia chú rái cá — Tin tức & Blog"
+    : "Otter Beer Journal — News & Blog";
   const description = isVi
     ? "Câu chuyện từ vùng biển, cập nhật từ nhà máy bia, và những góc nhìn sâu về quy trình chế biến của chúng tôi."
     : "Tales from the coastal waters, brewery updates, and deep dives into our crafting process.";

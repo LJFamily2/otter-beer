@@ -10,7 +10,7 @@ test.describe("Public homepage — News & Blog rail", () => {
 
     await expect(page.getByText("TIN TỨC & BLOG")).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "CHUYỆN NHÀ OTTER" })
+      page.getByRole("heading", { name: "NHẬT KÝ BIA CHÚ RÁI CÁ" })
     ).toBeVisible();
 
     await expect(
@@ -92,7 +92,7 @@ test.describe("Public homepage — News & Blog rail", () => {
     await page.goto("/en");
 
     await expect(
-      page.getByRole("heading", { name: "THE OTTER JOURNAL" })
+      page.getByRole("heading", { name: "OTTER BEER JOURNAL" })
     ).toBeVisible();
     await expect(
       page.locator('[data-news-card]').first()

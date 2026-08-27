@@ -6,9 +6,9 @@ describe("Footer Component", () => {
     render(<Footer locale="vi" />);
 
     expect(screen.getByRole("link", { name: /câu chuyện/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /di sản/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /ghé thăm/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /sản phẩm/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /tin tức/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /liên hệ/i })).toBeInTheDocument();
   });
 
   it("renders Vietnamese copyright notice and secondary links", () => {
@@ -21,16 +21,15 @@ describe("Footer Component", () => {
     expect(screen.getByRole("link", { name: /chính sách bảo mật/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /điều khoản dịch vụ/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /phân phối sỉ/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /liên hệ/i })).toBeInTheDocument();
   });
 
   it("renders main navigation links in English for the en locale", () => {
     render(<Footer locale="en" />);
 
     expect(screen.getByRole("link", { name: /our story/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /heritage/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /taproom/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /shop/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /news/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /contact/i })).toBeInTheDocument();
   });
 
   it("renders English copyright notice and secondary links", () => {

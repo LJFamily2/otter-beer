@@ -102,25 +102,6 @@ function LocationIcon() {
   );
 }
 
-function ArrowIcon() {
-  return (
-    <svg
-      viewBox="0 0 18 18"
-      aria-hidden="true"
-      className="h-[10px] w-[16px] transition-transform duration-200 group-hover:translate-x-1"
-    >
-      <path
-        d="M3 9h11.5M9.7 4.3 14.4 9l-4.7 4.7"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 function GpsIcon() {
   return (
     <svg

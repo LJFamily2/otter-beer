@@ -14,6 +14,7 @@ const COPY = {
 
 export function MobileContactBar({ locale = DEFAULT_LOCALE }: MobileContactBarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
 
   useEffect(() => {
@@ -22,15 +23,30 @@ export function MobileContactBar({ locale = DEFAULT_LOCALE }: MobileContactBarPr
       setIsScrolled(window.scrollY > 50);
     };
 
+    const handleMenuToggle = (e: Event) => {
+      const customEvent = e as CustomEvent<{ isOpen: boolean }>;
+      setIsMenuOpen(Boolean(customEvent.detail?.isOpen));
+    };
+
     handleScroll(); // Check initial scroll position
+    if (typeof document !== "undefined" && document.body.dataset.mobileMenuOpen === "true") {
+      queueMicrotask(() => setIsMenuOpen(true));
+    }
+
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("mobile-menu-toggle", handleMenuToggle);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("mobile-menu-toggle", handleMenuToggle);
+    };
   }, []);
+
+  const isVisible = isScrolled && !isMenuOpen;
 
   return (
     <div
       className={`fixed bottom-0 left-0 right-0 z-40 flex h-[56px] w-full border-t border-black/5 bg-white/95 backdrop-blur-md shadow-[0_-2px_10px_rgba(0,0,0,0.05)] md:hidden transition-all duration-300 transform ${
-        isScrolled ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
+        isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
       }`}
     >
       <a

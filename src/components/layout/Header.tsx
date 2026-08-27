@@ -36,8 +36,8 @@ interface HeaderProps {
 export function Header({
   links = [
     { label: "Sản phẩm", href: "#products" },
-    { label: "Blogs", href: "/blog" },
-    { label: "Tin tức", href: "#news" },
+    { label: "Câu chuyện", href: "#story" },
+    { label: "Tin tức", href: "/blog" },
   ],
   contactHref = "#contact",
   locale = "VIE",
@@ -98,11 +98,17 @@ export function Header({
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = "hidden";
+      document.body.dataset.mobileMenuOpen = "true";
     } else {
       document.body.style.overflow = "";
+      delete document.body.dataset.mobileMenuOpen;
     }
+    window.dispatchEvent(
+      new CustomEvent("mobile-menu-toggle", { detail: { isOpen: mobileMenuOpen } })
+    );
     return () => {
       document.body.style.overflow = "";
+      delete document.body.dataset.mobileMenuOpen;
     };
   }, [mobileMenuOpen]);
 
@@ -142,7 +148,7 @@ export function Header({
             aria-label="Primary navigation"
             className="flex items-center gap-8 lg:gap-12 max-[900px]:hidden"
           >
-            {links.slice(0, 3).map((link) => (
+            {links.map((link) => (
               <Link
                 key={`${link.href}-${link.label}`}
                 href={link.href}
@@ -370,7 +376,7 @@ export function Header({
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-40 flex flex-col justify-between bg-[#0f0e0c]/98 pt-[80px] sm:pt-[100px] pb-8 px-6 sm:px-10 backdrop-blur-2xl transition-all duration-300 min-[900px]:hidden text-white border-l border-amber-500/20 shadow-2xl">
           {/* Drawer Main Craft Navigation */}
-          <nav className="my-auto flex flex-col items-start gap-6 py-4">
+          <nav className="my-auto flex flex-col items-start gap-6 py-4 w-full">
             {links.map((link, idx) => (
               <Link
                 key={`${link.href}-${link.label}`}
@@ -390,7 +396,7 @@ export function Header({
             <Link
               href={contactHref}
               onClick={() => setMobileMenuOpen(false)}
-              className="mt-4 flex h-12 w-full max-w-xs items-center justify-center rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 text-sm font-extrabold uppercase tracking-[0.15em] shadow-lg shadow-amber-500/20 transition-all hover:brightness-110 active:scale-95"
+              className="mt-4 flex h-12 w-full items-center justify-center rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 text-sm font-extrabold uppercase tracking-[0.15em] shadow-lg shadow-amber-500/20 transition-all hover:brightness-110 active:scale-95"
             >
               {contactLabel}
             </Link>

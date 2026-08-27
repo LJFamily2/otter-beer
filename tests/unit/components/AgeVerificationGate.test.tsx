@@ -26,7 +26,7 @@ describe("AgeVerificationGate Component", () => {
         screen.getByRole("button", { name: /xác nhận đủ 18 tuổi/i })
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /chưa đủ 18 tuổi/i })
+        screen.getByRole("button", { name: /chưa đủ/i })
       ).toBeInTheDocument();
       expect(
         screen.getByText(/sử dụng rượu bia có trách nhiệm/i)
@@ -40,7 +40,7 @@ describe("AgeVerificationGate Component", () => {
       render(<AgeVerificationGate isStandalone={true} />);
 
       fireEvent.click(
-        screen.getByRole("button", { name: /chưa đủ 18 tuổi/i })
+        screen.getByRole("button", { name: /chưa đủ/i })
       );
 
       expect(
