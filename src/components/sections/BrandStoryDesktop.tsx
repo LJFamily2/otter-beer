@@ -1,39 +1,58 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { playPageTurn } from "@/lib/utils/pageTurnSound";
 import HTMLFlipBook from "react-pageflip";
+import {
+  BRAND_STORY_CHAPTERS,
+  buildBrandStoryBook,
+  chapterIndexForSpread,
+  type BrandStoryChapter,
+} from "@/config/brandStoryChapters";
 
 interface BrandStoryDesktopProps {
   locale: string;
+  /** Falls back to a static sample book when omitted or empty, so the section is never blank. */
+  chapters?: BrandStoryChapter[];
 }
 
 const COPY = {
   vi: {
     kicker: "CÂU CHUYỆN THƯƠNG HIỆU",
-    heading: "TỪ HẠT LÚA MẠCH ĐẾN LY BIA",
-    subtitle: "Kết hợp bố cục phóng khoáng và trải nghiệm lật sách 2 trang để kể câu chuyện một cách tự nhiên, cảm xúc.",
+    /* Broken by hand rather than by word: Anton is condensed and Vietnamese
+       diacritics need the extra leading, so balanced lines read better than
+       one word per line. */
+    headingLines: ["TỪ HẠT", "LÚA MẠCH", "ĐẾN LY BIA"],
+    subtitle: "Lật mở từng trang sử thi về niềm đam mê ủ bia thủ công và hành trình kiến tạo hương vị độc bản.",
     prev: "Trang trước",
     next: "Trang sau",
     pageOf: (page: number, total: number) => `Trang ${page} / ${total}`,
+    bookLabel: "Cuốn sách câu chuyện thương hiệu",
+    goToChapter: (title: string) => `Mở chương ${title}`,
+    chapterProgress: (spread: number, total: number, images: number) =>
+      `Trang ${spread} / ${total} của chương, gồm ${images} ảnh`,
+    turnHint: "KÉO HOẶC CLICK ĐỂ LẬT TRANG",
+    chapterCount: (total: number) => `${String(total).padStart(2, "0")} CHƯƠNG`,
   },
   en: {
     kicker: "BRAND STORY",
-    heading: "FROM GRAIN TO GLASS",
-    subtitle: "Combining a free-flowing layout and a 2-page flipbook experience to tell our story naturally and emotionally.",
+    headingLines: ["FROM", "GRAIN TO", "GLASS"],
+    subtitle: "Turn the pages of our brand story and explore the passion behind our authentic craft brewing.",
     prev: "Previous page",
     next: "Next page",
     pageOf: (page: number, total: number) => `Page ${page} of ${total}`,
+    bookLabel: "Brand story book",
+    goToChapter: (title: string) => `Open chapter ${title}`,
+    chapterProgress: (spread: number, total: number, images: number) =>
+      `Spread ${spread} of ${total} in this chapter, ${images} images`,
+    turnHint: "DRAG OR CLICK TO TURN THE PAGE",
+    chapterCount: (total: number) => `${String(total).padStart(2, "0")} CHAPTERS`,
   },
 } as const;
 
-const SPREADS = [
-  { title: "Our Story", left: "/images/otter-beer-premium-lager.jpg", right: "/images/contact-hero.jpeg" },
-  { title: "Ingredients", left: "/images/otter-beer-hero.png", right: "/images/otter-beer-single-3d.png" },
-  { title: "Brewing", left: "/images/otter-beer-single-can.png", right: "/images/otter-beer-premium-lager-transparent.png" },
-  { title: "Community", left: "/images/otter-beer-premium-lager.jpg", right: "/images/contact-hero.jpeg" },
-  { title: "Journal", left: "/images/otter-beer-hero.png", right: "/images/otter-beer-single-3d.png" },
-];
+const ACTIVE_TAB_WIDTH = 104;
+const INACTIVE_TAB_WIDTH = 44;
+const TAB_STEP_OFFSET = 36;
 
 interface PageFlipInstance {
   pageFlip: () => {
@@ -53,22 +72,58 @@ const FlipBook = HTMLFlipBook as unknown as React.ComponentType<
   }
 >;
 
-export function BrandStoryDesktop({ locale }: BrandStoryDesktopProps) {
+export function BrandStoryDesktop({ locale, chapters: chaptersProp = [] }: BrandStoryDesktopProps) {
+  const chapters = chaptersProp.length > 0 ? chaptersProp : BRAND_STORY_CHAPTERS;
   const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
   const [pageIndex, setPageIndex] = useState(0);
+  const [titleMousePos, setTitleMousePos] = useState<{ x: number; y: number } | null>(null);
+  const [isTitleHovered, setIsTitleHovered] = useState(false);
   const bookRef = useRef<PageFlipInstance | null>(null);
-  
+
+  const book = useMemo(() => buildBrandStoryBook(chapters), [chapters]);
+  const { pages: PAGES, chapters: CHAPTERS, totalSpreads: TOTAL_SPREADS } = book;
+  const LAST_PAGE_INDEX = TOTAL_SPREADS * 2 - 2;
+
   const currentSpreadIndex = Math.floor(pageIndex / 2);
   const isFirst = pageIndex === 0;
-  const isLast = pageIndex >= SPREADS.length * 2 - 2;
+  const isLast = pageIndex >= LAST_PAGE_INDEX;
+
+  /* A chapter owns a run of spreads, so advancing one spread usually stays
+     inside the same chapter — the tab only changes over once its last spread
+     has been turned. */
+  const activeChapterIndex = chapterIndexForSpread(book, currentSpreadIndex);
+  const activeChapter = CHAPTERS[activeChapterIndex];
+  const spreadInChapter = currentSpreadIndex - activeChapter.startSpread;
+
+  // Dynamic tab stack container width calculations
+  const leftTabCount = activeChapterIndex;
+  const leftTabContainerWidth =
+    leftTabCount === 0 ? 0 : (leftTabCount - 1) * TAB_STEP_OFFSET + INACTIVE_TAB_WIDTH;
+
+  const rightTabCount = CHAPTERS.length - activeChapterIndex;
+  const rightTabContainerWidth =
+    rightTabCount === 0 ? 0 : ACTIVE_TAB_WIDTH + (rightTabCount - 1) * TAB_STEP_OFFSET;
+
+  const handleTitleMouseMove = (e: React.MouseEvent<HTMLDivElement | HTMLHeadingElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setTitleMousePos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+    setIsTitleHovered(true);
+  };
+
+  const handleTitleMouseLeave = () => {
+    setIsTitleHovered(false);
+  };
 
   function turn(direction: "next" | "prev") {
     if (!bookRef.current) return;
-    
+
     if (direction === "next" && !isLast) {
       bookRef.current.pageFlip().flipNext();
       playPageTurn();
-      const nextIndex = Math.min(pageIndex + 2, SPREADS.length * 2 - 2);
+      const nextIndex = Math.min(pageIndex + 2, LAST_PAGE_INDEX);
       setPageIndex(nextIndex);
     } else if (direction === "prev" && !isFirst) {
       bookRef.current.pageFlip().flipPrev();
@@ -78,12 +133,22 @@ export function BrandStoryDesktop({ locale }: BrandStoryDesktopProps) {
     }
   }
 
-  function turnToChapter(spreadIndex: number) {
+  function turnToChapter(chapterIndex: number) {
     if (!bookRef.current) return;
-    const targetPage = spreadIndex * 2;
+    const targetPage = CHAPTERS[chapterIndex].startSpread * 2;
     bookRef.current.pageFlip().turnToPage(targetPage);
     playPageTurn();
     setPageIndex(targetPage);
+  }
+
+  function onKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      turn("next");
+    } else if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      turn("prev");
+    }
   }
 
   const onPageFlip = (e: PageFlipEvent) => {
@@ -91,211 +156,402 @@ export function BrandStoryDesktop({ locale }: BrandStoryDesktopProps) {
   };
 
   return (
-    <div className="relative mx-auto flex w-full max-w-[1400px] items-center gap-10">
-      
+    <div className="relative mx-auto flex w-full max-w-[1850px] items-center gap-10 xl:gap-14">
       {/* Left Title Section */}
-      <div className="flex w-[240px] shrink-0 flex-col gap-4 pt-4">
-        <span className="text-[10px] font-bold tracking-[0.2em] text-[#002867] uppercase mb-4">
+      <div className="flex w-[290px] shrink-0 flex-col justify-center xl:w-[320px]">
+        <span className="group flex items-center gap-3 text-[10px] font-bold tracking-[0.26em] text-[#c5a059] uppercase transition-colors duration-300 hover:text-[#e9c349]">
+          <span aria-hidden className="h-px w-8 bg-gradient-to-r from-[#c5a059] to-[#c5a059]/40 transition-all duration-300 group-hover:w-10 group-hover:from-[#e9c349]" />
           {copy.kicker}
         </span>
-        <h2 className="font-display text-[64px] sm:text-[72px] leading-[0.85] tracking-tight text-[#002867] uppercase">
-          {copy.heading.split(' ').map((word, i) => (
-            <React.Fragment key={i}>
-              {word}<br/>
-            </React.Fragment>
-          ))}
-        </h2>
-        <p className="mt-8 text-[13px] text-[#4a5568] leading-[1.8] opacity-80">
-          {copy.subtitle}
-        </p>
+
+        {/*
+          Interactive Title Heading:
+          Base warm ivory text + superimposed golden text-clip spotlight clipped strictly inside glyph shapes.
+        */}
+        <div className="relative mt-7 cursor-default select-none">
+          {/* Base Warm Ivory Text Layer */}
+          <h2
+            onMouseMove={handleTitleMouseMove}
+            onMouseLeave={handleTitleMouseLeave}
+            className="font-display text-[60px] leading-[1.32] tracking-[-0.01em] uppercase text-[#f7f4ef] xl:text-[68px]"
+          >
+            {copy.headingLines.map((line) => (
+              <span key={line} className="block text-[#f7f4ef]">
+                {line}
+              </span>
+            ))}
+          </h2>
+
+          {/* Golden Spotlight Overlay Layer - Clipped Strictly to Text Glyphs with Smooth 500ms Fade */}
+          <h2
+            aria-hidden
+            className={`pointer-events-none absolute inset-0 font-display text-[60px] leading-[1.32] tracking-[-0.01em] uppercase transition-opacity duration-500 ease-out xl:text-[68px] ${
+              isTitleHovered ? "opacity-100" : "opacity-0"
+            }`}
+            style={{
+              backgroundImage: titleMousePos
+                ? `radial-gradient(circle 140px at ${titleMousePos.x}px ${titleMousePos.y}px, #e9c349 0%, #c5a059 50%, transparent 85%)`
+                : "none",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            {copy.headingLines.map((line) => (
+              <span key={line} className="block">
+                {line}
+              </span>
+            ))}
+          </h2>
+        </div>
+
+        <span aria-hidden className="mt-8 h-px w-14 bg-gradient-to-r from-[#c5a059]/40 to-transparent" />
       </div>
 
       {/* Right Book Section */}
-      <div className="relative flex-1 min-w-0 pr-16 perspective-[1200px]">
-        {/* Deep ground shadow */}
+      <div
+        className="perspective-[1600px] relative min-w-0 flex-1 focus-visible:ring-2 focus-visible:ring-[#f5f1ea]/40 focus-visible:outline-none"
+        role="group"
+        aria-label={copy.bookLabel}
+        tabIndex={0}
+        onKeyDown={onKeyDown}
+      >
+        {/* Deep ambient ground shadow */}
         <div
           aria-hidden
-          className="absolute inset-x-20 -bottom-10 h-20 rounded-[50%] bg-black/50 blur-2xl transition-transform duration-1000"
+          className="pointer-events-none absolute inset-x-20 -bottom-10 h-20 rounded-[50%] bg-black/75 blur-3xl"
         />
 
-        {/* The Hardcover Container */}
-        <div className="relative mx-auto w-full max-w-[960px] aspect-[8/5] rounded-[10px] bg-[#2a0b12] p-2 pb-3 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.7),inset_0_1px_1px_rgba(255,255,255,0.1)] border border-[#1a060a]">
-          
-          {/* Paper Stack Edge */}
-          <div className="absolute inset-2 bg-[#f4f2ec] rounded-[3px] shadow-[inset_0_0_8px_rgba(0,0,0,0.1)]">
-            <div className="absolute inset-x-0 bottom-0 h-2 bg-[repeating-linear-gradient(to_bottom,rgba(0,0,0,0.06)_0px,rgba(0,0,0,0.06)_1px,transparent_1px,transparent_2px)] rounded-b-[3px]" />
-          </div>
+        {/* Outer Backlight Ambient Glow */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-12 top-4 bottom-4 rounded-[24px] bg-[#e9c349]/10 blur-3xl"
+        />
 
-          {/* Center Spine Binding */}
+        {/* Outer Dark Hardcover Container — FIXED COVER THAT NEVER SHIFTS */}
+        <div className="relative mx-auto w-full max-w-[1450px] rounded-[12px] border border-[#180609] bg-[#25080e] p-[8px] shadow-[0_35px_70px_-15px_rgba(0,0,0,0.88),inset_0_1px_1px_rgba(255,255,255,0.12)]">
+          {/* Inner paper block underlay */}
           <div
             aria-hidden
-            className="absolute inset-y-0 left-1/2 w-12 -translate-x-1/2 rounded-sm bg-[linear-gradient(to_right,rgba(0,0,0,0.7),rgba(255,255,255,0.08)_40%,rgba(255,255,255,0.12)_50%,rgba(255,255,255,0.08)_60%,rgba(0,0,0,0.7))] shadow-[inset_0_0_15px_rgba(0,0,0,0.8)] z-0"
+            className="pointer-events-none absolute inset-[8px] rounded-[4px] bg-[#efeade] shadow-[inset_0_0_12px_rgba(0,0,0,0.15)]"
           />
 
-          <div className="relative w-full aspect-[8/5] z-10 -mt-[2px] -mb-[2px]">
-            <FlipBook
-              width={480}
-              height={600}
-              size="stretch"
-              minWidth={300}
-              maxWidth={480}
-              minHeight={375}
-              maxHeight={600}
-              maxShadowOpacity={0.5}
-              showCover={false}
-              usePortrait={false}
-              mobileScrollSupport={false}
-              flippingTime={1000}
-              onFlip={onPageFlip}
-              className="mx-auto h-full w-full"
-              ref={bookRef}
+          {/* Book Content Container with Left Tabs + Center Spread + Right Tabs */}
+          <div className="relative flex w-full items-stretch justify-center">
+            {/* LEFT SIDE STAGGERED TABS (Past/Read Chapters) */}
+            <div
+              className="relative z-10 flex shrink-0 items-stretch transition-[width] duration-500 ease-out"
+              style={{ width: `${leftTabContainerWidth}px` }}
             >
-              {SPREADS.flatMap((spread, sIndex) => {
-                const isCurrentSpread = currentSpreadIndex === sIndex;
-                return [
-                  <PageFace
-                    key={`${spread.title}-left`}
-                    src={spread.left}
-                    title={spread.title}
-                    side="left"
-                    aria-hidden={!isCurrentSpread}
-                  />,
-                  <PageFace
-                    key={`${spread.title}-right`}
-                    src={spread.right}
-                    side="right"
-                    aria-hidden={!isCurrentSpread}
-                  />
-                ];
+              {CHAPTERS.map((chapter, index) => {
+                if (index >= activeChapterIndex) return null;
+                const reverseIndex = activeChapterIndex - 1 - index;
+                return (
+                  <button
+                    key={chapter.title}
+                    type="button"
+                    onClick={() => turnToChapter(index)}
+                    aria-label={copy.goToChapter(chapter.title)}
+                    className="group absolute top-0 bottom-0 flex flex-col items-center border-r border-[#cfc7b4] bg-[#eae4d5] pt-6 transition-all duration-500 ease-out hover:brightness-105"
+                    style={{
+                      left: `${reverseIndex * TAB_STEP_OFFSET}px`,
+                      width: `${INACTIVE_TAB_WIDTH}px`,
+                      zIndex: index,
+                      borderRadius: "6px 0 0 6px",
+                      boxShadow:
+                        "-6px 4px 14px rgba(0,0,0,0.18), inset 1px 1px 0 rgba(255,255,255,0.6)",
+                    }}
+                  >
+                    <span className="text-[9px] font-bold tracking-[0.1em] text-[#2a0b12]/60">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span aria-hidden className="mt-2 h-3 w-px bg-[#2a0b12]/20" />
+                    <span
+                      className="mt-3 text-[9px] font-bold tracking-[0.18em] whitespace-nowrap text-[#2a0b12]/60 uppercase transition-colors group-hover:text-[#2a0b12]"
+                      style={{ writingMode: "vertical-rl" }}
+                    >
+                      {chapter.title}
+                    </span>
+                  </button>
+                );
               })}
-            </FlipBook>
+            </div>
+
+            {/* CENTER BOOK SPREAD (2-Page FlipBook) */}
+            <div className="relative min-w-0 flex-1 h-full self-stretch">
+              <div className="relative z-10 h-full w-full">
+                <FlipBook
+                  width={563}
+                  height={761}
+                  size="stretch"
+                  minWidth={300}
+                  maxWidth={1200}
+                  minHeight={405}
+                  maxHeight={1600}
+                  maxShadowOpacity={0.4}
+                  showCover={false}
+                  usePortrait={false}
+                  mobileScrollSupport={false}
+                  useMouseEvents={false}
+                  clickEventForward={false}
+                  showPageCorners={false}
+                  flippingTime={800}
+                  onFlip={onPageFlip}
+                  className="mx-auto h-full w-full"
+                  ref={bookRef}
+                >
+                  {PAGES.map((page, index) => {
+                    const side = index % 2 === 0 ? "left" : "right";
+                    return (
+                      <PageFace
+                        key={`${page.chapterTitle}-${index}`}
+                        src={page.src}
+                        title={side === "left" ? page.chapterTitle : undefined}
+                        side={side}
+                        aria-hidden={Math.floor(index / 2) !== currentSpreadIndex}
+                      />
+                    );
+                  })}
+                </FlipBook>
+              </div>
+            </div>
+
+            {/* RIGHT SIDE STAGGERED TABS (Current & Upcoming Chapters) */}
+            <div
+              className="relative z-10 flex shrink-0 items-stretch transition-[width] duration-500 ease-out"
+              style={{ width: `${rightTabContainerWidth}px` }}
+            >
+              {CHAPTERS.map((chapter, index) => {
+                if (index < activeChapterIndex) return null;
+
+                const isCurrent = index === activeChapterIndex;
+                const offsetIndex = index - activeChapterIndex;
+
+                return (
+                  <button
+                    key={chapter.title}
+                    type="button"
+                    onClick={() => turnToChapter(index)}
+                    aria-current={isCurrent ? "true" : undefined}
+                    aria-label={copy.goToChapter(chapter.title)}
+                    className={`group absolute top-0 bottom-0 flex flex-col items-center border-l border-[#cfc7b4] pt-6 transition-all duration-500 ease-out hover:brightness-105 ${
+                      isCurrent
+                        ? "z-30 bg-[#f8f5ed]"
+                        : "bg-[#eae4d5] hover:bg-[#f4efe2]"
+                    }`}
+                    style={{
+                      left: `${isCurrent ? 0 : ACTIVE_TAB_WIDTH + (offsetIndex - 1) * TAB_STEP_OFFSET}px`,
+                      width: `${isCurrent ? ACTIVE_TAB_WIDTH : INACTIVE_TAB_WIDTH}px`,
+                      borderRadius: "0 6px 6px 0",
+                      boxShadow: isCurrent
+                        ? "8px 6px 20px rgba(0,0,0,0.22), inset -1px 1px 0 rgba(255,255,255,0.8)"
+                        : "6px 4px 14px rgba(0,0,0,0.16), inset -1px 1px 0 rgba(255,255,255,0.5)",
+                      zIndex: 30 - offsetIndex,
+                    }}
+                  >
+                    {isCurrent ? (
+                      <span className="flex w-full flex-col items-center px-3">
+                        <span className="text-[10px] font-extrabold tracking-[0.14em] text-[#2a0b12]/50">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <span aria-hidden className="mt-2 h-px w-6 bg-[#2a0b12]/30" />
+                        <span className="mt-3 text-center text-[10px] leading-[1.45] font-bold tracking-[0.16em] text-[#2a0b12]/85 uppercase">
+                          {chapter.title}
+                        </span>
+
+                        {chapter.spreadCount > 1 && (
+                          <span aria-hidden className="mt-4 flex items-center gap-[4px]">
+                            {Array.from({ length: chapter.spreadCount }).map((_, dot) => (
+                              <span
+                                key={dot}
+                                className={`h-[4px] w-[4px] rounded-full transition-colors duration-300 ${
+                                  dot === spreadInChapter
+                                    ? "bg-[#2a0b12]/80"
+                                    : "bg-[#2a0b12]/25"
+                                }`}
+                              />
+                            ))}
+                          </span>
+                        )}
+                        <span className="sr-only">
+                          {copy.chapterProgress(
+                            spreadInChapter + 1,
+                            chapter.spreadCount,
+                            chapter.images.length
+                          )}
+                        </span>
+                      </span>
+                    ) : (
+                      <>
+                        <span className="text-[9px] font-bold tracking-[0.1em] text-[#2a0b12]/60">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <span aria-hidden className="mt-2 h-3 w-px bg-[#2a0b12]/20" />
+                        <span
+                          className="mt-3 text-[9px] font-bold tracking-[0.18em] whitespace-nowrap text-[#2a0b12]/60 uppercase transition-colors group-hover:text-[#2a0b12]"
+                          style={{ writingMode: "vertical-rl" }}
+                        >
+                          {chapter.title}
+                        </span>
+                      </>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Side Tabs */}
-          <div className="absolute top-12 -right-[36px] flex flex-col gap-1 z-0">
-            {SPREADS.map((spread, index) => {
-              const isActive = currentSpreadIndex === index;
-              return (
-                <button
-                  key={spread.title}
-                  onClick={() => turnToChapter(index)}
-                  className={`group relative flex flex-col items-center justify-start h-28 w-9 shrink-0 overflow-hidden rounded-r-[4px] border border-l-0 border-[#d3cdbe] shadow-[2px_2px_5px_rgba(0,0,0,0.1)] transition-all duration-300 cursor-pointer pt-3 ${
-                    isActive ? "bg-[#f5f1ea] text-[#002867] w-11" : "bg-[#ebe6df] text-[#4a5568] hover:w-11"
-                  }`}
-                >
-                  <span className="relative z-10 text-[9px] font-bold tracking-wider mb-2">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <div className="relative z-10 w-[1px] h-3 bg-[#4a5568]/20 mb-2" />
-                  <span 
-                    className="relative z-10 text-[9px] font-bold tracking-widest uppercase whitespace-nowrap"
-                    style={{ writingMode: 'vertical-rl', transform: 'rotate(-180deg)' }}
-                  >
-                    {spread.title}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          {/* Floating Navigation Arrow - Left */}
+          <button
+            type="button"
+            onClick={() => turn("prev")}
+            disabled={isFirst}
+            aria-label={copy.prev}
+            className="group absolute -left-5 top-1/2 z-50 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-[#e9c349]/50 bg-[#25080e]/95 text-[#e9c349] shadow-[0_10px_25px_rgba(0,0,0,0.6)] backdrop-blur-md transition-all duration-300 hover:scale-110 hover:border-[#e9c349] hover:bg-[#25080e] disabled:pointer-events-none disabled:opacity-0"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="transition-transform group-hover:-translate-x-0.5"
+            >
+              <path d="M15.5 5v14l-10-7z" />
+            </svg>
+          </button>
+
+          {/* Floating Navigation Arrow - Right */}
+          <button
+            type="button"
+            onClick={() => turn("next")}
+            disabled={isLast}
+            aria-label={copy.next}
+            className="group absolute -right-5 top-1/2 z-50 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-[#e9c349]/50 bg-[#25080e]/95 text-[#e9c349] shadow-[0_10px_25px_rgba(0,0,0,0.6)] backdrop-blur-md transition-all duration-300 hover:scale-110 hover:border-[#e9c349] hover:bg-[#25080e] disabled:pointer-events-none disabled:opacity-0"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="transition-transform group-hover:translate-x-0.5"
+            >
+              <path d="M8.5 5v14l10-7z" />
+            </svg>
+          </button>
         </div>
 
-        {/* Simplified Toolbar & Instructions */}
-        <div className="mt-8 flex w-full flex-col items-center gap-4">
-          <div className="flex items-center gap-8">
-            <button
-              onClick={() => turn("prev")}
-              disabled={isFirst}
-              className="text-[#002867] hover:opacity-70 disabled:opacity-30 p-2"
-              aria-label={copy.prev}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            </button>
-            <p
-              aria-live="polite"
-              className="text-[12px] font-bold tracking-[0.2em] text-[#002867] uppercase"
-            >
-              TRANG {currentSpreadIndex + 1} / {SPREADS.length}
-            </p>
-            <button
-              onClick={() => turn("next")}
-              disabled={isLast}
-              className="text-[#002867] hover:opacity-70 disabled:opacity-30 p-2"
-              aria-label={copy.next}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
+        {/* Clean Chapter Dots Indicator */}
+        <div className="mt-10 flex items-center justify-center">
+          <div
+            aria-hidden
+            className="flex items-center gap-5 rounded-full border border-[#e9c349]/20 bg-[#25080e]/60 px-6 py-2.5 shadow-sm backdrop-blur-md"
+          >
+            {CHAPTERS.map((chapter) => (
+              <div key={chapter.title} className="flex items-center gap-2">
+                {Array.from({ length: chapter.spreadCount }).map((_, offset) => {
+                  const spread = chapter.startSpread + offset;
+                  return (
+                    <span
+                      key={spread}
+                      className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
+                        spread === currentSpreadIndex
+                          ? "scale-125 bg-[#e9c349] shadow-[0_0_8px_rgba(233,195,73,0.8)]"
+                          : "bg-[#f5f1ea]/30"
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+            ))}
           </div>
 
-          <div className="flex items-center gap-10 mt-2">
-            <div className="flex items-center gap-2 text-[9px] font-bold tracking-widest uppercase text-[#002867]/60">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="7"></rect><line x1="12" y1="6" x2="12" y2="10"></line></svg>
-              <span>DRAG</span>
-            </div>
-            <div className="flex items-center gap-2 text-[9px] font-bold tracking-widest uppercase text-[#002867]/60">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M12 8v8"></path><path d="M8 12h8"></path></svg>
-              <span>CLICK / ARROW KEY</span>
-            </div>
-            <div className="flex items-center gap-2 text-[9px] font-bold tracking-widest uppercase text-[#002867]/60">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 17a4 4 0 0 0 8 0v-4"></path><path d="M8 17a4 4 0 0 1-8 0v-4"></path><path d="M14 10V6a2 2 0 1 0-4 0v4"></path></svg>
-              <span>SWIPE</span>
-            </div>
-          </div>
+          <p aria-live="polite" className="sr-only">
+            {copy.pageOf(currentSpreadIndex + 1, TOTAL_SPREADS)}
+          </p>
         </div>
       </div>
     </div>
   );
 }
 
-const PageFace = React.forwardRef<HTMLDivElement, {
-  side: "left" | "right";
-  src: string;
-  title?: string;
-  "aria-hidden"?: boolean;
-}>(({ side, src, title, "aria-hidden": ariaHidden }, ref) => {
+const PageFace = React.forwardRef<
+  HTMLDivElement,
+  {
+    side: "left" | "right";
+    /** `null` renders a blank leaf — the padding page of an odd-length chapter. */
+    src: string | null;
+    title?: string;
+    "aria-hidden"?: boolean;
+  }
+>(({ side, src, title, "aria-hidden": ariaHidden }, ref) => {
+  const isPng = src?.toLowerCase().endsWith(".png");
+
   return (
     <div
       ref={ref}
       aria-hidden={ariaHidden}
-      className={`relative flex h-full w-full flex-col items-center justify-center bg-background overflow-hidden ${
+      className={`relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-[#f6f4ee] ${
         side === "left" ? "rounded-l-[4px]" : "rounded-r-[4px]"
       }`}
     >
       {title && <h3 className="sr-only">{title}</h3>}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={title}
-        className="absolute inset-0 h-full w-full object-cover"
-      />
+      {src !== null && (
+        <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
+          {isPng ? (
+            <div className="relative flex h-full w-full items-center justify-center p-6 xl:p-8">
+              {/* Studio soft drop shadow for product PNGs */}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-10 bottom-6 h-8 rounded-[50%] bg-black/20 blur-md"
+              />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={src}
+                alt={title ?? ""}
+                className="relative z-10 max-h-[92%] max-w-[92%] object-contain drop-shadow-[0_14px_22px_rgba(0,0,0,0.25)]"
+              />
+            </div>
+          ) : (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={src}
+              alt={title ?? ""}
+              className="h-full w-full object-cover"
+            />
+          )}
+        </div>
+      )}
 
       <PaperGrain />
 
+      {/* Page edge detail line */}
       <div
         aria-hidden
-        className={`pointer-events-none absolute inset-y-1 z-10 w-[11px] opacity-30 bg-[repeating-linear-gradient(to_right,rgba(42,11,18,0.22)_0px,rgba(42,11,18,0.22)_1px,transparent_1px,transparent_3px)] ${
+        className={`pointer-events-none absolute inset-y-1 z-10 w-[8px] opacity-25 bg-[repeating-linear-gradient(to_right,rgba(42,11,18,0.2)_0px,rgba(42,11,18,0.2)_1px,transparent_1px,transparent_3px)] ${
           side === "left" ? "left-0 rounded-l-[3px]" : "right-0 rounded-r-[3px]"
         }`}
       />
 
-      {/* Book spine gutter shadow */}
+      {/* Book spine gutter shadow - anchored precisely to the spine edge of each leaf */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 z-20 mix-blend-multiply"
         style={{
-          background: side === "left"
-            ? "linear-gradient(to right, transparent 50%, rgba(0,0,0,0.05) 85%, rgba(0,0,0,0.4) 96%, rgba(0,0,0,0.8) 100%)"
-            : "linear-gradient(to left, transparent 50%, rgba(0,0,0,0.05) 85%, rgba(0,0,0,0.4) 96%, rgba(0,0,0,0.8) 100%)"
+          background:
+            side === "left"
+              ? "linear-gradient(to right, transparent 65%, rgba(42,11,18,0.08) 85%, rgba(42,11,18,0.35) 96%, rgba(42,11,18,0.75) 100%)"
+              : "linear-gradient(to left, transparent 65%, rgba(42,11,18,0.08) 85%, rgba(42,11,18,0.35) 96%, rgba(42,11,18,0.75) 100%)",
         }}
       />
 
-      {/* Page Lighting curve simulating a bent page */}
+      {/* Bent page lighting highlight */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 z-20 mix-blend-overlay opacity-50"
+        className="pointer-events-none absolute inset-0 z-20 opacity-40 mix-blend-overlay"
         style={{
-          background: side === "left"
-            ? "linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 15%, rgba(255,255,255,0) 40%)"
-            : "linear-gradient(to left, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 15%, rgba(255,255,255,0) 40%)"
+          background:
+            side === "left"
+              ? "linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.35) 15%, rgba(255,255,255,0) 40%)"
+              : "linear-gradient(to left, rgba(255,255,255,0) 0%, rgba(255,255,255,0.35) 15%, rgba(255,255,255,0) 40%)",
         }}
       />
     </div>
@@ -315,62 +571,5 @@ function PaperGrain() {
       </filter>
       <rect width="100%" height="100%" filter="url(#brand-story-grain-desktop)" />
     </svg>
-  );
-}
-
-function FlourishRule() {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 180 14"
-      className="h-4 w-40"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.3"
-      strokeLinecap="round"
-    >
-      <path d="M4 7h56" />
-      <path d="M120 7h56" />
-      <path d="M68 7c6-6 12 6 18 0s12-6 18 0" />
-      <circle cx="90" cy="7" r="1.8" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function ArrowButton({
-  direction,
-  label,
-  disabled,
-  onClick,
-}: {
-  direction: "prev" | "next";
-  label: string;
-  disabled: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={label}
-      className="group relative flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none disabled:pointer-events-none disabled:opacity-20"
-    >
-      <svg
-        viewBox="0 0 24 24"
-        className="h-8 w-8 fill-current text-primary-container transition-all duration-200 group-hover:scale-125 group-hover:text-primary"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden
-      >
-        {direction === "prev" ? (
-          <path d="M 17.5 4.5 L 5.5 12 L 17.5 19.5 L 14.2 12 Z" />
-        ) : (
-          <path d="M 6.5 4.5 L 18.5 12 L 6.5 19.5 L 9.8 12 Z" />
-        )}
-      </svg>
-    </button>
   );
 }

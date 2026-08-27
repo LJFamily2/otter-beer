@@ -5,18 +5,13 @@ const localeEnum = z.enum(
   SUPPORTED_LOCALE_CODES as unknown as [string, ...string[]]
 );
 
-export const BrandStoryPageTranslationInputSchema = z.object({
+export const BrandStoryChapterTranslationInputSchema = z.object({
   locale: localeEnum,
   title: z
-    .string({ message: "Vui lòng nhập tiêu đề trang" })
+    .string({ message: "Vui lòng nhập tiêu đề chương" })
     .trim()
-    .min(1, "Vui lòng nhập tiêu đề trang")
-    .max(120, "Tiêu đề không được vượt quá 120 ký tự"),
-  caption: z
-    .string({ message: "Vui lòng nhập nội dung trang" })
-    .trim()
-    .min(1, "Vui lòng nhập nội dung trang")
-    .max(200, "Nội dung không được vượt quá 200 ký tự"),
+    .min(1, "Vui lòng nhập tiêu đề chương")
+    .max(80, "Tiêu đề không được vượt quá 80 ký tự"),
 });
 
 function validateTranslationSet(
@@ -39,28 +34,28 @@ function validateTranslationSet(
     ctx.addIssue({
       code: "custom",
       path: ["translations"],
-      message: "Mỗi ngôn ngữ chỉ được xuất hiện một lần trong mỗi trang",
+      message: "Mỗi ngôn ngữ chỉ được xuất hiện một lần trong mỗi chương",
     });
   }
 }
 
-export const BrandStoryPageInputSchema = z
+export const BrandStoryChapterInputSchema = z
   .object({
-    imageKey: z
-      .string({ message: "Vui lòng tải ảnh cho trang này" })
-      .trim()
-      .min(1, "Vui lòng tải ảnh cho trang này"),
+    images: z
+      .array(z.string().trim().min(1, "Đường dẫn ảnh không hợp lệ"))
+      .min(1, "Vui lòng thêm ít nhất một ảnh cho chương này")
+      .max(12, "Không được vượt quá 12 ảnh mỗi chương"),
     translations: z
-      .array(BrandStoryPageTranslationInputSchema)
+      .array(BrandStoryChapterTranslationInputSchema)
       .min(1, "Vui lòng điền nội dung cho ít nhất một ngôn ngữ bắt buộc"),
   })
   .superRefine((data, ctx) => validateTranslationSet(data.translations, ctx));
 
 export const BrandStoryUpdateSchema = z.object({
-  pages: z
-    .array(BrandStoryPageInputSchema)
-    .max(30, "Không được vượt quá 30 trang"),
+  chapters: z
+    .array(BrandStoryChapterInputSchema)
+    .max(10, "Không được vượt quá 10 chương"),
 });
 
-export type BrandStoryPageInput = z.infer<typeof BrandStoryPageInputSchema>;
+export type BrandStoryChapterInput = z.infer<typeof BrandStoryChapterInputSchema>;
 export type BrandStoryUpdateInput = z.infer<typeof BrandStoryUpdateSchema>;

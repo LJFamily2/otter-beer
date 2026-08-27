@@ -42,6 +42,7 @@ test.describe("Public homepage — Brand marquee", () => {
     page,
   }) => {
     await page.goto("/");
+    await expect(region(page)).toBeVisible();
     await region(page).scrollIntoViewIfNeeded();
 
     expect(await leftTrack(page).locator(":scope > *").count()).toBeGreaterThan(1);
@@ -50,8 +51,10 @@ test.describe("Public homepage — Brand marquee", () => {
 
   test("scrolls the two rows continuously", async ({ page }) => {
     await page.goto("/");
+    await expect(region(page)).toBeVisible();
     await region(page).scrollIntoViewIfNeeded();
 
+    await page.waitForTimeout(500);
     const before = await transformOf(leftTrack(page));
     await page.waitForTimeout(1000);
     const after = await transformOf(leftTrack(page));
@@ -64,8 +67,11 @@ test.describe("Public homepage — Brand marquee", () => {
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
+    await page.waitForTimeout(500); // Wait for hydration of reducedMotion state
+    await expect(region(page)).toBeVisible();
     await region(page).scrollIntoViewIfNeeded();
 
+    await page.waitForTimeout(500);
     const before = await transformOf(leftTrack(page));
     await page.waitForTimeout(1000);
     const after = await transformOf(leftTrack(page));

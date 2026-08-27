@@ -11,15 +11,17 @@ export class BrandStoryService {
     return this.repository.get();
   }
 
-  async replacePages(
+  async replaceChapters(
     input: BrandStoryUpdateInput,
     actorId: string
   ): Promise<IBrandStory> {
-    return this.repository.replacePages(input.pages, actorId);
+    return this.repository.replaceChapters(input.chapters, actorId);
   }
 
   // ─── Public reads (Server Components can call this directly — no HTTP
-  // round trip — once the homepage flipbook is wired to real data) ────────
+  // round trip). Called from the homepage (`page.tsx`), mapped through
+  // BrandStoryPresenter.toBookChapters() and passed to BrandStorySection
+  // as `chapters`. ─────────────────────────────────────────────────────
   async getPublished(): Promise<IBrandStory | null> {
     return this.repository.get();
   }

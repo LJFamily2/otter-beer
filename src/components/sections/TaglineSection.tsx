@@ -17,24 +17,24 @@ const COPY = {
     kicker: "TRIẾT LÝ NẤU BIA THỦ CÔNG",
     heading: "Mỗi Ngụm Bia, Một Câu Chuyện",
     subtext:
-      "Otter Beer không chỉ là thức uống — mỗi hương vị đều mang theo câu chuyện về vùng đất, con người và những kết nối đằng sau nó.",
+      "Otter Beer không chỉ là thức uống. Mỗi hương vị đều mang theo câu chuyện về vùng đất, con người và những kết nối đằng sau nó.",
     pillars: [
-      "100% MẠCH NHA VÀNG",
-      "NƯỚC SUỐI TÂY NINH",
-      "HOA BIA SAAZ TUYỂN CHỌN",
-      "Ủ LÊN MEN TỰ NHIÊN",
+      "THỦ CÔNG TINH TUYỂN",
+      "HƯƠNG VỊ TÂY NINH",
+      "BẢN SẮC ĐỊA PHƯƠNG",
+      "TRẢI NGHIỆM KHÁC BIỆT",
     ],
   },
   en: {
     kicker: "CRAFT BREWING PHILOSOPHY",
     heading: "Every Sip Tells a Story",
     subtext:
-      "Otter Beer isn't just something to drink — every flavor carries a story of the land, the people, and the connections behind it.",
+      "Otter Beer isn't just something to drink. Every flavor carries a story of the land, the people, and the connections behind it.",
     pillars: [
-      "100% GOLDEN MALT",
-      "TAY NINH SPRING WATER",
-      "SELECT SAAZ HOPS",
-      "NATURAL SLOW FERMENTATION",
+      "CURATED CRAFT",
+      "TAY NINH FLAVOR",
+      "LOCAL IDENTITY",
+      "DISTINCT EXPERIENCE",
     ],
   },
 } as const;

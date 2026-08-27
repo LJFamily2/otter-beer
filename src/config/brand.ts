@@ -29,7 +29,7 @@ export const CONTACT = {
 
 /**
  * PostalAddress fields. `streetAddress` matches the Contact section's visible
- * address string exactly (see contact.tsx COPY.address).
+ * address string exactly (see Contact.tsx COPY.address).
  */
 export const ADDRESS = {
   streetAddress: "13 House, Alley 30, Lac Long Quan Street, Hiep Dinh Ward",

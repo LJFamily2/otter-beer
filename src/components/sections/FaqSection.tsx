@@ -10,13 +10,13 @@ const COPY = {
     kicker: "CÂU HỎI THƯỜNG GẶP",
     heading: "Những Điều Bạn Hay Hỏi Về Otter Beer",
     subtext:
-      "Nguồn gốc, nguyên liệu, nơi mua và cách đặt bia cho sự kiện — trả lời ngắn gọn, đi thẳng vào vấn đề.",
+      "Giải đáp mọi thắc mắc của bạn về nguồn gốc, nguyên liệu, nơi mua và cách đặt bia cho sự kiện.",
   },
   en: {
     kicker: "FREQUENTLY ASKED QUESTIONS",
     heading: "What People Ask About Otter Beer",
     subtext:
-      "Where it comes from, what goes in it, where to buy it, and how to order for an event — answered directly.",
+      "Find all the answers regarding our ingredients, brewing process, where to buy, and event orders.",
   },
 } as const;
 

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import ContactSection from "./contact";
+import ContactSection from "./Contact";
 import {
   buildBreadcrumbJsonLd,
   buildBreweryJsonLd,

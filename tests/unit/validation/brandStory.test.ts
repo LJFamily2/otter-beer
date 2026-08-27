@@ -1,99 +1,104 @@
-import { BrandStoryPageInputSchema, BrandStoryUpdateSchema } from "@/lib/validation/brandStory";
+import { BrandStoryChapterInputSchema, BrandStoryUpdateSchema } from "@/lib/validation/brandStory";
 
 function viTranslation(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     locale: "vi",
-    title: "Copper Kettle Brewing History",
-    caption: "Mashing, Boiling, Fermenting",
+    title: "Our Story",
     ...overrides,
   };
 }
 
-function basePage(overrides: Partial<Record<string, unknown>> = {}) {
+function baseChapter(overrides: Partial<Record<string, unknown>> = {}) {
   return {
-    imageKey: "brand-story/page-1.jpg",
+    images: ["brand-story/page-1.jpg"],
     translations: [viTranslation()],
     ...overrides,
   };
 }
 
-describe("BrandStoryPageInputSchema", () => {
-  it("accepts a valid page with only the required (vi) locale", () => {
-    const result = BrandStoryPageInputSchema.safeParse(basePage());
+describe("BrandStoryChapterInputSchema", () => {
+  it("accepts a valid chapter with only the required (vi) locale", () => {
+    const result = BrandStoryChapterInputSchema.safeParse(baseChapter());
     expect(result.success).toBe(true);
   });
 
-  it("rejects a page missing the required vi locale", () => {
-    const result = BrandStoryPageInputSchema.safeParse(
-      basePage({ translations: [viTranslation({ locale: "en" })] })
+  it("accepts a chapter with multiple images", () => {
+    const result = BrandStoryChapterInputSchema.safeParse(
+      baseChapter({ images: ["a.jpg", "b.jpg", "c.jpg"] })
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a chapter missing the required vi locale", () => {
+    const result = BrandStoryChapterInputSchema.safeParse(
+      baseChapter({ translations: [viTranslation({ locale: "en" })] })
     );
     expect(result.success).toBe(false);
   });
 
-  it("rejects duplicate locales on the same page", () => {
-    const result = BrandStoryPageInputSchema.safeParse(
-      basePage({ translations: [viTranslation(), viTranslation()] })
+  it("rejects duplicate locales on the same chapter", () => {
+    const result = BrandStoryChapterInputSchema.safeParse(
+      baseChapter({ translations: [viTranslation(), viTranslation()] })
     );
     expect(result.success).toBe(false);
   });
 
   it("rejects an unsupported locale code", () => {
-    const result = BrandStoryPageInputSchema.safeParse(
-      basePage({ translations: [{ ...viTranslation(), locale: "fr" }] })
+    const result = BrandStoryChapterInputSchema.safeParse(
+      baseChapter({ translations: [{ ...viTranslation(), locale: "fr" }] })
     );
     expect(result.success).toBe(false);
   });
 
-  it("rejects a missing imageKey", () => {
-    const result = BrandStoryPageInputSchema.safeParse({ translations: [viTranslation()] });
+  it("rejects a chapter with no images", () => {
+    const result = BrandStoryChapterInputSchema.safeParse(baseChapter({ images: [] }));
     expect(result.success).toBe(false);
   });
 
-  it("rejects an empty imageKey", () => {
-    const result = BrandStoryPageInputSchema.safeParse(basePage({ imageKey: "" }));
+  it("rejects more than 12 images", () => {
+    const images = Array.from({ length: 13 }, (_, i) => `img-${i}.jpg`);
+    const result = BrandStoryChapterInputSchema.safeParse(baseChapter({ images }));
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an empty image entry", () => {
+    const result = BrandStoryChapterInputSchema.safeParse(baseChapter({ images: [""] }));
     expect(result.success).toBe(false);
   });
 
   it("rejects a title over the max length", () => {
-    const result = BrandStoryPageInputSchema.safeParse(
-      basePage({ translations: [viTranslation({ title: "a".repeat(121) })] })
-    );
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects a caption over the max length", () => {
-    const result = BrandStoryPageInputSchema.safeParse(
-      basePage({ translations: [viTranslation({ caption: "a".repeat(201) })] })
+    const result = BrandStoryChapterInputSchema.safeParse(
+      baseChapter({ translations: [viTranslation({ title: "a".repeat(81) })] })
     );
     expect(result.success).toBe(false);
   });
 });
 
 describe("BrandStoryUpdateSchema", () => {
-  it("accepts an empty pages array (flipbook with no pages yet)", () => {
-    const result = BrandStoryUpdateSchema.safeParse({ pages: [] });
+  it("accepts an empty chapters array (flipbook with no chapters yet)", () => {
+    const result = BrandStoryUpdateSchema.safeParse({ chapters: [] });
     expect(result.success).toBe(true);
   });
 
-  it("accepts multiple valid pages", () => {
-    const result = BrandStoryUpdateSchema.safeParse({ pages: [basePage(), basePage()] });
+  it("accepts multiple valid chapters", () => {
+    const result = BrandStoryUpdateSchema.safeParse({ chapters: [baseChapter(), baseChapter()] });
     expect(result.success).toBe(true);
   });
 
-  it("rejects more than 30 pages", () => {
-    const pages = Array.from({ length: 31 }, () => basePage());
-    const result = BrandStoryUpdateSchema.safeParse({ pages });
+  it("rejects more than 10 chapters", () => {
+    const chapters = Array.from({ length: 11 }, () => baseChapter());
+    const result = BrandStoryUpdateSchema.safeParse({ chapters });
     expect(result.success).toBe(false);
   });
 
-  it("rejects the whole payload when any single page is invalid", () => {
+  it("rejects the whole payload when any single chapter is invalid", () => {
     const result = BrandStoryUpdateSchema.safeParse({
-      pages: [basePage(), basePage({ imageKey: "" })],
+      chapters: [baseChapter(), baseChapter({ images: [] })],
     });
     expect(result.success).toBe(false);
   });
 
-  it("requires a pages field", () => {
+  it("requires a chapters field", () => {
     const result = BrandStoryUpdateSchema.safeParse({});
     expect(result.success).toBe(false);
   });

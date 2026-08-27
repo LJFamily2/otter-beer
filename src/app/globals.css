@@ -94,6 +94,22 @@ h4 {
   color: var(--color-primary);
 }
 
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"],
+input[type="button"]:disabled,
+input[type="submit"]:disabled,
+input[type="reset"]:disabled {
+  cursor: not-allowed;
+}
+
 /* Brand Story page turn — see src/components/sections/BrandStorySection.tsx.
    A single half-width leaf hinged at the gutter swings a full 180°, carrying
    the outgoing page on its front face and the incoming one (pre-rotated) on

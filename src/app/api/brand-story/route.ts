@@ -8,8 +8,8 @@ import { mutationRateLimiter } from "@/lib/rate-limit/limiters";
 
 /**
  * Singleton resource — no [id] segment, unlike Beers/BlogPost. GET returns
- * the one Brand Story document's pages (empty array if never saved); PUT
- * replaces the whole pages array in one call, mirroring how PUT
+ * the one Brand Story document's chapters (empty array if never saved); PUT
+ * replaces the whole chapters array in one call, mirroring how PUT
  * /api/permissions replaces a whole role's matrix.
  */
 export const GET = RouteGuard.requirePermission(
@@ -17,7 +17,7 @@ export const GET = RouteGuard.requirePermission(
   "view",
   async () => {
     const brandStory = await brandStoryService.get();
-    return NextResponse.json({ pages: brandStory?.pages ?? [] });
+    return NextResponse.json({ chapters: brandStory?.chapters ?? [] });
   }
 );
 
@@ -36,8 +36,8 @@ export const PUT = withRateLimit(
         );
       }
 
-      const brandStory = await brandStoryService.replacePages(parsed.data, session.user.id);
-      return NextResponse.json({ pages: brandStory.pages });
+      const brandStory = await brandStoryService.replaceChapters(parsed.data, session.user.id);
+      return NextResponse.json({ chapters: brandStory.chapters });
     }
   ),
   "brand-story-write"

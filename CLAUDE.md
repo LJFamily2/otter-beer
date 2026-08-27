@@ -60,3 +60,8 @@ Before creating a new page or component, check `docs/component-catalog.md`
 similar one may already exist. **When you add a new page, route, or
 reusable component, append one line to the matching table in that
 document in the same change** — it only stays useful if it stays current.
+
+## MANDATORY: File Naming Convention (Capital Case / PascalCase)
+
+All component and section file names **MUST** be written in Capital Case (PascalCase), e.g. `Contact.tsx`, `Header.tsx`, `HeroSection.tsx`.
+

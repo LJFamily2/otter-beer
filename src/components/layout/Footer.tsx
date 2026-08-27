@@ -1,33 +1,47 @@
-import Image from "next/image";
 import Link from "next/link";
 import { DEFAULT_LOCALE } from "@/config/locales";
 
 interface FooterProps {
   locale?: string;
-  bgImageSrc?: string;
 }
 
-export function Footer({
-  locale = DEFAULT_LOCALE,
-  bgImageSrc = "/images/footer-bg.png",
-}: FooterProps) {
+const COPY = {
+  vi: {
+    navLabel: "Điều hướng chân trang",
+    ourStory: "CÂU CHUYỆN",
+    heritage: "DI SẢN",
+    taproom: "GHÉ THĂM",
+    shop: "SẢN PHẨM",
+    copyright: "© 2024 OTTER BEER COMPANY. NẤU BẰNG DANH DỰ.",
+    legalLabel: "Liên kết pháp lý và liên hệ",
+    privacyPolicy: "CHÍNH SÁCH BẢO MẬT",
+    termsOfService: "ĐIỀU KHOẢN DỊCH VỤ",
+    wholesale: "PHÂN PHỐI SỈ",
+    contact: "LIÊN HỆ",
+  },
+  en: {
+    navLabel: "Footer Navigation",
+    ourStory: "OUR STORY",
+    heritage: "HERITAGE",
+    taproom: "TAPROOM",
+    shop: "SHOP",
+    copyright: "© 2024 OTTER BEER COMPANY. BREWED WITH HONOR.",
+    legalLabel: "Legal and Contact Links",
+    privacyPolicy: "PRIVACY POLICY",
+    termsOfService: "TERMS OF SERVICE",
+    wholesale: "WHOLESALE",
+    contact: "CONTACT",
+  },
+} as const;
+
+export function Footer({ locale = DEFAULT_LOCALE }: FooterProps) {
   const prefix = locale === DEFAULT_LOCALE ? "" : `/${locale}`;
+  const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
 
   return (
-    <footer className="relative w-full overflow-hidden bg-[#002f82] text-white">
-      {/* Background Image Container */}
-      <div className="pointer-events-none absolute inset-0 z-0 select-none">
-        <Image
-          src={bgImageSrc}
-          alt=""
-          fill
-          sizes="100vw"
-          className="object-cover object-center"
-          priority={false}
-        />
-        {/* Subtle overlay */}
-        <div className="absolute inset-0 bg-[#002867]/15 mix-blend-multiply" />
-      </div>
+    <footer className="relative w-full overflow-hidden bg-background text-primary">
+      {/* Subtle brand texture, same decorative pattern used on the privacy page */}
+      <div className="heritage-pattern pointer-events-none absolute inset-0 z-0" />
 
       {/* Footer Content */}
       <div className="relative z-10 mx-auto max-w-[1400px] px-6 py-10 sm:px-10 sm:py-12 lg:px-16 lg:py-14">
@@ -38,32 +52,32 @@ export function Footer({
 
           {/* Center Main Nav Links */}
           <nav
-            aria-label="Footer Navigation"
+            aria-label={copy.navLabel}
             className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 md:gap-12 lg:gap-16"
           >
             <Link
-              href={`${prefix}/about`}
-              className="font-display text-2xl tracking-wide text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] transition-colors duration-200 hover:text-[#90adf7] sm:text-3xl lg:text-4xl"
+              href={`${prefix}#story`}
+              className="font-display text-2xl tracking-wide text-primary transition-colors duration-200 hover:text-primary-container sm:text-3xl lg:text-4xl"
             >
-              OUR STORY
+              {copy.ourStory}
             </Link>
             <Link
-              href={`${prefix}/about#heritage`}
-              className="font-display text-2xl tracking-wide text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] transition-colors duration-200 hover:text-[#90adf7] sm:text-3xl lg:text-4xl"
+              href={`${prefix}#story`}
+              className="font-display text-2xl tracking-wide text-primary transition-colors duration-200 hover:text-primary-container sm:text-3xl lg:text-4xl"
             >
-              HERITAGE
+              {copy.heritage}
             </Link>
             <Link
-              href={`${prefix}/events`}
-              className="font-display text-2xl tracking-wide text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] transition-colors duration-200 hover:text-[#90adf7] sm:text-3xl lg:text-4xl"
+              href={`${prefix}/contact`}
+              className="font-display text-2xl tracking-wide text-primary transition-colors duration-200 hover:text-primary-container sm:text-3xl lg:text-4xl"
             >
-              TAPROOM
+              {copy.taproom}
             </Link>
             <Link
-              href={`${prefix}/menu`}
-              className="font-display text-2xl tracking-wide text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] transition-colors duration-200 hover:text-[#90adf7] sm:text-3xl lg:text-4xl"
+              href={`${prefix}#products`}
+              className="font-display text-2xl tracking-wide text-primary transition-colors duration-200 hover:text-primary-container sm:text-3xl lg:text-4xl"
             >
-              SHOP
+              {copy.shop}
             </Link>
           </nav>
 
@@ -74,7 +88,7 @@ export function Footer({
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
-              className="text-white transition-transform duration-200 hover:scale-110 hover:text-[#90adf7] active:scale-95"
+              className="text-primary transition-transform duration-200 hover:scale-110 hover:text-primary-container active:scale-95"
             >
               <CameraIcon className="h-7 w-7 sm:h-8 sm:w-8" />
             </a>
@@ -82,7 +96,7 @@ export function Footer({
             <button
               type="button"
               aria-label="Scan QR Code"
-              className="cursor-pointer text-white transition-transform duration-200 hover:scale-110 hover:text-[#90adf7] active:scale-95"
+              className="cursor-pointer text-primary transition-transform duration-200 hover:scale-110 hover:text-primary-container active:scale-95"
             >
               <QrCodeIcon className="h-7 w-7 sm:h-8 sm:w-8" />
             </button>
@@ -90,7 +104,7 @@ export function Footer({
             <a
               href={`${prefix}/contact`}
               aria-label="Threads / Social"
-              className="text-white transition-transform duration-200 hover:scale-110 hover:text-[#90adf7] active:scale-95"
+              className="text-primary transition-transform duration-200 hover:scale-110 hover:text-primary-container active:scale-95"
             >
               <AtSymbolIcon className="h-7 w-7 sm:h-8 sm:w-8" />
             </a>
@@ -98,43 +112,43 @@ export function Footer({
         </div>
 
         {/* Divider Line */}
-        <div className="my-7 h-[1px] w-full bg-white/40 sm:my-8" />
+        <div className="my-7 h-[1px] w-full bg-primary/20 sm:my-8" />
 
         {/* Bottom Legal & Secondary Links */}
         <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
           {/* Copyright Notice */}
-          <p className="font-mono text-[11px] font-medium uppercase tracking-wider text-white/90 sm:text-xs">
-            © 2024 OTTER BEER COMPANY. BREWED WITH HONOR.
+          <p className="font-mono text-[11px] font-medium uppercase tracking-wider text-primary/90 sm:text-xs">
+            {copy.copyright}
           </p>
 
           {/* Secondary Utility Links */}
           <nav
-            aria-label="Legal and Contact Links"
+            aria-label={copy.legalLabel}
             className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8"
           >
             <Link
               href={`${prefix}/privacy`}
-              className="text-[11px] font-semibold uppercase tracking-wider text-white underline underline-offset-4 decoration-white/70 transition-colors duration-200 hover:text-[#90adf7] hover:decoration-[#90adf7] sm:text-xs"
+              className="text-[11px] font-semibold uppercase tracking-wider text-primary underline underline-offset-4 decoration-primary/70 transition-colors duration-200 hover:text-primary-container hover:decoration-primary-container sm:text-xs"
             >
-              PRIVACY POLICY
+              {copy.privacyPolicy}
             </Link>
             <Link
               href={`${prefix}/terms`}
-              className="text-[11px] font-semibold uppercase tracking-wider text-white transition-colors duration-200 hover:text-[#90adf7] hover:underline hover:underline-offset-4 sm:text-xs"
+              className="text-[11px] font-semibold uppercase tracking-wider text-primary transition-colors duration-200 hover:text-primary-container hover:underline hover:underline-offset-4 sm:text-xs"
             >
-              TERMS OF SERVICE
-            </Link>
-            <Link
-              href={`${prefix}/wholesale`}
-              className="text-[11px] font-semibold uppercase tracking-wider text-white transition-colors duration-200 hover:text-[#90adf7] hover:underline hover:underline-offset-4 sm:text-xs"
-            >
-              WHOLESALE
+              {copy.termsOfService}
             </Link>
             <Link
               href={`${prefix}/contact`}
-              className="text-[11px] font-semibold uppercase tracking-wider text-white transition-colors duration-200 hover:text-[#90adf7] hover:underline hover:underline-offset-4 sm:text-xs"
+              className="text-[11px] font-semibold uppercase tracking-wider text-primary transition-colors duration-200 hover:text-primary-container hover:underline hover:underline-offset-4 sm:text-xs"
             >
-              CONTACT
+              {copy.wholesale}
+            </Link>
+            <Link
+              href={`${prefix}/contact`}
+              className="text-[11px] font-semibold uppercase tracking-wider text-primary transition-colors duration-200 hover:text-primary-container hover:underline hover:underline-offset-4 sm:text-xs"
+            >
+              {copy.contact}
             </Link>
           </nav>
         </div>

@@ -143,9 +143,9 @@ export function AgeVerificationGate({
       aria-modal="true"
       aria-labelledby="age-verification-heading"
       className={
-        isStandalone
-          ? "relative flex min-h-dvh w-full flex-col overflow-hidden sm:grid sm:grid-rows-2"
-          : "fixed inset-0 z-50 flex flex-col overflow-hidden bg-[#1B3D84] sm:grid sm:grid-rows-2"
+        layout === "overlay"
+          ? "fixed inset-0 z-50 flex flex-col overflow-hidden bg-[#1B3D84] sm:grid sm:grid-rows-2"
+          : "relative flex min-h-dvh w-full flex-col overflow-hidden sm:grid sm:grid-rows-2"
       }
     >
       {/* Background Photo */}
@@ -172,12 +172,12 @@ export function AgeVerificationGate({
           {!isDenied ? (
             <>
               {/* Age Question */}
-              <h1
+              <Heading
                 id="age-verification-heading"
                 className="font-display text-6xl uppercase leading-tight tracking-wide text-white"
               >
                 {content.heading}
-              </h1>
+              </Heading>
 
               {/* Buttons Row */}
               <div className="mt-6 flex flex-row flex-wrap justify-center gap-3 lg:mt-8">
@@ -211,12 +211,12 @@ export function AgeVerificationGate({
           ) : (
             /* Underage Denial View */
             <div className="animate-in fade-in slide-in-from-bottom-2 flex flex-col items-center duration-200">
-              <h1
+              <Heading
                 id="age-verification-heading"
                 className="font-display text-6xl uppercase leading-tight tracking-wide text-white"
               >
                 {content.deniedHeading}
-              </h1>
+              </Heading>
               <p className="mt-3 max-w-md text-base font-medium text-white/70">
                 {content.deniedMessage}
               </p>
