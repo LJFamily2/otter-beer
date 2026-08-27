@@ -19,7 +19,9 @@ export class BrandStoryService {
   }
 
   // ─── Public reads (Server Components can call this directly — no HTTP
-  // round trip — once the homepage flipbook is wired to real data) ────────
+  // round trip). Called from the homepage (`page.tsx`), mapped through
+  // BrandStoryPresenter.toBookChapters() and passed to BrandStorySection
+  // as `chapters`. ─────────────────────────────────────────────────────
   async getPublished(): Promise<IBrandStory | null> {
     return this.repository.get();
   }

@@ -1,12 +1,19 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { playPageTurn } from "@/lib/utils/pageTurnSound";
 import HTMLFlipBook from "react-pageflip";
-import { BRAND_STORY_BOOK, chapterIndexForSpread } from "@/config/brandStoryChapters";
+import {
+  BRAND_STORY_CHAPTERS,
+  buildBrandStoryBook,
+  chapterIndexForSpread,
+  type BrandStoryChapter,
+} from "@/config/brandStoryChapters";
 
 interface BrandStoryDesktopProps {
   locale: string;
+  /** Falls back to a static sample book when omitted or empty, so the section is never blank. */
+  chapters?: BrandStoryChapter[];
 }
 
 const COPY = {
@@ -16,7 +23,7 @@ const COPY = {
        diacritics need the extra leading, so balanced lines read better than
        one word per line. */
     headingLines: ["TỪ HẠT", "LÚA MẠCH", "ĐẾN LY BIA"],
-    subtitle: "Kết hợp bố cục phóng khoáng và trải nghiệm lật sách 2 trang để kể câu chuyện một cách tự nhiên, cảm xúc.",
+    subtitle: "Lật mở từng trang sử thi về niềm đam mê ủ bia thủ công và hành trình kiến tạo hương vị độc bản.",
     prev: "Trang trước",
     next: "Trang sau",
     pageOf: (page: number, total: number) => `Trang ${page} / ${total}`,
@@ -30,7 +37,7 @@ const COPY = {
   en: {
     kicker: "BRAND STORY",
     headingLines: ["FROM", "GRAIN TO", "GLASS"],
-    subtitle: "Combining a free-flowing layout and a 2-page flipbook experience to tell our story naturally and emotionally.",
+    subtitle: "Turn the pages of our brand story and explore the passion behind our authentic craft brewing.",
     prev: "Previous page",
     next: "Next page",
     pageOf: (page: number, total: number) => `Page ${page} of ${total}`,
@@ -43,17 +50,9 @@ const COPY = {
   },
 } as const;
 
-const { pages: PAGES, chapters: CHAPTERS, totalSpreads: TOTAL_SPREADS } = BRAND_STORY_BOOK;
-const LAST_PAGE_INDEX = TOTAL_SPREADS * 2 - 2;
-
 const ACTIVE_TAB_WIDTH = 104;
 const INACTIVE_TAB_WIDTH = 44;
 const TAB_STEP_OFFSET = 36;
-
-/* Fore-edge of the un-read page block: hairline rules stacked so the part of
-   the tab column that chapters have vacated still reads as paper, not a gap. */
-const FORE_EDGE =
-  "bg-[repeating-linear-gradient(to_right,rgba(42,11,18,0.16)_0px,rgba(42,11,18,0.16)_1px,transparent_1px,transparent_4px)]";
 
 interface PageFlipInstance {
   pageFlip: () => {
@@ -73,12 +72,17 @@ const FlipBook = HTMLFlipBook as unknown as React.ComponentType<
   }
 >;
 
-export function BrandStoryDesktop({ locale }: BrandStoryDesktopProps) {
+export function BrandStoryDesktop({ locale, chapters: chaptersProp = [] }: BrandStoryDesktopProps) {
+  const chapters = chaptersProp.length > 0 ? chaptersProp : BRAND_STORY_CHAPTERS;
   const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
   const [pageIndex, setPageIndex] = useState(0);
   const [titleMousePos, setTitleMousePos] = useState<{ x: number; y: number } | null>(null);
   const [isTitleHovered, setIsTitleHovered] = useState(false);
   const bookRef = useRef<PageFlipInstance | null>(null);
+
+  const book = useMemo(() => buildBrandStoryBook(chapters), [chapters]);
+  const { pages: PAGES, chapters: CHAPTERS, totalSpreads: TOTAL_SPREADS } = book;
+  const LAST_PAGE_INDEX = TOTAL_SPREADS * 2 - 2;
 
   const currentSpreadIndex = Math.floor(pageIndex / 2);
   const isFirst = pageIndex === 0;
@@ -87,7 +91,7 @@ export function BrandStoryDesktop({ locale }: BrandStoryDesktopProps) {
   /* A chapter owns a run of spreads, so advancing one spread usually stays
      inside the same chapter — the tab only changes over once its last spread
      has been turned. */
-  const activeChapterIndex = chapterIndexForSpread(BRAND_STORY_BOOK, currentSpreadIndex);
+  const activeChapterIndex = chapterIndexForSpread(book, currentSpreadIndex);
   const activeChapter = CHAPTERS[activeChapterIndex];
   const spreadInChapter = currentSpreadIndex - activeChapter.startSpread;
 

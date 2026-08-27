@@ -1,37 +1,27 @@
 "use client";
 
 import React, { useState, useRef, useMemo, useEffect } from "react";
-import { BRAND_STORY_CHAPTERS } from "@/config/brandStoryChapters";
+import { BRAND_STORY_CHAPTERS, type BrandStoryChapter } from "@/config/brandStoryChapters";
 
 interface BrandStoryMobileProps {
   locale: string;
+  /** Falls back to a static sample book when omitted or empty, so the section is never blank. */
+  chapters?: BrandStoryChapter[];
 }
 
 const COPY = {
   vi: {
     kicker: "CÂU CHUYỆN THƯƠNG HIỆU",
     headingLines: ["TỪ HẠT LÚA MẠCH", "ĐẾN LY BIA TRÒN VỊ"],
-    subtitle: "Khám phá hành trình thủ công chế tác Otter Beer qua từng khung hình phim độc bản.",
+    subtitle: "Khám phá hành trình chế tác thủ công tạo nên hương vị nguyên bản của Otter Beer.",
     pageOf: (page: number, total: number) => `TRANG ${page} / ${total}`,
-    chapterTitles: [
-      "CÂU CHUYỆN",
-      "NGUYÊN LIỆU",
-      "Ủ BIA",
-      "CỘNG ĐỒNG",
-    ],
     swipeHint: "VUỐT ĐỂ CHUYỂN TRANG",
   },
   en: {
     kicker: "BRAND STORY",
     headingLines: ["FROM GRAIN TO", "GOLDEN GLASS"],
-    subtitle: "Discover the craft journey of Otter Beer through unique filmstrip frames.",
+    subtitle: "Discover the authentic craft journey behind every drop of Otter Beer.",
     pageOf: (page: number, total: number) => `PAGE ${page} / ${total}`,
-    chapterTitles: [
-      "OUR STORY",
-      "INGREDIENTS",
-      "BREWING",
-      "COMMUNITY",
-    ],
     swipeHint: "SWIPE TO TURN PAGE",
   },
 } as const;
@@ -74,7 +64,8 @@ interface MobileSlide {
   rotationClass: string;
 }
 
-export function BrandStoryMobile({ locale }: BrandStoryMobileProps) {
+export function BrandStoryMobile({ locale, chapters: chaptersProp = [] }: BrandStoryMobileProps) {
+  const chapters = chaptersProp.length > 0 ? chaptersProp : BRAND_STORY_CHAPTERS;
   const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -106,7 +97,7 @@ export function BrandStoryMobile({ locale }: BrandStoryMobileProps) {
   }, []);
 
   // Reduce to 4 chapters as requested
-  const displayChapters = useMemo(() => BRAND_STORY_CHAPTERS.slice(0, 4), []);
+  const displayChapters = useMemo(() => chapters.slice(0, 4), [chapters]);
 
   // Flatten images into a unified slides array for the 4 chapters
   const { slides, chapterStartIndices } = useMemo(() => {
@@ -120,7 +111,7 @@ export function BrandStoryMobile({ locale }: BrandStoryMobileProps) {
         flatSlides.push({
           src: img,
           chapterIndex: cIdx,
-          chapterTitle: copy.chapterTitles[cIdx] || chap.title,
+          chapterTitle: chap.title,
           imageIndexInChapter: iIdx + 1,
           totalInChapter: chap.images.length,
           badge: SLIDE_BADGES[badgeIdx % SLIDE_BADGES.length],
@@ -131,7 +122,7 @@ export function BrandStoryMobile({ locale }: BrandStoryMobileProps) {
     });
 
     return { slides: flatSlides, chapterStartIndices: startIndices };
-  }, [displayChapters, copy.chapterTitles]);
+  }, [displayChapters]);
 
   const totalSlides = slides.length;
   const activeSlide = slides[currentIndex] || slides[0];
@@ -297,7 +288,7 @@ export function BrandStoryMobile({ locale }: BrandStoryMobileProps) {
         }`}
         aria-label="Brand Story Chapters"
       >
-        {copy.chapterTitles.map((title, chapIdx) => {
+        {displayChapters.map((chap, chapIdx) => {
           const isActive = chapIdx === activeChapterIndex;
           return (
             <button
@@ -310,7 +301,7 @@ export function BrandStoryMobile({ locale }: BrandStoryMobileProps) {
               }`}
             >
               <span className="text-[13px] sm:text-[14px] font-extrabold tracking-tight uppercase whitespace-nowrap text-center">
-                {title}
+                {chap.title}
               </span>
             </button>
           );

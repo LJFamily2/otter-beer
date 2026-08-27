@@ -7,53 +7,56 @@ import {
   type Model,
 } from "mongoose";
 
-/** One language's worth of copy for a single book page — mirrors IBeerTranslation's array-of-subdocuments shape. */
-export interface IBrandStoryPageTranslation {
+/** One language's worth of copy for a chapter — mirrors IBeerTranslation's array-of-subdocuments shape. */
+export interface IBrandStoryChapterTranslation {
   locale: string;
-  /** Left-page heading, e.g. "Copper Kettle Brewing History". */
+  /** Tab label / sr-only page heading, e.g. "Our Story". */
   title: string;
-  /** Right-page cursive line(s), e.g. "Mashing" / "Boiling" / "Fermenting". */
-  caption: string;
 }
 
-export interface IBrandStoryPage {
-  /** Storage key for the page's illustration/photo — see src/lib/storage. */
-  imageKey: string;
-  translations: IBrandStoryPageTranslation[];
+/**
+ * A chapter is a *group* of images, not a single page. The reader turns
+ * through every image in a chapter before the next chapter's tab becomes
+ * current — see src/config/brandStoryChapters.ts, which lays this same
+ * shape out into two-page spreads for the flipbook.
+ */
+export interface IBrandStoryChapter {
+  /** Ordered storage keys for the chapter's illustrations/photos — see src/lib/storage. */
+  images: string[];
+  translations: IBrandStoryChapterTranslation[];
 }
 
 /**
  * Singleton document — there is exactly one Brand Story (the homepage
- * flipbook's ordered page list), not a collection of independently
- * CRUD-able records. See BrandStoryRepository.get()/replacePages().
+ * flipbook's ordered chapter list), not a collection of independently
+ * CRUD-able records. See BrandStoryRepository.get()/replaceChapters().
  */
 export interface IBrandStory extends Document {
-  pages: IBrandStoryPage[];
+  chapters: IBrandStoryChapter[];
   updatedBy: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const BrandStoryPageTranslationSchema = new Schema<IBrandStoryPageTranslation>(
+const BrandStoryChapterTranslationSchema = new Schema<IBrandStoryChapterTranslation>(
   {
     locale: { type: String, required: true, trim: true, lowercase: true },
-    title: { type: String, required: true, trim: true, maxlength: 120 },
-    caption: { type: String, required: true, trim: true, maxlength: 200 },
+    title: { type: String, required: true, trim: true, maxlength: 80 },
   },
   { _id: false }
 );
 
-const BrandStoryPageSchema = new Schema<IBrandStoryPage>(
+const BrandStoryChapterSchema = new Schema<IBrandStoryChapter>(
   {
-    imageKey: { type: String, required: true, trim: true },
-    translations: { type: [BrandStoryPageTranslationSchema], default: [] },
+    images: { type: [String], default: [] },
+    translations: { type: [BrandStoryChapterTranslationSchema], default: [] },
   },
   { _id: false }
 );
 
 const BrandStorySchema = new Schema<IBrandStory>(
   {
-    pages: { type: [BrandStoryPageSchema], default: [] },
+    chapters: { type: [BrandStoryChapterSchema], default: [] },
     updatedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   },
   { timestamps: true }

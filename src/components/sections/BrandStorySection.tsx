@@ -1,12 +1,15 @@
 import React from "react";
 import { BrandStoryDesktop } from "./BrandStoryDesktop";
 import { BrandStoryMobile } from "./BrandStoryMobile";
+import type { BrandStoryChapter } from "@/config/brandStoryChapters";
 
 interface BrandStorySectionProps {
   locale: string;
+  /** Published chapters from the backend. Each of Desktop/Mobile falls back to its own static sample book when omitted or empty. */
+  chapters?: BrandStoryChapter[];
 }
 
-export function BrandStorySection({ locale }: BrandStorySectionProps) {
+export function BrandStorySection({ locale, chapters }: BrandStorySectionProps) {
   return (
     /* scroll-mt keeps the fixed header from covering the section when the nav
        jumps to #story — and from swallowing clicks on the book's controls. */
@@ -16,12 +19,12 @@ export function BrandStorySection({ locale }: BrandStorySectionProps) {
           brand-story-bg line-art sat behind the book and fought it for
           attention; keep this background plain. */}
       <div className="relative hidden w-full overflow-hidden bg-[#0e0c0b] px-6 py-24 lg:block 2xl:px-10">
-        <BrandStoryDesktop locale={locale} />
+        <BrandStoryDesktop locale={locale} chapters={chapters} />
       </div>
 
       {/* Mobile Version */}
       <div className="block lg:hidden w-full">
-        <BrandStoryMobile locale={locale} />
+        <BrandStoryMobile locale={locale} chapters={chapters} />
       </div>
     </section>
   );

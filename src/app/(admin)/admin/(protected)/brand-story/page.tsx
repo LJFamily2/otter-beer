@@ -4,7 +4,7 @@ import { brandStoryService } from "@/services/BrandStoryService";
 import { MODULE_KEYS } from "@/config/permissions";
 import { LOCALES, type LocaleCode } from "@/config/locales";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
-import { BrandStoryForm, type BrandStoryPageFormState } from "./BrandStoryForm";
+import { BrandStoryForm, type BrandStoryChapterFormState } from "./BrandStoryForm";
 
 export const metadata: Metadata = {
   title: "Câu chuyện thương hiệu",
@@ -25,19 +25,16 @@ export default async function BrandStoryPage() {
 
   const brandStory = await brandStoryService.get();
 
-  const initialPages: BrandStoryPageFormState[] = (brandStory?.pages ?? []).map(
-    (page, index) => {
-      const translations = {} as Record<LocaleCode, { title: string; caption: string }>;
+  const initialChapters: BrandStoryChapterFormState[] = (brandStory?.chapters ?? []).map(
+    (chapter, index) => {
+      const translations = {} as Record<LocaleCode, { title: string }>;
       for (const locale of LOCALES) {
-        const match = page.translations.find((t) => t.locale === locale.code);
-        translations[locale.code] = {
-          title: match?.title ?? "",
-          caption: match?.caption ?? "",
-        };
+        const match = chapter.translations.find((t) => t.locale === locale.code);
+        translations[locale.code] = { title: match?.title ?? "" };
       }
       return {
         key: `existing-${index}`,
-        imageKey: page.imageKey,
+        images: chapter.images,
         translations,
       };
     }
@@ -54,12 +51,12 @@ export default async function BrandStoryPage() {
         />
         <h1 className="text-[32px] tracking-wide text-primary">Câu chuyện thương hiệu</h1>
         <p className="text-base text-on-surface-variant">
-          Quản lý các trang của cuốn sách lật hiển thị trên trang chủ — mỗi trang gồm một ảnh
-          minh họa và nội dung theo ngôn ngữ.
+          Quản lý các chương của cuốn sách lật hiển thị trên trang chủ — mỗi chương gồm một
+          tiêu đề theo ngôn ngữ và một nhóm ảnh minh họa.
         </p>
       </div>
 
-      <BrandStoryForm initialPages={initialPages} canEdit={Boolean(grant.edit)} />
+      <BrandStoryForm initialChapters={initialChapters} canEdit={Boolean(grant.edit)} />
     </div>
   );
 }
