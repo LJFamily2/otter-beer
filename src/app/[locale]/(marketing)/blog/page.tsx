@@ -72,7 +72,7 @@ export default async function BlogListPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <section className="px-5 pt-18 text-center">
+      <section className="px-5 pt-28 sm:pt-36 lg:pt-40 text-center">
         <span className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-secondary">
           {isVi ? "Nhật ký nhà máy bia" : "The brewery journal"}
         </span>

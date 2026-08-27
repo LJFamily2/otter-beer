@@ -76,8 +76,8 @@ export default async function HomePage({ params }: HomePageProps) {
       />
 
       <HeroSection locale={locale} slides={heroSlides} />
-      <TaglineSection locale={locale} />
       <MarqueeSection locale={locale} />
+      <TaglineSection locale={locale} />
       {beers.length > 0 ? <ProductShowcase locale={locale} beers={beers} /> : null}
       <BrandStorySection locale={locale} chapters={brandStoryChapters} />
       {posts.length > 0 ? <NewsBlogSection locale={locale} posts={posts} /> : null}

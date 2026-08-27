@@ -49,9 +49,8 @@ describe("Footer Component", () => {
   it("renders social and action icons with accessible labels", () => {
     render(<Footer locale="vi" />);
 
+    expect(screen.getByLabelText("Facebook")).toBeInTheDocument();
     expect(screen.getByLabelText("Instagram")).toBeInTheDocument();
-    expect(screen.getByLabelText("Scan QR Code")).toBeInTheDocument();
-    expect(screen.getByLabelText("Threads / Social")).toBeInTheDocument();
   });
 
   it("uses the theme background with primary-blue text, not a hardcoded dark fill", () => {

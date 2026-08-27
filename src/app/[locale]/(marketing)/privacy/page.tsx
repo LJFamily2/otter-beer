@@ -33,7 +33,7 @@ export default async function PrivacyPolicyPage({ params }: PrivacyPageProps) {
   return (
     <div className="relative min-h-screen bg-surface text-on-surface antialiased flex flex-col">
       {/* Header Section */}
-      <header className="relative w-full py-16 md:py-24 bg-surface-container-lowest border-b border-surface-variant overflow-hidden">
+      <header className="relative w-full pt-28 sm:pt-36 lg:pt-40 pb-16 md:pb-24 bg-surface-container-lowest border-b border-surface-variant overflow-hidden">
         <div className="heritage-pattern absolute inset-0 pointer-events-none" />
         <div className="relative z-10 mx-auto max-w-[1280px] px-6 text-center">
           <h1 className="font-display text-4xl md:text-6xl text-primary uppercase tracking-tight mb-4">
