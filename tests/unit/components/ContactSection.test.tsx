@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import ContactSection from "@/app/[locale]/(marketing)/contact/contact";
+import ContactSection from "@/app/[locale]/(marketing)/contact/Contact";
 import { ADDRESS, CONTACT } from "@/config/brand";
 
 describe("ContactSection", () => {
@@ -7,24 +7,22 @@ describe("ContactSection", () => {
     render(<ContactSection locale="en" />);
 
     expect(
-      screen.getByRole("heading", { name: /let.?s talk beer/i }),
+      screen.getByRole("heading", { name: /crafted in tay ninh/i }),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /call us/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /message/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /send email/i })).toBeInTheDocument();
     expect(screen.getByText(/phone numbers/i)).toBeInTheDocument();
-    expect(screen.getByText(/the taproom/i)).toBeInTheDocument();
+    expect(screen.getByText(/the taproom & brewery/i)).toBeInTheDocument();
   });
 
   it("renders Vietnamese copy for the vi locale", () => {
-    // The vi block used to be a verbatim copy of the English one, so the
-    // Vietnamese page carried no Vietnamese contact keywords at all.
     render(<ContactSection locale="vi" />);
 
     expect(
-      screen.getByRole("heading", { name: /liên hệ otter beer/i }),
+      screen.getByRole("heading", { name: /đậm chất tây ninh/i }),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /gọi ngay/i })).toBeInTheDocument();
-    expect(screen.getByText(/taproom tây ninh/i)).toBeInTheDocument();
+    expect(screen.getByText(/taproom & nhà máy/i)).toBeInTheDocument();
   });
 
   describe("heading level", () => {
@@ -32,17 +30,15 @@ describe("ContactSection", () => {
       render(<ContactSection locale="en" />);
 
       expect(
-        screen.getByRole("heading", { level: 1, name: /let.?s talk beer/i }),
+        screen.getByRole("heading", { level: 1, name: /crafted in tay ninh/i }),
       ).toBeInTheDocument();
     });
 
     it("renders as h2 when embedded on a page that owns its own h1", () => {
-      // The homepage embeds this section below the hero. Two h1s on a page
-      // leaves a crawler no single statement of what the page is about.
       render(<ContactSection locale="en" headingLevel="h2" />);
 
       expect(
-        screen.getByRole("heading", { level: 2, name: /let.?s talk beer/i }),
+        screen.getByRole("heading", { level: 2, name: /crafted in tay ninh/i }),
       ).toBeInTheDocument();
       expect(
         screen.queryByRole("heading", { level: 1 }),
@@ -77,6 +73,17 @@ describe("ContactSection", () => {
           document.querySelector(`a[href="tel:${phone}"]`),
         ).toBeInTheDocument();
       }
+    });
+
+    it("renders the embedded Google Map iframe with accessibility title", () => {
+      render(<ContactSection locale="en" />);
+
+      const iframe = screen.getByTitle("Tay Ninh Otter Beer Brewery Map");
+      expect(iframe).toBeInTheDocument();
+      expect(iframe).toHaveAttribute(
+        "src",
+        expect.stringContaining("google.com/maps/embed"),
+      );
     });
   });
 });

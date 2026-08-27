@@ -6,12 +6,19 @@ import { ProductShowcase } from "@/components/sections/ProductShowcase";
 import { BrandStorySection } from "@/components/sections/BrandStorySection";
 import { NewsBlogSection } from "@/components/sections/NewsBlogSection";
 import { FaqSection } from "@/components/sections/FaqSection";
-import ContactSection from "./contact/contact";
-import { ContactCtaSection } from "@/components/sections/ContactCtaSection";
+import ContactSection from "./contact/Contact";
 import { beerService } from "@/services/BeerService";
+import { heroSectionService } from "@/services/HeroSectionService";
+import { blogPostService } from "@/services/BlogPostService";
+import { brandStoryService } from "@/services/BrandStoryService";
 import { toShowcaseItem } from "@/lib/utils/BeerPresenter";
+import { toSlideItem } from "@/lib/utils/HeroSectionPresenter";
+import { toNewsCardItem } from "@/lib/utils/BlogPostPresenter";
+import { toBookChapters } from "@/lib/utils/BrandStoryPresenter";
 import { buildHomeJsonLd, buildHomeMetadata } from "@/lib/seo";
 import { faqFor } from "@/config/faq";
+
+const NEWS_RAIL_SIZE = 10;
 
 interface HomePageProps {
   params: Promise<{ locale: string }>;
@@ -30,6 +37,21 @@ export default async function HomePage({ params }: HomePageProps) {
   const beers = await beerService
     .listShowcasePublished()
     .then((items) => items.map((beer) => toShowcaseItem(beer, locale)).filter((item) => item !== null))
+    .catch(() => []);
+
+  const heroSlides = await heroSectionService
+    .listPublishedSlides()
+    .then((slides) => slides.map((slide) => toSlideItem(slide, locale)).filter((item) => item !== null))
+    .catch(() => []);
+
+  const posts = await blogPostService
+    .getRecentPublished(NEWS_RAIL_SIZE)
+    .then((items) => items.map((post) => toNewsCardItem(post, locale)).filter((item) => item !== null))
+    .catch(() => []);
+
+  const brandStoryChapters = await brandStoryService
+    .getPublished()
+    .then((brandStory) => toBookChapters(brandStory, locale))
     .catch(() => []);
 
   const faq = faqFor(locale);
@@ -53,17 +75,16 @@ export default async function HomePage({ params }: HomePageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <HeroSection locale={locale} />
-      <BrandStorySection locale={locale} />
+      <HeroSection locale={locale} slides={heroSlides} />
       <TaglineSection locale={locale} />
       <MarqueeSection locale={locale} />
       {beers.length > 0 ? <ProductShowcase locale={locale} beers={beers} /> : null}
-      <NewsBlogSection locale={locale} />
-      <ContactCtaSection locale={locale} />
+      <BrandStorySection locale={locale} chapters={brandStoryChapters} />
+      {posts.length > 0 ? <NewsBlogSection locale={locale} posts={posts} /> : null}
+      <FaqSection locale={locale} />
       {/* The page's single <h1> lives in HeroSection, so the contact block
           renders at h2 here — on /contact it keeps its own h1. */}
       <ContactSection locale={locale} headingLevel="h2" />
-      <FaqSection locale={locale} />
     </>
   );
 }
