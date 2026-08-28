@@ -1,3 +1,7 @@
+"use client";
+
+import { useState, useCallback } from "react";
+
 interface ContactSectionProps {
   locale?: string;
   /**
@@ -16,6 +20,8 @@ const COPY = {
     body: "Whether you're inquiring about private events, wholesale distribution, or simply want to know what's pouring, call us directly or visit our brewery.",
     call: "Call Us",
     message: "Send Email",
+    copied: "Copied!",
+    toastMessage: "Email copied: hello@otterbeer.vn",
     phoneLabel: "PHONE NUMBERS",
     taproomLabel: "THE TAPROOM & BREWERY",
     company: "BADENBEER Co., Ltd.",
@@ -33,6 +39,8 @@ const COPY = {
     body: "Đặt bia cho sự kiện, hợp tác phân phối sỉ, hay ghé thăm xưởng bia thưởng thức mẻ bia mới. Hãy gọi trực tiếp hoặc ghé qua xưởng bia.",
     call: "Gọi Ngay",
     message: "Gửi Email",
+    copied: "Đã sao chép!",
+    toastMessage: "Đã sao chép email: hello@otterbeer.vn",
     phoneLabel: "SỐ ĐIỆN THOẠI",
     taproomLabel: "TAPROOM & NHÀ MÁY",
     company: "Công ty TNHH BADENBEER",
@@ -87,6 +95,23 @@ function EmailIcon() {
   );
 }
 
+function CheckIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
 function LocationIcon() {
   return (
     <svg
@@ -127,6 +152,48 @@ export default function ContactSection({
   const copy = COPY[locale === "vi" ? "vi" : "en"];
   const Heading = headingLevel;
 
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyEmail = useCallback(async () => {
+    const email = "hello@otterbeer.vn";
+    let success = false;
+
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(email);
+        success = true;
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = email;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        success = document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+    } catch {
+      const textarea = document.createElement("textarea");
+      textarea.value = email;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      success = document.execCommand("copy");
+      document.body.removeChild(textarea);
+    }
+
+    if (success) {
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate?.(40);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  }, []);
+
   return (
     <section
       id="contact"
@@ -144,7 +211,6 @@ export default function ContactSection({
 
       <div className="relative mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-16">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-14 items-stretch">
-
           {/* Left Column: Editorial Stage */}
           <div className="flex flex-col justify-between lg:col-span-6 space-y-10">
             <div>
@@ -157,7 +223,9 @@ export default function ContactSection({
               {/* Display Headline - Balanced 2-Line Formatting with Zero Overlap */}
               <Heading className="mt-6 !text-white font-display text-[clamp(3rem,4.8vw,5.2rem)] leading-[1.25] tracking-[-0.02em] uppercase">
                 <span className="block">{copy.headingLine1}</span>
-                <span className="block text-[#fed65b] mt-1.5 sm:mt-2.5">{copy.headingLine2}</span>
+                <span className="block text-[#fed65b] mt-1.5 sm:mt-2.5">
+                  {copy.headingLine2}
+                </span>
               </Heading>
 
               {/* Standfirst Body Copy */}
@@ -169,18 +237,28 @@ export default function ContactSection({
               <div className="mt-8 flex flex-wrap gap-4 sm:mt-10">
                 <a
                   href="tel:+84908790102"
-                  className="group inline-flex h-[56px] min-w-[190px] items-center justify-center gap-3 rounded-xl bg-[#fed65b] px-6 text-[1.05rem] font-bold uppercase tracking-wider text-black shadow-lg shadow-[#fed65b]/10 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#ffe382] hover:shadow-[#fed65b]/20"
+                  className="group inline-flex h-[56px] min-w-[190px] items-center justify-center gap-3 rounded-xl bg-[#fed65b] px-6 text-[1.05rem] font-bold uppercase tracking-wider text-black shadow-lg shadow-[#fed65b]/10 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#ffe382] hover:shadow-[#fed65b]/20 active:translate-y-0 active:scale-[0.98]"
                 >
                   <PhoneIcon className="h-4 w-4 text-black" />
                   <span>{copy.call}</span>
                 </a>
-                <a
-                  href="mailto:hello@otterbeer.vn"
-                  className="group inline-flex h-[56px] min-w-[190px] items-center justify-center gap-2.5 rounded-xl border border-[#fed65b]/30 bg-[#221e14] px-6 text-[1.05rem] font-semibold tracking-wide text-[#fed65b] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#fed65b] hover:bg-[#2e291c]"
+                <button
+                  type="button"
+                  onClick={handleCopyEmail}
+                  aria-label={copied ? copy.copied : copy.message}
+                  className={`group inline-flex h-[56px] min-w-[190px] items-center justify-center gap-2.5 rounded-xl border px-6 text-[1.05rem] font-semibold tracking-wide transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] ${
+                    copied
+                      ? "border-[#10b981]/50 bg-[#064e3b]/40 text-[#34d399]"
+                      : "border-[#fed65b]/30 bg-[#221e14] text-[#fed65b] hover:border-[#fed65b] hover:bg-[#2e291c]"
+                  }`}
                 >
-                  <EmailIcon />
-                  <span>{copy.message}</span>
-                </a>
+                  {copied ? (
+                    <CheckIcon className="h-4 w-4 text-[#34d399]" />
+                  ) : (
+                    <EmailIcon />
+                  )}
+                  <span>{copied ? copy.copied : copy.message}</span>
+                </button>
               </div>
             </div>
 
@@ -194,12 +272,18 @@ export default function ContactSection({
                 </div>
                 <div className="mt-3 space-y-1 text-[1.25rem] font-light tracking-wide text-white">
                   <p>
-                    <a href="tel:+84908790102" className="transition-colors hover:text-[#f9e37a]">
+                    <a
+                      href="tel:+84908790102"
+                      className="transition-colors hover:text-[#f9e37a]"
+                    >
                       (+84) 908 790 102
                     </a>
                   </p>
                   <p>
-                    <a href="tel:+84981686491" className="transition-colors hover:text-[#f9e37a]">
+                    <a
+                      href="tel:+84981686491"
+                      className="transition-colors hover:text-[#f9e37a]"
+                    >
                       (+84) 981 686 491
                     </a>
                   </p>
@@ -214,7 +298,9 @@ export default function ContactSection({
                     <span>{copy.taproomLabel}</span>
                   </div>
                 </div>
-                <p className="mt-3 text-[1.05rem] font-bold text-white">{copy.company}</p>
+                <p className="mt-3 text-[1.05rem] font-bold text-white">
+                  {copy.company}
+                </p>
                 <address className="mt-1 text-[0.9375rem] not-italic leading-relaxed text-[#a1a1aa]">
                   {copy.address}
                 </address>
@@ -247,7 +333,6 @@ export default function ContactSection({
               className="h-full w-full border-0 filter contrast-[105%]"
             />
           </div>
-
         </div>
       </div>
     </section>
