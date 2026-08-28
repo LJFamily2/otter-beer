@@ -19,6 +19,121 @@ function baseBeer(overrides: Partial<Record<string, unknown>> = {}) {
   };
 }
 
+function variant(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    imageKey: "beers/can.png",
+    names: [{ locale: "vi", shortName: "LON" }],
+    ...overrides,
+  };
+}
+
+describe("beer packaging variants", () => {
+  it("defaults to an empty list when a client omits variants entirely", () => {
+    const result = BeerCreateSchema.safeParse(baseBeer());
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.variants).toEqual([]);
+  });
+
+  it("accepts variants with vi-only and with both locales", () => {
+    const result = BeerCreateSchema.safeParse(
+      baseBeer({
+        variants: [
+          variant(),
+          variant({
+            imageKey: "beers/six-pack.png",
+            names: [
+              { locale: "vi", shortName: "BAO BÌ 6 LON" },
+              { locale: "en", shortName: "6-PACK" },
+            ],
+          }),
+        ],
+      })
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts more than three variants (no cap)", () => {
+    const result = BeerCreateSchema.safeParse(
+      baseBeer({ variants: [variant(), variant(), variant(), variant(), variant()] })
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a variant with no image", () => {
+    expect(
+      BeerCreateSchema.safeParse(baseBeer({ variants: [variant({ imageKey: "" })] })).success
+    ).toBe(false);
+    expect(
+      BeerCreateSchema.safeParse(baseBeer({ variants: [variant({ imageKey: undefined })] }))
+        .success
+    ).toBe(false);
+  });
+
+  it("rejects a variant missing the required vi label", () => {
+    const result = BeerCreateSchema.safeParse(
+      baseBeer({ variants: [variant({ names: [{ locale: "en", shortName: "CAN" }] })] })
+    );
+    expect(result.success).toBe(false);
+  });
+
+  it("points the error at the offending variant index", () => {
+    const result = BeerCreateSchema.safeParse(
+      baseBeer({
+        variants: [variant(), variant({ names: [{ locale: "en", shortName: "CAN" }] })],
+      })
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.path.join(".") === "variants.1.names")).toBe(
+        true
+      );
+    }
+  });
+
+  it("rejects a variant with no labels at all", () => {
+    expect(
+      BeerCreateSchema.safeParse(baseBeer({ variants: [variant({ names: [] })] })).success
+    ).toBe(false);
+  });
+
+  it("rejects a duplicate locale within one variant", () => {
+    const result = BeerCreateSchema.safeParse(
+      baseBeer({
+        variants: [
+          variant({
+            names: [
+              { locale: "vi", shortName: "LON" },
+              { locale: "vi", shortName: "LON LỚN" },
+            ],
+          }),
+        ],
+      })
+    );
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a label longer than 40 characters", () => {
+    const result = BeerCreateSchema.safeParse(
+      baseBeer({
+        variants: [variant({ names: [{ locale: "vi", shortName: "L".repeat(41) }] })],
+      })
+    );
+    expect(result.success).toBe(false);
+  });
+
+  it("lets an update clear every variant with an empty array", () => {
+    const result = BeerUpdateSchema.safeParse({ variants: [] });
+    expect(result.success).toBe(true);
+  });
+
+  it("still validates variants supplied on update", () => {
+    expect(BeerUpdateSchema.safeParse({ variants: [variant()] }).success).toBe(true);
+    expect(
+      BeerUpdateSchema.safeParse({ variants: [variant({ imageKey: "" })] }).success
+    ).toBe(false);
+  });
+});
+
 describe("BeerCreateSchema", () => {
   it("accepts a valid beer with only the required (vi) locale", () => {
     const result = BeerCreateSchema.safeParse(baseBeer());

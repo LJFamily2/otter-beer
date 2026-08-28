@@ -74,11 +74,19 @@ export class BeerRepository extends BaseRepository<IBeer> {
    * True if `key` is a published beer's image — the gate for the public
    * image proxy (src/app/api/media/public/[...key]/route.ts), mirroring
    * BlogPostRepository.isKeyPubliclyVisible.
+   *
+   * Matches variant photos as well as the main image: a variant's can/6-pack
+   * shot is rendered to logged-out visitors just like `imageKey` is, so
+   * leaving it out of this gate would 404 every packaging image in
+   * production while still looking fine to a logged-in admin.
    */
   async isKeyPubliclyVisible(key: string): Promise<boolean> {
     const model = await this.ready();
     const count = await model
-      .countDocuments({ status: "published", imageKey: key })
+      .countDocuments({
+        status: "published",
+        $or: [{ imageKey: key }, { "variants.imageKey": key }],
+      })
       .exec();
     return count > 0;
   }

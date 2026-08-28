@@ -3,7 +3,11 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { MODULE_KEYS } from "@/config/permissions";
 import { beerService } from "@/services/BeerService";
-import { BeerForm, type BeerFormInitialData } from "../../BeerForm";
+import {
+  BeerForm,
+  type BeerFormInitialData,
+  type VariantFormState,
+} from "../../BeerForm";
 
 export const metadata: Metadata = {
   title: "Chỉnh sửa sản phẩm",
@@ -42,6 +46,12 @@ export default async function EditBeerPage({ params }: EditBeerPageProps) {
         { style: t.style, headline: t.headline, description: t.description },
       ])
     ) as BeerFormInitialData["translations"],
+    variants: beer.variants.map<VariantFormState>((variant) => ({
+      imageKey: variant.imageKey,
+      names: Object.fromEntries(
+        variant.names.map((name) => [name.locale, name.shortName])
+      ) as VariantFormState["names"],
+    })),
   };
 
   return <BeerForm mode="edit" beerId={id} initialData={initialData} />;

@@ -26,6 +26,7 @@ const beer: BeerShowcaseItem = {
   description: "A crisp golden lager.",
   themeColor: "#002867",
   themeColorContainer: "#123456",
+  variants: [],
 };
 
 /** Nodes in a @graph, keyed by @type, for terse assertions. */

@@ -44,6 +44,7 @@ export class BeerService {
       isFeatured: input.isFeatured,
       status: input.status,
       translations: input.translations,
+      variants: input.variants,
       createdBy: actorObjectId,
       updatedBy: actorObjectId,
     });
@@ -73,6 +74,7 @@ export class BeerService {
     if (input.isFeatured !== undefined) update.isFeatured = input.isFeatured;
     if (input.status !== undefined) update.status = input.status;
     if (input.translations !== undefined) update.translations = input.translations;
+    if (input.variants !== undefined) update.variants = input.variants;
 
     const updated = await this.repository.updateById(id, update);
     if (updated?.isFeatured) {

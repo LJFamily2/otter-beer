@@ -26,21 +26,6 @@ const COPY = {
   },
 } as const;
 
-/* Curated brutalist technical badges per slide */
-const SLIDE_BADGES = [
-  "EST 2023",
-  "TAY NINH HERITAGE",
-  "BA DEN PEAK",
-  "PILSNER MALT",
-  "SAAZ HOPS",
-  "5.0% ABV",
-  "MANIFEST #OB-23",
-  "BREW HOUSE",
-  "CRAFT SPIRIT",
-  "COMMUNITY",
-  "LOCAL HERITAGE",
-  "TOGETHERNESS",
-];
 
 /* Alternating subtle rotation angles for editorial filmstrip effect */
 const SLIDE_ROTATIONS = [
@@ -60,7 +45,6 @@ interface MobileSlide {
   chapterTitle: string;
   imageIndexInChapter: number;
   totalInChapter: number;
-  badge: string;
   rotationClass: string;
 }
 
@@ -103,7 +87,7 @@ export function BrandStoryMobile({ locale, chapters: chaptersProp = [] }: BrandS
   const { slides, chapterStartIndices } = useMemo(() => {
     const flatSlides: MobileSlide[] = [];
     const startIndices: number[] = [];
-    let badgeIdx = 0;
+    let slideIdx = 0;
 
     displayChapters.forEach((chap, cIdx) => {
       startIndices.push(flatSlides.length);
@@ -114,10 +98,9 @@ export function BrandStoryMobile({ locale, chapters: chaptersProp = [] }: BrandS
           chapterTitle: chap.title,
           imageIndexInChapter: iIdx + 1,
           totalInChapter: chap.images.length,
-          badge: SLIDE_BADGES[badgeIdx % SLIDE_BADGES.length],
-          rotationClass: SLIDE_ROTATIONS[badgeIdx % SLIDE_ROTATIONS.length],
+          rotationClass: SLIDE_ROTATIONS[slideIdx % SLIDE_ROTATIONS.length],
         });
-        badgeIdx++;
+        slideIdx++;
       });
     });
 
@@ -235,10 +218,6 @@ export function BrandStoryMobile({ locale, chapters: chaptersProp = [] }: BrandS
         <div
           className={`relative w-full max-w-[340px] bg-[#fdf9f4] text-[#1c1c19] border-2 border-[#3F2424] shadow-[6px_6px_0px_#3F2424] p-3.5 transition-transform duration-300 ease-out transform ${activeSlide.rotationClass}`}
         >
-          {/* Top Badge Overlay */}
-          <div className="absolute top-4 right-4 z-20 bg-[#00153e] text-[#fdf9f4] px-2.5 py-1 text-[11px] font-bold uppercase border border-[#3F2424] shadow-[2px_2px_0px_#3F2424]">
-            {activeSlide.badge}
-          </div>
 
           {/* Top Chapter Tag */}
           <div className="absolute top-4 left-4 z-20 bg-[#fdf9f4]/95 text-[#00153e] px-2.5 py-1 text-[11px] font-bold uppercase border border-[#3F2424]">

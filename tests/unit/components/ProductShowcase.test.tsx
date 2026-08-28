@@ -16,6 +16,7 @@ function beer(overrides: Partial<BeerShowcaseItem> = {}): BeerShowcaseItem {
     findLocallyUrl: "https://find.example.com",
     themeColor: "#123456",
     themeColorContainer: "#654321",
+    variants: [],
     ...overrides,
   };
 }
