@@ -10,7 +10,7 @@ describe("ContactSection", () => {
       screen.getByRole("heading", { name: /crafted in tay ninh/i }),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /call us/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /send email/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /send email/i })).toBeInTheDocument();
     expect(screen.getByText(/phone numbers/i)).toBeInTheDocument();
     expect(screen.getByText(/the taproom & brewery/i)).toBeInTheDocument();
   });

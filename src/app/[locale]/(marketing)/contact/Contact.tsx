@@ -24,7 +24,6 @@ const COPY = {
     toastMessage: "Email copied: hello@otterbeer.vn",
     phoneLabel: "PHONE NUMBERS",
     taproomLabel: "THE TAPROOM & BREWERY",
-    company: "BADENBEER Co., Ltd.",
     address:
       "13 House, Alley 30, Lac Long Quan Street, Hiep Dinh Ward, Tay Ninh Province",
     directions: "Get Directions",
@@ -43,7 +42,6 @@ const COPY = {
     toastMessage: "Đã sao chép email: hello@otterbeer.vn",
     phoneLabel: "SỐ ĐIỆN THOẠI",
     taproomLabel: "TAPROOM & NHÀ MÁY",
-    company: "Công ty TNHH BADENBEER",
     address:
       "Số nhà 13, hẻm 30, đường Lạc Long Quân, phường Hiệp Định, tỉnh Tây Ninh",
     directions: "Chỉ Đường",
@@ -298,10 +296,7 @@ export default function ContactSection({
                     <span>{copy.taproomLabel}</span>
                   </div>
                 </div>
-                <p className="mt-3 text-[1.05rem] font-bold text-white">
-                  {copy.company}
-                </p>
-                <address className="mt-1 text-[0.9375rem] not-italic leading-relaxed text-[#a1a1aa]">
+                <address className="mt-3 text-[0.9375rem] not-italic leading-relaxed text-[#a1a1aa]">
                   {copy.address}
                 </address>
 
