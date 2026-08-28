@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { Alert } from "@/components/ui/Alert";
 import { Tabs } from "@/components/ui/Tabs";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { DEFAULT_THEME_COLOR, DEFAULT_THEME_COLOR_CONTAINER } from "@/config/beer";
@@ -41,6 +42,8 @@ function emptyVariant(): VariantFormState {
 }
 
 export interface BeerFormInitialData {
+  /** Per-locale label for the main image, shown as the first pill. */
+  imageNames?: Partial<Record<LocaleCode, string>>;
   imageKey?: string;
   abv: number;
   ibu: number;
@@ -96,6 +99,9 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
     }
     return initial;
   });
+  const [imageNames, setImageNames] = useState<Partial<Record<LocaleCode, string>>>(
+    () => ({ ...emptyVariant().names, ...(initialData?.imageNames ?? {}) })
+  );
   const [variants, setVariants] = useState<VariantFormState[]>(() =>
     (initialData?.variants ?? []).map((variant) => ({
       imageKey: variant.imageKey,
@@ -103,6 +109,7 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
     }))
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -141,6 +148,7 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setErrors([]);
+    setSuccessMessage(null);
     setFieldErrors({});
 
     const requiredLocales = getRequiredLocales();
@@ -184,6 +192,18 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
     if (themeColorContainer.trim() && !HEX_COLOR_PATTERN.test(themeColorContainer.trim())) {
       validationErrors.push("Màu nền không hợp lệ, cần đúng định dạng mã hex (VD: #1d3f82).");
       newFieldErrors.themeColorContainer = "Mã hex không hợp lệ";
+    }
+
+    if (variants.length > 0) {
+      for (const localeCode of requiredLocales) {
+        const localeLabel =
+          LOCALES.find((l) => l.code === localeCode)?.label ?? localeCode;
+        if (!(imageNames[localeCode as LocaleCode] ?? "").trim()) {
+          validationErrors.push(
+            `Ảnh chính: cần nhập tên ngắn (${localeLabel}) khi sản phẩm có phiên bản.`
+          );
+        }
+      }
     }
 
     variants.forEach((variant, index) => {
@@ -232,6 +252,12 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
       isFeatured,
       status,
       translations: activeTranslations,
+      imageNames: LOCALES.filter(
+        (locale) => (imageNames[locale.code] ?? "").trim().length > 0
+      ).map((locale) => ({
+        locale: locale.code,
+        shortName: (imageNames[locale.code] ?? "").trim(),
+      })),
       variants: variants.map((variant) => ({
         imageKey: variant.imageKey,
         names: LOCALES.filter(
@@ -277,8 +303,27 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
         return;
       }
 
-      router.push("/admin/beers");
+      // Stay on the form rather than bouncing back to the list, so an editor
+      // can keep working on the same product after saving.
+      if (mode === "create") {
+        // There is no edit page to stay on yet — hand over to the new
+        // product's own so the next save PATCHes instead of creating a
+        // second copy.
+        const created = await response.json().catch(() => null);
+        const newId = created?._id ? String(created._id) : null;
+        if (newId) {
+          router.replace(`/admin/beers/${newId}/sua`);
+          router.refresh();
+          return;
+        }
+        router.push("/admin/beers");
+        router.refresh();
+        return;
+      }
+
+      setSuccessMessage("Đã lưu thay đổi.");
       router.refresh();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       setErrors([err instanceof Error ? err.message : "Đã xảy ra lỗi không xác định."]);
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -292,7 +337,13 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
   const pageTitle = mode === "create" ? "Tạo sản phẩm mới" : "Chỉnh sửa sản phẩm";
 
   return (
-    <form className="flex max-w-[860px] flex-col gap-8 pb-12" onSubmit={handleSubmit}>
+    <form
+      className="flex max-w-[860px] flex-col gap-8 pb-12"
+      onSubmit={handleSubmit}
+      // Any edit invalidates the "saved" banner — leaving it up while there
+      // are unsaved changes would misreport the form's state.
+      onChange={() => setSuccessMessage(null)}
+    >
       <div className="flex flex-col gap-3 border-b border-[rgba(196,198,210,0.3)] pb-4">
         <Breadcrumbs
           items={[
@@ -303,6 +354,10 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
         />
         <h1 className="text-[32px] tracking-wide text-primary">{pageTitle}</h1>
       </div>
+
+      {successMessage ? (
+        <Alert variant="success" title={successMessage} />
+      ) : null}
 
       {errors.length > 0 ? (
         <div className="rounded-lg bg-error-container p-4 text-on-error-container shadow-sm">
@@ -414,18 +469,52 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
       <Card className={sectionClass}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex flex-col gap-1">
-            <h2 className={sectionTitleClass}>Phiên bản đóng gói</h2>
+            <h2 className={sectionTitleClass}>Phiên bản sản phẩm</h2>
             <p className="max-w-[520px] text-sm text-on-surface-variant">
-              Mỗi phiên bản là một quy cách đóng gói (lon, bao bì 6 lon, thùng 24 lon) với
-              ảnh riêng. Từ 2 phiên bản trở lên, trang chủ sẽ hiển thị thanh chọn ngay dưới
-              ảnh. Để trống nếu sản phẩm chỉ có một ảnh — khi đó ảnh sản phẩm ở trên được
-              dùng.
+              Mỗi phiên bản là một biến thể của sản phẩm với ảnh riêng — ví dụ quy cách
+              đóng gói (lon, bao bì 6 lon, thùng 24 lon). Mỗi phiên bản thêm vào đây sẽ
+              hiện thành một nút chọn ngay dưới ảnh trên trang chủ. Để trống nếu sản
+              phẩm chỉ có một ảnh — khi đó ảnh sản phẩm ở trên được dùng.
             </p>
           </div>
           <Button type="button" variant="secondary" size="sm" onClick={addVariant}>
             Thêm phiên bản
           </Button>
         </div>
+
+        {variants.length > 0 ? (
+          <div className="flex flex-col gap-4 rounded border border-[rgba(196,198,210,0.5)] bg-surface p-4">
+            <div className="flex items-center justify-between gap-4">
+              <span className={labelClass}>Ảnh chính (nút đầu tiên)</span>
+              <span className="text-xs text-on-surface-variant">
+                Ảnh lấy từ mục “Thông số & Ảnh” ở trên
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {LOCALES.map((locale) => (
+                <Input
+                  key={locale.code}
+                  label={
+                    <>
+                      Tên ngắn ({locale.label}){" "}
+                      {locale.required ? (
+                        <span className="text-error font-bold">*</span>
+                      ) : null}
+                    </>
+                  }
+                  id={`main-image-name-${locale.code}`}
+                  maxLength={40}
+                  placeholder={locale.code === "en" ? "VD: CAN" : "VD: LON"}
+                  value={imageNames[locale.code] ?? ""}
+                  onChange={(e) =>
+                    setImageNames((prev) => ({ ...prev, [locale.code]: e.target.value }))
+                  }
+                />
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         {variants.length === 0 ? (
           <p className="rounded border border-dashed border-[rgba(196,198,210,0.7)] bg-surface p-4 text-sm text-on-surface-variant">

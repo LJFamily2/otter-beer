@@ -46,10 +46,17 @@ export default async function EditBeerPage({ params }: EditBeerPageProps) {
         { style: t.style, headline: t.headline, description: t.description },
       ])
     ) as BeerFormInitialData["translations"],
-    variants: beer.variants.map<VariantFormState>((variant) => ({
+    // `?? []` rather than trusting the schema default: a Beer document saved
+    // before `variants` existed has no such path, and in dev the compiled
+    // model is cached across HMR reloads, so a server that booted before the
+    // field was added hands back documents without it either way.
+    imageNames: Object.fromEntries(
+      (beer.imageNames ?? []).map((name) => [name.locale, name.shortName])
+    ) as BeerFormInitialData["imageNames"],
+    variants: (beer.variants ?? []).map<VariantFormState>((variant) => ({
       imageKey: variant.imageKey,
       names: Object.fromEntries(
-        variant.names.map((name) => [name.locale, name.shortName])
+        (variant.names ?? []).map((name) => [name.locale, name.shortName])
       ) as VariantFormState["names"],
     })),
   };

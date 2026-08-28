@@ -27,7 +27,7 @@ export interface IBeerTranslation {
 }
 
 /**
- * One language's label for a packaging variant — "Lon" / "Can". Mirrors
+ * One language's label for a variant — "Lon" / "Can". Mirrors
  * IBeerTranslation's array-of-subdocuments shape so the image stays shared
  * across languages while the label follows the site's locale.
  */
@@ -38,8 +38,9 @@ export interface IBeerVariantName {
 }
 
 /**
- * A packaging option for a beer (single can, 6-pack, 24-case). Each carries
- * its own photo; the showcase swaps the hero image when a visitor picks one.
+ * One selectable version of a beer — most often a packaging format (single
+ * can, 6-pack, 24-case). Each carries its own photo; the showcase swaps the
+ * hero image when a visitor picks one.
  */
 export interface IBeerVariant {
   imageKey: string;
@@ -48,6 +49,12 @@ export interface IBeerVariant {
 
 export interface IBeer extends Document {
   imageKey?: string;
+  /**
+   * Per-locale label for `imageKey`, used as the first pill in the showcase's
+   * variant picker. Only meaningful once `variants` is non-empty — a beer
+   * with no variants shows its image with no picker, so it needs no label.
+   */
+  imageNames: IBeerVariantName[];
   abv: number;
   ibu: number;
   shopUrl?: string;
@@ -61,7 +68,9 @@ export interface IBeer extends Document {
   status: BeerStatus;
   translations: IBeerTranslation[];
   /**
-   * Packaging variants. Empty for beers that only ever ship one way — the
+   * Product variants — packaging (single can / 6-pack / case) is the
+   * motivating case, but nothing here is packaging-specific: a variant is
+   * just an image plus a label. Empty for beers with only one look — the
    * showcase then falls back to `imageKey` and renders no picker, which is
    * exactly how every beer behaved before variants existed.
    */
@@ -108,6 +117,7 @@ const BeerVariantSchema = new Schema<IBeerVariant>(
 const BeerSchema = new Schema<IBeer>(
   {
     imageKey: { type: String, trim: true },
+    imageNames: { type: [BeerVariantNameSchema], default: [] },
     abv: { type: Number, required: true, min: 0, max: 100 },
     ibu: { type: Number, required: true, min: 0, max: 200 },
     shopUrl: { type: String, trim: true },

@@ -45,6 +45,56 @@ export const BeerVariantInputSchema = z.object({
 });
 
 /**
+ * Shared label-set rule: every required locale present, no locale twice.
+ * Used for the main image's label and for each variant's.
+ */
+function validateNameSet(
+  names: { locale: string }[],
+  ctx: z.RefinementCtx,
+  path: (string | number)[],
+  subject: string
+) {
+  const locales = names.map((n) => n.locale);
+
+  const missing = getRequiredLocales().filter((l) => !locales.includes(l));
+  if (missing.length > 0) {
+    const missingLabels = missing.map((l) =>
+      l === "vi" ? "Tiếng Việt" : l === "en" ? "Tiếng Anh" : l
+    );
+    ctx.addIssue({
+      code: "custom",
+      path,
+      message: `${subject}: thiếu tên ở ngôn ngữ bắt buộc: ${missingLabels.join(", ")}`,
+    });
+  }
+
+  if (new Set(locales).size !== locales.length) {
+    ctx.addIssue({
+      code: "custom",
+      path,
+      message: `${subject}: mỗi ngôn ngữ chỉ được xuất hiện một lần`,
+    });
+  }
+}
+
+/**
+ * The main image becomes the first pill as soon as a beer has variants, so
+ * from that point it needs a label of its own — otherwise the row would show
+ * one unnamed pill beside named ones.
+ */
+function validateMainImageNames(
+  variants: unknown[] | undefined,
+  imageNames: { locale: string }[] | undefined,
+  ctx: z.RefinementCtx
+) {
+  if (!variants || variants.length === 0) return;
+  // undefined on a partial update means "leave as-is" — the stored value
+  // stands, so there is nothing to check here.
+  if (imageNames === undefined) return;
+  validateNameSet(imageNames, ctx, ["imageNames"], "Ảnh chính");
+}
+
+/**
  * Each variant needs a label in every required locale and may not repeat a
  * locale — same contract validateTranslationSet enforces for the beer's own
  * copy, but scoped per variant so the error points at the offending row.
@@ -54,27 +104,12 @@ function validateVariantSet(
   ctx: z.RefinementCtx
 ) {
   variants.forEach((variant, index) => {
-    const locales = variant.names.map((n) => n.locale);
-
-    const missing = getRequiredLocales().filter((l) => !locales.includes(l));
-    if (missing.length > 0) {
-      const missingLabels = missing.map((l) =>
-        l === "vi" ? "Tiếng Việt" : l === "en" ? "Tiếng Anh" : l
-      );
-      ctx.addIssue({
-        code: "custom",
-        path: ["variants", index, "names"],
-        message: `Phiên bản ${index + 1}: thiếu tên ở ngôn ngữ bắt buộc: ${missingLabels.join(", ")}`,
-      });
-    }
-
-    if (new Set(locales).size !== locales.length) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["variants", index, "names"],
-        message: `Phiên bản ${index + 1}: mỗi ngôn ngữ chỉ được xuất hiện một lần`,
-      });
-    }
+    validateNameSet(
+      variant.names,
+      ctx,
+      ["variants", index, "names"],
+      `Phiên bản ${index + 1}`
+    );
   });
 }
 
@@ -125,6 +160,7 @@ const baseFields = {
   isFeatured: z.boolean().default(false),
   status: z.enum(BEER_STATUSES).default("draft"),
   variants: z.array(BeerVariantInputSchema).default([]),
+  imageNames: z.array(BeerVariantNameInputSchema).default([]),
 };
 
 export const BeerCreateSchema = z
@@ -137,6 +173,7 @@ export const BeerCreateSchema = z
   .superRefine((data, ctx) => {
     validateTranslationSet(data.translations, ctx);
     validateVariantSet(data.variants, ctx);
+    validateMainImageNames(data.variants, data.imageNames, ctx);
   });
 
 export const BeerUpdateSchema = z
@@ -152,10 +189,12 @@ export const BeerUpdateSchema = z
     status: z.enum(BEER_STATUSES).optional(),
     translations: z.array(BeerTranslationInputSchema).min(1).optional(),
     variants: z.array(BeerVariantInputSchema).optional(),
+    imageNames: z.array(BeerVariantNameInputSchema).optional(),
   })
   .superRefine((data, ctx) => {
     if (data.translations) validateTranslationSet(data.translations, ctx);
     if (data.variants) validateVariantSet(data.variants, ctx);
+    validateMainImageNames(data.variants, data.imageNames, ctx);
   });
 
 export type BeerCreateInput = z.infer<typeof BeerCreateSchema>;
