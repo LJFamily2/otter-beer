@@ -19,6 +19,15 @@ function baseBeer(overrides: Partial<Record<string, unknown>> = {}) {
   };
 }
 
+/** A beer with variants also needs a label for its main image — that becomes the first pill. */
+function beerWithVariants(variants: unknown[], overrides: Partial<Record<string, unknown>> = {}) {
+  return baseBeer({
+    variants,
+    imageNames: [{ locale: "vi", shortName: "LON" }],
+    ...overrides,
+  });
+}
+
 function variant(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     imageKey: "beers/can.png",
@@ -27,7 +36,7 @@ function variant(overrides: Partial<Record<string, unknown>> = {}) {
   };
 }
 
-describe("beer packaging variants", () => {
+describe("beer product variants", () => {
   it("defaults to an empty list when a client omits variants entirely", () => {
     const result = BeerCreateSchema.safeParse(baseBeer());
     expect(result.success).toBe(true);
@@ -36,26 +45,47 @@ describe("beer packaging variants", () => {
 
   it("accepts variants with vi-only and with both locales", () => {
     const result = BeerCreateSchema.safeParse(
-      baseBeer({
-        variants: [
-          variant(),
-          variant({
-            imageKey: "beers/six-pack.png",
-            names: [
-              { locale: "vi", shortName: "BAO BÌ 6 LON" },
-              { locale: "en", shortName: "6-PACK" },
-            ],
-          }),
-        ],
-      })
+      beerWithVariants([
+        variant(),
+        variant({
+          imageKey: "beers/six-pack.png",
+          names: [
+            { locale: "vi", shortName: "BAO BÌ 6 LON" },
+            { locale: "en", shortName: "6-PACK" },
+          ],
+        }),
+      ])
     );
     expect(result.success).toBe(true);
   });
 
   it("accepts more than three variants (no cap)", () => {
     const result = BeerCreateSchema.safeParse(
-      baseBeer({ variants: [variant(), variant(), variant(), variant(), variant()] })
+      beerWithVariants([variant(), variant(), variant(), variant(), variant()])
     );
+    expect(result.success).toBe(true);
+  });
+
+  it("requires a main-image label once the beer has variants", () => {
+    expect(
+      BeerCreateSchema.safeParse(baseBeer({ variants: [variant()] })).success
+    ).toBe(false);
+    expect(
+      BeerCreateSchema.safeParse(
+        baseBeer({ variants: [variant()], imageNames: [{ locale: "en", shortName: "CAN" }] })
+      ).success
+    ).toBe(false);
+  });
+
+  it("does not require a main-image label when there are no variants", () => {
+    expect(BeerCreateSchema.safeParse(baseBeer({ variants: [] })).success).toBe(true);
+    expect(BeerCreateSchema.safeParse(baseBeer()).success).toBe(true);
+  });
+
+  it("leaves the stored main-image label alone on a partial update", () => {
+    // `imageNames` omitted means "unchanged", so adding variants alone must
+    // not be rejected for a label the client never sent.
+    const result = BeerUpdateSchema.safeParse({ variants: [variant()] });
     expect(result.success).toBe(true);
   });
 

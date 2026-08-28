@@ -2,8 +2,9 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { buttonVariants } from "@/components/ui/Button";
+import { Tabs } from "@/components/ui/Tabs";
 import type { BeerShowcaseItem } from "@/lib/utils/BeerPresenter";
 
 interface ProductShowcaseProps {
@@ -22,7 +23,7 @@ const COPY = {
     sectionLabel: "Các dòng bia thủ công Otter Beer",
     prevProduct: "Sản phẩm trước",
     nextProduct: "Sản phẩm tiếp theo",
-    variantLabel: "Chọn quy cách đóng gói",
+    variantLabel: "Chọn phiên bản",
   },
   en: {
     shop: "SHOP NOW",
@@ -34,7 +35,7 @@ const COPY = {
     sectionLabel: "Otter Beer craft beer range",
     prevProduct: "Previous Product",
     nextProduct: "Next Product",
-    variantLabel: "Choose pack size",
+    variantLabel: "Choose variant",
   },
 } as const;
 
@@ -211,32 +212,35 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
           {/* Realistic 3D Ground Reflection Shadow */}
           <div className="h-4 w-48 rounded-full bg-gradient-to-r from-transparent via-primary/30 to-transparent blur-md transition-all duration-500 group-hover:w-56 group-hover:opacity-80" />
 
-          {/* Packaging Variant Picker — sharp rectangular pills that inherit the
-              beer's --color-primary, so the row recolors with the section. */}
-          {variants.length > 1 ? (
-            <div
-              role="group"
-              aria-label={copy.variantLabel}
-              className="mt-6 flex flex-wrap items-center justify-center gap-2"
-            >
-              {variants.map((variant, index) => {
-                const isActive = index === activeVariantIndex;
-                return (
-                  <button
-                    key={`${variant.shortName}-${index}`}
-                    type="button"
-                    onClick={() => setVariantIndex(index)}
-                    aria-pressed={isActive}
-                    className={`cursor-pointer border px-4 py-2 text-[11px] font-bold tracking-[0.12em] uppercase transition-all duration-200 active:scale-95 ${
-                      isActive
-                        ? "border-primary bg-primary text-white shadow-sm"
-                        : "border-primary/25 bg-white/70 text-primary backdrop-blur-md hover:border-primary/60 hover:bg-white"
-                    }`}
-                  >
-                    {variant.shortName}
-                  </button>
-                );
-              })}
+          {/* Product Variant Picker — main image first, then each variant.
+              The shared segmented Tabs fills the SELECTED tab with the beer's
+              --color-primary and leaves the track neutral, and glides that
+              fill between tabs. LayoutGroup scopes the glide to this beer:
+              without it the fill would fly across from the previous product's
+              control when the carousel advances. */}
+          {variants.length > 0 ? (
+            <div role="group" aria-label={copy.variantLabel} className="mt-6 max-w-full">
+              <LayoutGroup id={`variant-picker-${currentBeer.id}`}>
+                <Tabs
+                  variant="segmented"
+                  value={String(activeVariantIndex)}
+                  onChange={(next) => setVariantIndex(Number(next))}
+                  // Index as the value: two packs may legitimately share a
+                  // label, and position is what actually identifies a tab.
+                  // Tailwind preflight sets `text-transform: none` on
+                  // <button>, so uppercase has to ride on the label itself
+                  // rather than the container — and keeping it here leaves
+                  // Tabs case-neutral for the admin, where locale names like
+                  // "Tiếng Việt" must stay as written.
+                  items={variants.map((variant, index) => ({
+                    value: String(index),
+                    label: (
+                      <span className="uppercase tracking-wide">{variant.shortName}</span>
+                    ),
+                  }))}
+                  className="max-w-full flex-wrap justify-center"
+                />
+              </LayoutGroup>
             </div>
           ) : null}
 

@@ -31,15 +31,18 @@ export function pickVariantName(
   variant: Pick<IBeerVariant, "names">,
   locale: string
 ): string | null {
+  // Tolerates a variant with no names array at all: dropping one unlabelled
+  // pill beats throwing while rendering the public homepage.
+  const names = variant.names ?? [];
   const name =
-    variant.names.find((n) => n.locale === locale) ??
-    variant.names.find((n) => n.locale === DEFAULT_LOCALE) ??
-    variant.names[0] ??
+    names.find((n) => n.locale === locale) ??
+    names.find((n) => n.locale === DEFAULT_LOCALE) ??
+    names[0] ??
     null;
   return name?.shortName ?? null;
 }
 
-/** One packaging option as rendered by the showcase's pill picker. */
+/** One product variant as rendered by the showcase's pill picker. */
 export interface BeerVariantItem {
   shortName: string;
   imageSrc: string;
@@ -59,8 +62,9 @@ export interface BeerShowcaseItem {
   themeColor: string;
   themeColorContainer: string;
   /**
-   * Packaging options, in editor order. Empty for beers with none, in which
-   * case the showcase renders `imageSrc` and hides the picker.
+   * The picker's pills: the main image first, then each variant. Empty for
+   * beers with no variants, in which case the showcase renders `imageSrc`
+   * and hides the picker entirely.
    */
   variants: BeerVariantItem[];
 }
@@ -71,15 +75,55 @@ export interface BeerShowcaseItem {
  * integrity guard — translations is required to have at least one entry at
  * the schema level, so this should not happen for a saved beer).
  */
+/**
+ * The picker's pills, in display order: the beer's main image first, then
+ * each variant. Returns an empty list when the beer has no variants — there
+ * is nothing to switch between, so the showcase renders the main image with
+ * no picker at all.
+ */
+function buildVariantItems(
+  beer: IBeer,
+  translation: IBeerTranslation,
+  locale: string,
+  mainImageSrc: string
+): BeerVariantItem[] {
+  const variants = beer.variants ?? [];
+  if (variants.length === 0) return [];
+
+  const items: BeerVariantItem[] = [
+    {
+      // The label is required once variants exist, so this normally comes
+      // from imageNames; `style` is a defensive fallback that keeps the main
+      // image in the row (and therefore selected by default) even if a
+      // document predates that rule.
+      shortName:
+        pickVariantName({ names: beer.imageNames ?? [] }, locale) ?? translation.style,
+      imageSrc: mainImageSrc,
+    },
+  ];
+
+  for (const variant of variants) {
+    const shortName = pickVariantName(variant, locale);
+    // A variant with no usable label is unrenderable (the pill would be
+    // blank), so it is dropped rather than shown as an empty button.
+    if (!shortName || !variant.imageKey) continue;
+    items.push({ shortName, imageSrc: publicImageUrl(variant.imageKey) });
+  }
+
+  return items;
+}
+
 export function toShowcaseItem(beer: IBeer, locale: string): BeerShowcaseItem | null {
   const translation = pickTranslation(beer, locale);
   if (!translation) return null;
+
+  const mainImageSrc = beer.imageKey ? publicImageUrl(beer.imageKey) : FALLBACK_IMAGE_SRC;
 
   return {
     id: String(beer._id),
     abv: `${beer.abv}%`,
     ibu: beer.ibu,
-    imageSrc: beer.imageKey ? publicImageUrl(beer.imageKey) : FALLBACK_IMAGE_SRC,
+    imageSrc: mainImageSrc,
     style: translation.style,
     headline: translation.headline,
     description: translation.description,
@@ -87,12 +131,6 @@ export function toShowcaseItem(beer: IBeer, locale: string): BeerShowcaseItem | 
     findLocallyUrl: beer.findLocallyUrl,
     themeColor: beer.themeColor ?? DEFAULT_THEME_COLOR,
     themeColorContainer: beer.themeColorContainer ?? DEFAULT_THEME_COLOR_CONTAINER,
-    // A variant with no usable label is unrenderable (the pill would be
-    // blank), so it is dropped rather than shown as an empty button.
-    variants: (beer.variants ?? []).flatMap((variant) => {
-      const shortName = pickVariantName(variant, locale);
-      if (!shortName || !variant.imageKey) return [];
-      return [{ shortName, imageSrc: publicImageUrl(variant.imageKey) }];
-    }),
+    variants: buildVariantItems(beer, translation, locale, mainImageSrc),
   };
 }

@@ -40,6 +40,7 @@ describe("BeerService", () => {
         status: "draft",
         translations: fakeTranslations(),
         variants: [],
+        imageNames: [],
       };
       await service.create(input, "507f1f77bcf86cd799439011");
 
@@ -59,6 +60,7 @@ describe("BeerService", () => {
         themeColorContainer: "#1d3f82",
         translations: fakeTranslations(),
         variants: [],
+        imageNames: [],
       };
       await service.create(input, "507f1f77bcf86cd799439011");
 
@@ -81,6 +83,7 @@ describe("BeerService", () => {
         status: "draft",
         translations: fakeTranslations(),
         variants: [],
+        imageNames: [],
       };
       await service.create(input, "507f1f77bcf86cd799439011");
 

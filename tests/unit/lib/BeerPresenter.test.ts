@@ -85,9 +85,55 @@ describe("toShowcaseItem", () => {
     expect(item).toBeNull();
   });
 
-  it("maps packaging variants to labels + image URLs for the requested locale", () => {
+  it("leads the pill list with the main image, then each variant", () => {
     const item = toShowcaseItem(
       beer({
+        imageKey: "beers/lager.png",
+        imageNames: [
+          { locale: "vi", shortName: "LON" },
+          { locale: "en", shortName: "CAN" },
+        ],
+        variants: [
+          {
+            imageKey: "beers/six-pack.png",
+            names: [{ locale: "vi", shortName: "BAO BÌ 6 LON" }],
+          },
+        ],
+      }),
+      "en"
+    );
+
+    expect(item?.variants).toEqual([
+      { shortName: "CAN", imageSrc: "/api/media/public/beers/lager.png" },
+      { shortName: "BAO BÌ 6 LON", imageSrc: "/api/media/public/beers/six-pack.png" },
+    ]);
+  });
+
+  it("falls back to the beer's style when the main image has no label", () => {
+    const item = toShowcaseItem(
+      beer({
+        imageKey: "beers/lager.png",
+        imageNames: [],
+        variants: [
+          { imageKey: "beers/can.png", names: [{ locale: "vi", shortName: "LON" }] },
+        ],
+      }),
+      "vi"
+    );
+
+    // Never drops the main image from the row — doing so would silently
+    // change which image the showcase shows by default.
+    expect(item?.variants[0]).toEqual({
+      shortName: "Bia Vàng",
+      imageSrc: "/api/media/public/beers/lager.png",
+    });
+  });
+
+  it("maps variant labels + image URLs for the requested locale", () => {
+    const item = toShowcaseItem(
+      beer({
+        imageKey: "beers/lager.png",
+        imageNames: [{ locale: "vi", shortName: "LON" }],
         variants: [
           {
             imageKey: "beers/can.png",
@@ -105,7 +151,7 @@ describe("toShowcaseItem", () => {
       "en"
     );
 
-    expect(item?.variants).toEqual([
+    expect(item?.variants.slice(1)).toEqual([
       { shortName: "CAN", imageSrc: "/api/media/public/beers/can.png" },
       // No EN label on this one, so it falls back to vi rather than vanishing.
       { shortName: "BAO BÌ 6 LON", imageSrc: "/api/media/public/beers/six-pack.png" },
@@ -116,8 +162,9 @@ describe("toShowcaseItem", () => {
     const item = toShowcaseItem(
       beer({
         imageKey: "beers/lager.png",
+        imageNames: [{ locale: "vi", shortName: "LON" }],
         variants: [
-          { imageKey: "beers/can.png", names: [{ locale: "vi", shortName: "LON" }] },
+          { imageKey: "beers/can.png", names: [{ locale: "vi", shortName: "6 LON" }] },
         ],
       }),
       "vi"
@@ -129,6 +176,8 @@ describe("toShowcaseItem", () => {
   it("drops variants that have no usable label or no image", () => {
     const item = toShowcaseItem(
       beer({
+        imageKey: "beers/lager.png",
+        imageNames: [{ locale: "vi", shortName: "LON" }],
         variants: [
           { imageKey: "beers/can.png", names: [] },
           { imageKey: "", names: [{ locale: "vi", shortName: "LON" }] },
@@ -139,8 +188,14 @@ describe("toShowcaseItem", () => {
     );
 
     expect(item?.variants).toEqual([
+      { shortName: "LON", imageSrc: "/api/media/public/beers/lager.png" },
       { shortName: "THÙNG", imageSrc: "/api/media/public/beers/case.png" },
     ]);
+  });
+
+  it("renders no pills at all when the beer has no variants", () => {
+    const item = toShowcaseItem(beer({ imageKey: "beers/lager.png" }), "vi");
+    expect(item?.variants).toEqual([]);
   });
 
   it("returns an empty variant list for a beer saved before variants existed", () => {
@@ -169,5 +224,11 @@ describe("pickVariantName", () => {
 
   it("returns null when a variant has no names at all", () => {
     expect(pickVariantName({ names: [] }, "vi")).toBeNull();
+  });
+
+  it("returns null rather than throwing when names is missing entirely", () => {
+    expect(
+      pickVariantName({ names: undefined as unknown as [] }, "vi")
+    ).toBeNull();
   });
 });
