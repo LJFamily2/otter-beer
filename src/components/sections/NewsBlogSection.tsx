@@ -126,7 +126,7 @@ export function NewsBlogSection({ locale = DEFAULT_LOCALE, posts }: NewsBlogSect
               {copy.kicker}
             </span>
 
-            <h2 className="mt-3 font-display text-[clamp(34px,5.5vw,60px)] uppercase leading-[1.08] tracking-[0.14em] !text-white">
+            <h2 className="mt-3 font-display text-[clamp(34px,5.5vw,60px)] uppercase leading-[1.2] tracking-[0.14em] !text-white">
               {copy.heading}
             </h2>
 
@@ -159,7 +159,7 @@ export function NewsBlogSection({ locale = DEFAULT_LOCALE, posts }: NewsBlogSect
               onClick={() => scrollByCard(-1)}
               disabled={atStart}
               aria-label={copy.prev}
-              className="group pointer-events-auto flex size-12 sm:size-14 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/30 bg-white/20 text-white shadow-xl backdrop-blur-md transition-all duration-300 hover:border-white hover:bg-white/35 hover:scale-110 active:scale-95 disabled:pointer-events-none disabled:opacity-0"
+              className="group pointer-events-auto flex size-12 sm:size-14 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/30 bg-white/20 text-white shadow-xl backdrop-blur-[14px] transition-all duration-300 hover:border-white hover:bg-white/35 hover:scale-110 active:scale-95 disabled:pointer-events-none disabled:opacity-0"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -180,7 +180,7 @@ export function NewsBlogSection({ locale = DEFAULT_LOCALE, posts }: NewsBlogSect
               onClick={() => scrollByCard(1)}
               disabled={atEnd}
               aria-label={copy.next}
-              className="group pointer-events-auto flex size-12 sm:size-14 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/30 bg-white/20 text-white shadow-xl backdrop-blur-md transition-all duration-300 hover:border-white hover:bg-white/35 hover:scale-110 active:scale-95 disabled:pointer-events-none disabled:opacity-0"
+              className="group pointer-events-auto flex size-12 sm:size-14 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/30 bg-white/20 text-white shadow-xl backdrop-blur-[14px] transition-all duration-300 hover:border-white hover:bg-white/35 hover:scale-110 active:scale-95 disabled:pointer-events-none disabled:opacity-0"
             >
               <svg
                 viewBox="0 0 24 24"
