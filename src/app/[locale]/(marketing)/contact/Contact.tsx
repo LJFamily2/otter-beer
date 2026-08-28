@@ -153,7 +153,6 @@ export default function ContactSection({
   const Heading = headingLevel;
 
   const [copied, setCopied] = useState(false);
-  const [showToast, setShowToast] = useState(false);
 
   const handleCopyEmail = useCallback(async () => {
     const email = "hello@otterbeer.vn";
@@ -191,9 +190,7 @@ export default function ContactSection({
         navigator.vibrate?.(40);
       }
       setCopied(true);
-      setShowToast(true);
       setTimeout(() => setCopied(false), 2500);
-      setTimeout(() => setShowToast(false), 3500);
     }
   }, []);
 
@@ -338,22 +335,6 @@ export default function ContactSection({
           </div>
         </div>
       </div>
-
-      {/* Floating Toast Notification */}
-      {showToast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-3.5 rounded-2xl border border-[#fed65b]/40 bg-[#141718]/95 px-5 py-3.5 text-white shadow-2xl backdrop-blur-lg transition-all animate-in fade-in slide-in-from-bottom-4"
-        >
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#fed65b]/15 text-[#fed65b]">
-            <CheckIcon className="h-4 w-4 text-[#fed65b]" />
-          </span>
-          <p className="text-[0.9375rem] font-medium text-[#f4f4f5]">
-            {copy.toastMessage}
-          </p>
-        </div>
-      )}
     </section>
   );
 }
