@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { DEFAULT_LOCALE } from "@/config/locales";
 
 interface MobileContactBarProps {
@@ -8,13 +8,14 @@ interface MobileContactBarProps {
 }
 
 const COPY = {
-  vi: { email: "EMAIL", phone: "ĐIỆN THOẠI", zalo: "ZALO" },
-  en: { email: "EMAIL", phone: "PHONE", zalo: "ZALO" },
+  vi: { email: "EMAIL", copied: "ĐÃ SAO CHÉP", phone: "ĐIỆN THOẠI", zalo: "ZALO" },
+  en: { email: "EMAIL", copied: "COPIED!", phone: "PHONE", zalo: "ZALO" },
 } as const;
 
 export function MobileContactBar({ locale = DEFAULT_LOCALE }: MobileContactBarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
 
   useEffect(() => {
@@ -41,6 +42,46 @@ export function MobileContactBar({ locale = DEFAULT_LOCALE }: MobileContactBarPr
     };
   }, []);
 
+  const handleCopyEmail = useCallback(async () => {
+    const email = "hello@otterbeer.vn";
+    let success = false;
+
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(email);
+        success = true;
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = email;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        success = document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+    } catch {
+      const textarea = document.createElement("textarea");
+      textarea.value = email;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      success = document.execCommand("copy");
+      document.body.removeChild(textarea);
+    }
+
+    if (success) {
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate?.(40);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  }, []);
+
   const isVisible = isScrolled && !isMenuOpen;
 
   return (
@@ -49,12 +90,16 @@ export function MobileContactBar({ locale = DEFAULT_LOCALE }: MobileContactBarPr
         isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0 pointer-events-none"
       }`}
     >
-      <a
-        href="mailto:hello@otterbeer.vn"
-        className="flex flex-1 items-center justify-center border-r border-black/5 text-[0.8125rem] font-bold uppercase tracking-wider text-primary transition-colors active:bg-black/5"
+      <button
+        type="button"
+        onClick={handleCopyEmail}
+        aria-label={copied ? copy.copied : copy.email}
+        className={`flex flex-1 items-center justify-center border-r border-black/5 text-[0.8125rem] font-bold uppercase tracking-wider transition-colors active:bg-black/5 ${
+          copied ? "text-[#059669]" : "text-primary"
+        }`}
       >
-        {copy.email}
-      </a>
+        {copied ? copy.copied : copy.email}
+      </button>
       <a
         href="tel:+84908790102"
         className="flex flex-1 items-center justify-center border-r border-black/5 text-[0.8125rem] font-bold uppercase tracking-wider text-primary transition-colors active:bg-black/5"
