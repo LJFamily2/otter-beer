@@ -17,7 +17,7 @@ describe("MarqueeSection Component", () => {
 
       expect(screen.getAllByText("OTTER BEER").length).toBeGreaterThan(0);
       expect(
-        screen.getAllByText("TASTE OF TAY NINH, A DIFFERENT EXPERIENCE").length
+        screen.getAllByText("LOCAL FLAVOR, A DIFFERENT EXPERIENCE").length
       ).toBeGreaterThan(0);
     });
 
@@ -26,7 +26,7 @@ describe("MarqueeSection Component", () => {
 
       expect(screen.getAllByText("OTTER BEER").length).toBeGreaterThan(0);
       expect(
-        screen.getAllByText("HƯƠNG VỊ TÂY NINH, TRẢI NGHIỆM KHÁC BIỆT").length
+        screen.getAllByText("HƯƠNG VỊ ĐỊA PHƯƠNG, TRẢI NGHIỆM KHÁC BIỆT").length
       ).toBeGreaterThan(0);
     });
 
@@ -34,7 +34,7 @@ describe("MarqueeSection Component", () => {
       render(<MarqueeSection />);
 
       expect(
-        screen.getAllByText("HƯƠNG VỊ TÂY NINH, TRẢI NGHIỆM KHÁC BIỆT").length
+        screen.getAllByText("HƯƠNG VỊ ĐỊA PHƯƠNG, TRẢI NGHIỆM KHÁC BIỆT").length
       ).toBeGreaterThan(0);
     });
 
@@ -42,7 +42,7 @@ describe("MarqueeSection Component", () => {
       render(<MarqueeSection locale="fr" />);
 
       expect(
-        screen.getAllByText("TASTE OF TAY NINH, A DIFFERENT EXPERIENCE").length
+        screen.getAllByText("LOCAL FLAVOR, A DIFFERENT EXPERIENCE").length
       ).toBeGreaterThan(0);
     });
   });
@@ -72,7 +72,7 @@ describe("MarqueeSection Component", () => {
 
       const region = screen.getByRole("region", { name: "Brand Marquee" });
       const srOnly = within(region)
-        .getAllByText(/OTTER BEER|TASTE OF TAY NINH/)
+        .getAllByText(/OTTER BEER|LOCAL FLAVOR/)
         .filter((el) => el.className.includes("sr-only"));
 
       expect(srOnly).toHaveLength(2);

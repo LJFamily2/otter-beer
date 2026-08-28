@@ -8,11 +8,11 @@ interface MarqueeSectionProps {
 const COPY = {
   vi: {
     brand: "OTTER BEER",
-    tagline: "HƯƠNG VỊ TÂY NINH, TRẢI NGHIỆM KHÁC BIỆT",
+    tagline: "HƯƠNG VỊ ĐỊA PHƯƠNG, TRẢI NGHIỆM KHÁC BIỆT",
   },
   en: {
     brand: "OTTER BEER",
-    tagline: "TASTE OF TAY NINH, A DIFFERENT EXPERIENCE",
+    tagline: "LOCAL FLAVOR, A DIFFERENT EXPERIENCE",
   },
 } as const;
 

@@ -218,21 +218,6 @@ export function Header({
 
           {/* Right-side group: Social icons, Language selector, Contact button, Mobile Menu button */}
           <div className="ml-auto flex items-center gap-3 sm:gap-4 z-10">
-            {/* Social Icon - Instagram (Desktop only) */}
-            <a
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="me noopener noreferrer"
-              className={`flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95 max-[900px]:hidden ${
-                mobileMenuOpen || !isScrolled
-                  ? "text-white hover:bg-white/20 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
-                  : "text-primary hover:bg-primary/10 hover:text-primary-container"
-              }`}
-              aria-label="Instagram"
-            >
-              <InstagramIcon className="h-5 w-5" />
-            </a>
-
             {/* Social Icon - Facebook (Desktop only) */}
             <a
               href={FACEBOOK_URL}
@@ -246,6 +231,21 @@ export function Header({
               aria-label="Facebook"
             >
               <FacebookIcon className="h-5 w-5" />
+            </a>
+
+            {/* Social Icon - Instagram (Desktop only) */}
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="me noopener noreferrer"
+              className={`flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 active:scale-95 max-[900px]:hidden ${
+                mobileMenuOpen || !isScrolled
+                  ? "text-white hover:bg-white/20 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
+                  : "text-primary hover:bg-primary/10 hover:text-primary-container"
+              }`}
+              aria-label="Instagram"
+            >
+              <InstagramIcon className="h-5 w-5" />
             </a>
 
             {/* Language Selector Dropdown (Desktop & Mobile when menu closed) */}
