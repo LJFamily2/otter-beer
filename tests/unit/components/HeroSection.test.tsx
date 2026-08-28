@@ -305,4 +305,84 @@ describe("HeroSection Component", () => {
       expect(currentSlideNumber()).toBe(2);
     });
   });
+
+  describe("above-the-fold call to action", () => {
+    /**
+     * The hero is deliberately image-only, and the consequence was that the
+     * page offered nothing to act on until the contact block far below the
+     * fold. These two links are the fix.
+     */
+    it("renders both CTAs", () => {
+      render(<HeroSection />);
+
+      expect(screen.getByTestId("hero-cta-primary")).toBeInTheDocument();
+      expect(screen.getByTestId("hero-cta-secondary")).toBeInTheDocument();
+    });
+
+    it("sends the primary CTA to the product showcase", () => {
+      render(<HeroSection locale="vi" />);
+
+      expect(screen.getByTestId("hero-cta-primary")).toHaveAttribute(
+        "href",
+        "/#products"
+      );
+    });
+
+    it("sends the secondary CTA to the contact page", () => {
+      render(<HeroSection locale="vi" />);
+
+      expect(screen.getByTestId("hero-cta-secondary")).toHaveAttribute(
+        "href",
+        "/contact"
+      );
+    });
+
+    it("locale-prefixes both CTAs for a non-default locale", () => {
+      render(<HeroSection locale="en" />);
+
+      // "/en#products", not "/en/#products" — next/link normalises the
+      // trailing slash away, which lands on exactly the same href the header
+      // nav in (marketing)/layout.tsx builds for the same target.
+      expect(screen.getByTestId("hero-cta-primary")).toHaveAttribute(
+        "href",
+        "/en#products"
+      );
+      expect(screen.getByTestId("hero-cta-secondary")).toHaveAttribute(
+        "href",
+        "/en/contact"
+      );
+    });
+
+    it("localises the CTA labels", () => {
+      const { unmount } = render(<HeroSection locale="vi" />);
+      expect(screen.getByTestId("hero-cta-primary")).toHaveTextContent(
+        /khám phá bia/i
+      );
+      unmount();
+
+      render(<HeroSection locale="en" />);
+      expect(screen.getByTestId("hero-cta-primary")).toHaveTextContent(
+        /explore our beers/i
+      );
+    });
+
+    it("keeps the CTAs out of the indicator group so they are not slide buttons", () => {
+      render(<HeroSection />);
+
+      expect(indicators()).toHaveLength(SLIDE_COUNT);
+      expect(
+        within(screen.getByRole("group", { name: "Hero slides" })).queryByTestId(
+          "hero-cta-primary"
+        )
+      ).not.toBeInTheDocument();
+    });
+
+    it("still renders the sr-only h1 alongside the CTAs", () => {
+      render(<HeroSection locale="en" />);
+
+      expect(
+        screen.getByRole("heading", { level: 1, name: /otter beer craft brewery/i })
+      ).toBeInTheDocument();
+    });
+  });
 });

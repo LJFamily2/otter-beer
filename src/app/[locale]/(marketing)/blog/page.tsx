@@ -10,7 +10,10 @@ import {
   buildWebSiteJsonLd,
   jsonLdGraph,
   localizedPath,
+  toBreadcrumbItems,
+  type BreadcrumbEntry,
 } from "@/lib/seo";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { publicImageUrl } from "@/lib/storage/constants";
 import { Badge } from "@/components/ui/Badge";
 import { Pagination } from "@/components/ui/Pagination";
@@ -56,13 +59,16 @@ export default async function BlogListPage({
   const buildHref = (targetPage: number) =>
     `${localizedPath(locale, "/blog")}?page=${targetPage}`;
 
+  // One trail, two consumers — the JSON-LD and the visible <Breadcrumbs>.
+  const trail: BreadcrumbEntry[] = [
+    { name: isVi ? "Trang chủ" : "Home", path: "/" },
+    { name: isVi ? "Tin tức" : "News", path: "/blog" },
+  ];
+
   const jsonLd = jsonLdGraph([
     buildOrganizationJsonLd(),
     buildWebSiteJsonLd(locale),
-    buildBreadcrumbJsonLd(locale, [
-      { name: isVi ? "Trang chủ" : "Home", path: "/" },
-      { name: isVi ? "Tin tức" : "News", path: "/blog" },
-    ]),
+    buildBreadcrumbJsonLd(locale, trail),
   ]);
 
   return (
@@ -72,7 +78,12 @@ export default async function BlogListPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <section className="px-5 pt-28 sm:pt-36 lg:pt-40 text-center">
+      <Breadcrumbs
+        items={toBreadcrumbItems(locale, trail)}
+        className="mx-auto max-w-[1280px] px-5 pt-24 sm:pt-32 lg:pt-36"
+      />
+
+      <section className="px-5 pt-8 text-center">
         {/* Kept in title case rather than the uppercase other page headings
             use: at this size the Vietnamese title stacks diacritics above the
             cap height, and 0.92 leading leaves them no room. The tight leading
@@ -94,7 +105,11 @@ export default async function BlogListPage({
               <div className="absolute inset-0">
                 <Image
                   src={publicImageUrl(featured.coverImageKey)}
-                  alt=""
+                  alt={
+                    isVi
+                      ? `Ảnh bìa bài viết: ${featuredTranslation.title}`
+                      : `Cover image for: ${featuredTranslation.title}`
+                  }
                   fill
                   className="object-cover"
                   sizes="(max-width: 1320px) calc(100vw - 40px), 1280px"
@@ -140,7 +155,11 @@ export default async function BlogListPage({
                     {post.coverImageKey ? (
                       <Image
                         src={publicImageUrl(post.coverImageKey)}
-                        alt=""
+                        alt={
+                          isVi
+                            ? `Ảnh bìa bài viết: ${translation.title}`
+                            : `Cover image for: ${translation.title}`
+                        }
                         fill
                         className="object-cover"
                         sizes="(max-width: 640px) 100vw, 33vw"

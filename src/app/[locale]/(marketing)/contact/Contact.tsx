@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { MAP_URL, formatGeo, responseTimeFor } from "@/config/brand";
 
 interface ContactSectionProps {
   locale?: string;
@@ -29,7 +30,6 @@ const COPY = {
     directions: "Get Directions",
     factory: "Visit Factory",
     statusOpen: "Taproom Open",
-    gps: "11.3385° N, 106.1144° E",
   },
   vi: {
     kicker: "LIÊN HỆ & ĐỊA CHỈ",
@@ -47,7 +47,6 @@ const COPY = {
     directions: "Chỉ Đường",
     factory: "Tham Quan Nhà Máy",
     statusOpen: "Xưởng Bia Đang Mở Cửa",
-    gps: "11.3385° B, 106.1144° Đ",
   },
 } as const;
 
@@ -121,6 +120,40 @@ function LocationIcon() {
         d="M8 1.2A5.6 5.6 0 0 0 2.4 6.8c0 4.1 4.2 7.7 5.2 8.6.2.2.5.2.7 0 .9-.9 5.3-4.5 5.3-8.6A5.6 5.6 0 0 0 8 1.2Zm0 7.6A2 2 0 1 1 8 5a2 2 0 0 1 0 4Z"
         fill="currentColor"
       />
+    </svg>
+  );
+}
+
+function ClockIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden="true"
+      className="h-4 w-4 shrink-0"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
+function DirectionsIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="h-3.5 w-3.5"
+    >
+      <path d="M3 11l19-9-9 19-2-8-8-2z" />
     </svg>
   );
 }
@@ -231,6 +264,18 @@ export default function ContactSection({
                 {copy.body}
               </p>
 
+              {/* Response-time commitment. A visitor deciding whether to phone
+                  a brewery wants to know they will not be left hanging; this
+                  is the one line that answers it. Sourced from brand.ts so the
+                  promise is stated in exactly one place. */}
+              <p
+                data-testid="contact-response-time"
+                className="mt-4 inline-flex items-center gap-2.5 text-[0.9375rem] font-medium text-[#f9e37a]"
+              >
+                <ClockIcon />
+                <span>{responseTimeFor(locale)}</span>
+              </p>
+
               {/* Action Buttons - Solid Accent Block */}
               <div className="mt-8 flex flex-wrap gap-4 sm:mt-10">
                 <a
@@ -300,10 +345,27 @@ export default function ContactSection({
                   {copy.address}
                 </address>
 
-                {/* GPS Coordinates Badge */}
-                <div className="mt-3 inline-flex items-center gap-2 rounded-md bg-white/5 px-2.5 py-1 text-[0.75rem] font-mono text-[#f9e37a]/90">
-                  <GpsIcon />
-                  <span>{copy.gps}</span>
+                {/* GPS badge — rendered from brand.ts GEO, the same value the
+                    Brewery JSON-LD publishes, so the two can never drift. */}
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <span className="inline-flex items-center gap-2 rounded-md bg-white/5 px-2.5 py-1 text-[0.75rem] font-mono text-[#f9e37a]/90">
+                    <GpsIcon />
+                    <span>{formatGeo(locale)}</span>
+                  </span>
+
+                  {/* The "Get Directions" copy existed in COPY and MAP_URL
+                      existed in brand.ts, but nothing ever rendered either —
+                      the address was a dead end for anyone trying to visit. */}
+                  <a
+                    href={MAP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-testid="contact-directions"
+                    className="inline-flex items-center gap-1.5 rounded-md border border-[#fed65b]/30 px-2.5 py-1 text-[0.75rem] font-bold uppercase tracking-wider text-[#fed65b] transition-colors hover:border-[#fed65b] hover:bg-[#fed65b]/10"
+                  >
+                    <DirectionsIcon />
+                    <span>{copy.directions}</span>
+                  </a>
                 </div>
               </div>
             </div>

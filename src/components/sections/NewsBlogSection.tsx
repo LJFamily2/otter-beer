@@ -104,6 +104,9 @@ export function NewsBlogSection({ locale = DEFAULT_LOCALE, posts }: NewsBlogSect
           style={{ y: parallaxY }}
           className="absolute -top-[25%] -bottom-[25%] inset-x-0 h-[150%]"
         >
+          {/* Genuinely decorative: a parallax texture inside an aria-hidden
+              wrapper. An alt here would inject noise into the section for
+              screen-reader users and say nothing about the news content. */}
           <Image
             src="/images/new-bg.png"
             alt=""
@@ -217,7 +220,11 @@ export function NewsBlogSection({ locale = DEFAULT_LOCALE, posts }: NewsBlogSect
                   >
                     <Image
                       src={post.imageSrc}
-                      alt=""
+                      alt={
+                        locale === "vi"
+                          ? `Ảnh bìa bài viết: ${post.title}`
+                          : `Cover image for: ${post.title}`
+                      }
                       fill
                       sizes="(max-width: 640px) 264px, (max-width: 1024px) 300px, 324px"
                       loading={index < 2 ? "eager" : undefined}

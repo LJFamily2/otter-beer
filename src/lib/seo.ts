@@ -17,8 +17,20 @@ import {
 import type { IBlogPost, IBlogPostTranslation } from "@/models/BlogPost";
 import type { BeerShowcaseItem } from "@/lib/utils/BeerPresenter";
 
-/** Default social-share image. 1200x630-ish source living in /public. */
-export const OG_IMAGE_PATH = "/images/otter-beer-hero.png";
+/**
+ * Default social-share image — a real 1200x630 card.
+ *
+ * This used to point at otter-beer-hero.png, which is 1024x1024, while every
+ * `openGraph.images` entry below declared `width: 1200, height: 630`. Facebook,
+ * X and Zalo all trust the declared dimensions, so every shared link rendered
+ * a mis-cropped or rejected preview. Regenerate with
+ * `node scripts/generate-og-image.mjs` if the source art changes.
+ */
+export const OG_IMAGE_PATH = "/images/otter-beer-og.png";
+
+/** The OG card's true pixel dimensions. Declared here so metadata cannot lie about them again. */
+export const OG_IMAGE_WIDTH = 1200;
+export const OG_IMAGE_HEIGHT = 630;
 /** Square-ish brand mark used as the Organization `logo`. */
 export const LOGO_PATH = "/images/otter-beer-logo-yellow-bg.png";
 
@@ -217,7 +229,9 @@ export function buildStaticPageMetadata({
       type: "website",
       siteName: BRAND_NAME,
       locale: locale === "vi" ? "vi_VN" : "en_US",
-      images: [{ url: image, width: 1200, height: 630, alt: title }],
+      images: [
+        { url: image, width: OG_IMAGE_WIDTH, height: OG_IMAGE_HEIGHT, alt: title },
+      ],
     },
     twitter: {
       card: "summary_large_image",
@@ -407,6 +421,30 @@ export interface BreadcrumbEntry {
   path: string;
 }
 
+/**
+ * Maps a breadcrumb trail into the shape `<Breadcrumbs>` renders.
+ *
+ * Exists so a page can declare its trail ONCE and feed it to both
+ * `buildBreadcrumbJsonLd` and the visible component. The site previously
+ * emitted BreadcrumbList JSON-LD on /contact, /blog and /blog/[slug] while
+ * rendering no visible trail at all — Google's structured-data guidelines
+ * require breadcrumb markup to reflect a breadcrumb a user can actually see,
+ * so the markup was both a UX gap and a validity risk.
+ *
+ * The last entry is intentionally left without an href: `Breadcrumbs` renders
+ * the final item as the current page regardless, and omitting it keeps the
+ * "don't link to where you already are" rule visible at the call site.
+ */
+export function toBreadcrumbItems(
+  locale: string,
+  trail: readonly BreadcrumbEntry[]
+): { label: string; href?: string }[] {
+  return trail.map((entry, index) => ({
+    label: entry.name,
+    href: index === trail.length - 1 ? undefined : localizedPath(locale, entry.path),
+  }));
+}
+
 /** `BreadcrumbList` — drives the path shown in place of a raw URL in results. */
 export function buildBreadcrumbJsonLd(
   locale: string,
@@ -458,6 +496,24 @@ export function buildHomeJsonLd(
  * nodes means the `{ "@id": ... }` references it makes actually resolve on the
  * page, and a breadcrumb trail replaces the raw URL in the result.
  */
+/**
+ * The Home > News > {post} trail. Shared by `buildBlogPostJsonLd` and the
+ * visible <Breadcrumbs> on the post page so the markup describes a trail the
+ * reader can actually see, which is what Google's guidelines require.
+ */
+export function blogPostBreadcrumbTrail(
+  homeLabel: string,
+  blogLabel: string,
+  title: string,
+  slug: string
+): BreadcrumbEntry[] {
+  return [
+    { name: homeLabel, path: "/" },
+    { name: blogLabel, path: "/blog" },
+    { name: title, path: `/blog/${slug}` },
+  ];
+}
+
 export function buildBlogPostJsonLd(
   post: IBlogPost,
   locale: string,
@@ -470,10 +526,14 @@ export function buildBlogPostJsonLd(
     buildOrganizationJsonLd(),
     buildWebSiteJsonLd(locale),
     buildArticleJsonLd(post, locale, translation, authorName),
-    buildBreadcrumbJsonLd(locale, [
-      { name: homeLabel, path: "/" },
-      { name: blogLabel, path: "/blog" },
-      { name: translation.title, path: `/blog/${translation.slug}` },
-    ]),
+    buildBreadcrumbJsonLd(
+      locale,
+      blogPostBreadcrumbTrail(
+        homeLabel,
+        blogLabel,
+        translation.title,
+        translation.slug
+      )
+    ),
   ]);
 }

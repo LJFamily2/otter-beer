@@ -4,6 +4,15 @@ import { CookieConsent } from "@/components/ui/CookieConsent";
 
 const STORAGE_KEY = "otter_beer_cookie_consent";
 
+type DataLayerWindow = Window & { dataLayer?: unknown[] };
+
+/** Every `consent`/`update` tuple the banner has pushed for Consent Mode v2. */
+const consentUpdates = () =>
+  ((window as DataLayerWindow).dataLayer ?? []).filter(
+    (e): e is [string, string, Record<string, string>] =>
+      Array.isArray(e) && e[0] === "consent" && e[1] === "update"
+  );
+
 /** Tailwind class helper — reads the class list off a rendered element. */
 const classesOf = (el: HTMLElement) => el.className.split(/\s+/);
 
@@ -15,6 +24,7 @@ const openSettings = async (name: RegExp) => {
 describe("CookieConsent Component", () => {
   beforeEach(() => {
     localStorage.clear();
+    delete (window as DataLayerWindow).dataLayer;
   });
 
   describe("visibility", () => {
@@ -277,6 +287,82 @@ describe("CookieConsent Component", () => {
       expect(
         within(dialog).getByRole("button", { name: /đóng/i })
       ).toBeInTheDocument();
+    });
+  });
+
+  describe("enforcing the choice (Google Consent Mode v2)", () => {
+    /**
+     * The bug this covers: the banner used to write preferences to
+     * localStorage and nothing ever read them, while <GoogleAnalytics> loaded
+     * unconditionally from the root layout. Clicking "Only essential cookies"
+     * dismissed the banner and changed nothing — GA still loaded and still set
+     * _ga. A banner that states a choice it does not honour is an affirmative
+     * misrepresentation under GDPR and Vietnam's Decree 13, not just a gap.
+     */
+    it("denies analytics storage when the visitor rejects non-essential cookies", async () => {
+      render(<CookieConsent locale="en" />);
+
+      await userEvent.click(
+        await screen.findByRole("button", { name: /reject non-essential/i })
+      );
+
+      expect(consentUpdates().at(-1)?.[2]).toEqual({
+        analytics_storage: "denied",
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+      });
+    });
+
+    it("grants every signal on accept-all", async () => {
+      render(<CookieConsent locale="en" />);
+
+      await userEvent.click(
+        await screen.findByRole("button", { name: /accept all/i })
+      );
+
+      expect(consentUpdates().at(-1)?.[2]).toEqual({
+        analytics_storage: "granted",
+        ad_storage: "granted",
+        ad_user_data: "granted",
+        ad_personalization: "granted",
+      });
+    });
+
+    it("persists the rejection so it survives a reload", async () => {
+      render(<CookieConsent locale="en" />);
+
+      await userEvent.click(
+        await screen.findByRole("button", { name: /reject non-essential/i })
+      );
+
+      expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}")).toEqual({
+        essential: true,
+        analytics: false,
+        marketing: false,
+      });
+    });
+
+    it("pushes exactly one consent update per decision", async () => {
+      render(<CookieConsent locale="en" />);
+
+      await userEvent.click(
+        await screen.findByRole("button", { name: /accept all/i })
+      );
+
+      expect(consentUpdates()).toHaveLength(1);
+    });
+
+    it("always keeps essential cookies on, whatever the visitor saved", async () => {
+      render(<CookieConsent locale="en" />);
+
+      await userEvent.click(
+        await screen.findByRole("button", { name: /reject non-essential/i })
+      );
+
+      expect(
+        JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}").essential
+      ).toBe(true);
     });
   });
 });

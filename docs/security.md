@@ -116,20 +116,46 @@ export class HtmlSanitizer {
 }
 ```
 
-### Content Security Policy (CSP)
-Add to `next.config.ts` (not yet wired — do this alongside the admin UI build):
+### Content Security Policy (CSP) — implemented
 
-```typescript
-const cspHeader = `
-  default-src 'self';
-  script-src 'self' 'nonce-{nonce}' https://accounts.google.com;
-  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-  font-src 'self' https://fonts.gstatic.com;
-  img-src 'self' data: https://lh3.googleusercontent.com;
-  connect-src 'self';
-  frame-ancestors 'none';
-`;
-```
+Built in `src/lib/security/headers.ts` and applied to every route and every
+`public/` asset via `headers()` in `next.config.ts`. Asserted in
+`tests/unit/lib/securityHeaders.test.ts` (policy shape) and
+`tests/e2e/public/securityHeaders.spec.ts` (actually on the wire).
+
+The strict directives, which are the ones that matter most here:
+
+| Directive | Value | Stops |
+|---|---|---|
+| `frame-ancestors` | `'none'` | Clickjacking the admin panel |
+| `object-src` | `'none'` | Plugin/object injection |
+| `base-uri` | `'self'` | An injected `<base>` re-rooting every relative URL |
+| `form-action` | `'self'` | An injected form posting credentials offsite |
+| `default-src` | `'self'` | Everything not explicitly allowed below |
+
+Third parties are allowlisted narrowly and only where the site genuinely uses
+them: `googletagmanager.com` in `script-src`, the GA measurement endpoints in
+`connect-src`, `https://www.google.com` as the **only** `frame-src` (the Maps
+embed on `/contact`), and `lh3.googleusercontent.com` in `img-src` (admin
+avatars, matching `next.config.ts`'s `remotePatterns`). There is no
+`fonts.gstatic.com` entry because `next/font/google` self-hosts at build time.
+
+**Why there is no nonce.** Next's own CSP guide reaches for a per-request nonce
+generated in `proxy.ts`. That is the stronger policy and is deliberately not
+what we do: a nonce must be read through `headers()` during render, which opts
+every page into dynamic rendering — and this site's entire premise (CLAUDE.md,
+`docs/seo.md`) is statically-rendered HTML a crawler gets without executing
+anything. So `script-src` carries `'unsafe-inline'`, which Next needs for its
+bootstrap scripts and `@next/third-parties` needs for the GA snippet.
+
+That trade is acceptable because the residual XSS surface is narrow and covered
+elsewhere: the only attacker-influenced HTML on the site is blog post content,
+and that is DOMPurify-sanitised on write with no bypass path (see above). If the
+site ever gains a genuinely dynamic, user-content-heavy surface, revisit this
+and move to the nonce approach.
+
+`'unsafe-eval'` and `ws:` are added in development only (React's dev-mode error
+reconstruction and HMR) and never ship to production.
 
 ---
 
@@ -220,19 +246,44 @@ export const POST = RouteGuard.requirePermission(
 
 ---
 
-## 8. HTTP Security Headers
+## 8. HTTP Security Headers — implemented
 
-Add these headers in `next.config.ts` (not yet wired — do alongside the CSP work above):
+`buildSecurityHeaders()` in `src/lib/security/headers.ts`, applied to
+`/:path*` by `next.config.ts`. Headers are checked before the filesystem, so
+static files in `public/` are covered too, not just page routes.
 
-```typescript
-const securityHeaders = [
-  { key: "X-Content-Type-Options", value: "nosniff" },
-  { key: "X-Frame-Options", value: "DENY" },
-  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
-];
-```
+| Header | Value |
+|---|---|
+| `Content-Security-Policy` | see §3 |
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `DENY` (belt-and-braces with `frame-ancestors`, for older browsers) |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), interest-cohort=()` |
+| `X-DNS-Prefetch-Control` | `on` |
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` — **production only** |
+
+HSTS is omitted in development on purpose: browsers ignore it over http
+anyway, but a stray `max-age` picked up from a localhost proxy pins the whole
+`localhost` origin to https for two years and is painful to unstick.
+
+## 8a. Cookie consent governs analytics
+
+`src/lib/analytics/consent.ts` + `src/components/analytics/`.
+
+Google Analytics runs under **Consent Mode v2**: every signal
+(`analytics_storage`, `ad_storage`, `ad_user_data`, `ad_personalization`)
+starts `denied`, and the banner pushes an `update` when the visitor chooses.
+`ConsentSync` replays a stored decision on later visits.
+
+This replaced a real compliance defect, not a missing nicety: the banner used
+to write preferences to `localStorage` that nothing ever read, while
+`<GoogleAnalytics>` loaded unconditionally from the root layout — so "Reject
+Non-Essential" dismissed the banner and changed nothing. Under GDPR and
+Vietnam's Decree 13 a control that states a choice it does not honour is an
+affirmative misrepresentation, which is worse than having no banner at all.
+
+**Rule: any future tag that sets cookies or an identifier must be registered
+through this module — never mounted directly in a layout.**
 
 ---
 

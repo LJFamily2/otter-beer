@@ -1,10 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import { Anton, Hanken_Grotesk } from "next/font/google";
-import { GoogleAnalytics } from "@next/third-parties/google";
+import { Analytics } from "@/components/analytics/Analytics";
 import { getServerLocale } from "@/lib/utils/getServerLocale";
 import { env } from "@/lib/env";
 import { BRAND_NAME, LEGAL_NAME } from "@/config/brand";
-import { LOGO_PATH, OG_IMAGE_PATH } from "@/lib/seo";
+import {
+  LOGO_PATH,
+  OG_IMAGE_PATH,
+  OG_IMAGE_HEIGHT,
+  OG_IMAGE_WIDTH,
+} from "@/lib/seo";
 import "./globals.css";
 
 const anton = Anton({
@@ -69,7 +74,14 @@ export const metadata: Metadata = {
     type: "website",
     siteName: BRAND_NAME,
     url: siteUrl,
-    images: [{ url: OG_IMAGE_PATH, width: 1200, height: 630, alt: BRAND_NAME }],
+    images: [
+      {
+        url: OG_IMAGE_PATH,
+        width: OG_IMAGE_WIDTH,
+        height: OG_IMAGE_HEIGHT,
+        alt: BRAND_NAME,
+      },
+    ],
   },
 
   twitter: {
@@ -97,8 +109,11 @@ export default async function RootLayout({
   return (
     <html lang={lang} className={`${anton.variable} ${hankenGrotesk.variable} scroll-smooth`}>
       <body>
+        {/* First thing in the document body: the Consent Mode "denied" default
+            has to be parsed before gtag.js is injected, or there is a window in
+            which the tag believes it may store an identifier. See Analytics. */}
+        <Analytics gaId={env.NEXT_PUBLIC_GA_ID} />
         {children}
-        {env.NEXT_PUBLIC_GA_ID && <GoogleAnalytics gaId={env.NEXT_PUBLIC_GA_ID} />}
       </body>
     </html>
   );

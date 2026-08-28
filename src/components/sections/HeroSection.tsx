@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { localizedPath } from "@/lib/seo";
 import {
   animate,
   motion,
@@ -31,7 +33,7 @@ const FALLBACK_SLIDES: HeroSlideItem[] = [
     alt: "Bia Otter Beer Premium Lager rót ra ly, bọt mịn, màu vàng hổ phách",
   },
   {
-    src: "/images/contact-hero.jpeg",
+    src: "/images/contact-hero.jpg",
     alt: "Không gian taproom của nhà máy bia Otter Beer tại Tây Ninh",
   },
   {
@@ -157,8 +159,16 @@ function SlideMedia({
  * is about and exactly what a sighted visitor sees in the images.
  */
 const HERO_COPY = {
-  vi: { headline: "Bia thủ công Otter Beer, nấu tại Tây Ninh, Việt Nam" },
-  en: { headline: "Otter Beer craft brewery, brewed in Tay Ninh, Vietnam" },
+  vi: {
+    headline: "Bia thủ công Otter Beer, nấu tại Tây Ninh, Việt Nam",
+    primaryCta: "Khám Phá Bia",
+    secondaryCta: "Liên Hệ Đặt Bia",
+  },
+  en: {
+    headline: "Otter Beer craft brewery, brewed in Tay Ninh, Vietnam",
+    primaryCta: "Explore Our Beers",
+    secondaryCta: "Get In Touch",
+  },
 } as const;
 
 interface HeroSectionProps {
@@ -438,6 +448,37 @@ export function HeroSection({ locale = "vi", slides: slidesProp = [] }: HeroSect
 
       {/* Segmented progress indicators. Not a tablist — there are no tabpanels;
           it is a labelled group of jump buttons. */}
+      {/*
+        Above-the-fold call to action.
+
+        The hero is deliberately image-only — no type is painted over the
+        photography (see SlideMedia) — and that is why it previously carried no
+        CTA at all: the first thing a visitor could act on was the contact block
+        far below the fold. These two links sit in the same z-20 chrome layer as
+        the indicators, deliberately *outside* the draggable track, so adding
+        them costs the carousel nothing — a drag that starts on the track still
+        pans, and the buttons keep their own hit targets.
+
+        Anchored above the indicators and riding the existing bottom scrim, so
+        no new gradient is introduced over the art.
+      */}
+      <div className="absolute inset-x-0 bottom-20 z-20 flex flex-wrap items-center justify-center gap-3 px-6 sm:bottom-24 sm:gap-4">
+        <Link
+          href={`${localizedPath(locale, "/")}#products`}
+          data-testid="hero-cta-primary"
+          className="inline-flex h-12 min-w-[180px] items-center justify-center rounded-xl bg-[#fed65b] px-6 text-sm font-bold uppercase tracking-wider text-black shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#ffe382] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:translate-y-0 sm:h-[52px] sm:text-[0.95rem]"
+        >
+          {copy.primaryCta}
+        </Link>
+        <Link
+          href={localizedPath(locale, "/contact")}
+          data-testid="hero-cta-secondary"
+          className="inline-flex h-12 min-w-[180px] items-center justify-center rounded-xl border border-white/40 bg-black/30 px-6 text-sm font-semibold uppercase tracking-wider text-white backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-black/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:translate-y-0 sm:h-[52px] sm:text-[0.95rem]"
+        >
+          {copy.secondaryCta}
+        </Link>
+      </div>
+
       <div
         role="group"
         aria-label="Hero slides"

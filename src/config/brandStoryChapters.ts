@@ -20,7 +20,7 @@ export const BRAND_STORY_CHAPTERS: BrandStoryChapter[] = [
     title: "Our Story",
     images: [
       "/images/otter-beer-premium-lager.jpg",
-      "/images/contact-hero.jpeg",
+      "/images/contact-hero.jpg",
       "/images/otter-beer-hero.png",
     ],
   },
@@ -40,7 +40,7 @@ export const BRAND_STORY_CHAPTERS: BrandStoryChapter[] = [
   {
     title: "Community",
     images: [
-      "/images/contact-hero.jpeg",
+      "/images/contact-hero.jpg",
       "/images/otter-beer-premium-lager.jpg",
       "/images/otter-beer-hero.png",
     ],

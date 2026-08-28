@@ -38,11 +38,33 @@ export const ADDRESS = {
   addressCountry: "VN",
 } as const;
 
-/** Approximate brewery coordinates — powers the `geo` node on the Brewery schema. */
+/**
+ * Brewery coordinates — powers the `geo` node on the Brewery schema AND the
+ * GPS badge rendered in the Contact section.
+ *
+ * These two used to be separate literals that had drifted apart: the schema
+ * said 11.3254/106.0967 while the visible badge said 11.3385/106.1144, which
+ * is a different spot entirely. The visible pair is the correct one — it is
+ * where the embedded Google Map is actually pinned — and a NAP/geo mismatch
+ * between visible text and structured data is exactly the local-SEO trust
+ * problem this file's header warns about. Single source now; render the badge
+ * from `formatGeo()` rather than retyping the numbers.
+ */
 export const GEO = {
-  latitude: 11.3254,
-  longitude: 106.0967,
+  latitude: 11.3385,
+  longitude: 106.1144,
 } as const;
+
+/**
+ * The GPS badge string, per locale, derived from GEO so it can never drift
+ * from the coordinates the structured data publishes.
+ */
+export function formatGeo(locale: string): string {
+  const isVi = locale === "vi";
+  const ns = isVi ? "B" : "N";
+  const ew = isVi ? "Đ" : "E";
+  return `${GEO.latitude.toFixed(4)}° ${ns}, ${GEO.longitude.toFixed(4)}° ${ew}`;
+}
 
 /**
  * Profiles that prove this is the same real-world entity across the web.
@@ -58,9 +80,19 @@ export const SOCIAL_PROFILES: readonly string[] = [
   "https://instagram.com/otterbeer",
 ];
 
-/** Google Maps deep link used by the Contact section's "Get Directions". */
-export const MAP_URL =
-  "https://maps.google.com/?q=S%E1%BB%91+nh%C3%A0+13+H%E1%BA%B9m+30+L%E1%BA%A1c+Long+Qu%C3%A2n+T%C3%A2y+Ninh";
+/**
+ * Google Maps deep link behind the Contact section's "Get Directions" button.
+ *
+ * Built from GEO rather than from an address string. The previous value was a
+ * free-text `?q=` query that (a) had a typo — "Hẹm" for "hẻm" — and (b) left
+ * Google to guess which of several similar Tay Ninh addresses was meant. That
+ * was tolerable while nothing rendered the link; now that it is a button a
+ * visitor taps to drive to the brewery, a fuzzy match is a wrong turn.
+ *
+ * Coordinates route to the exact pin, and deriving them here means the button,
+ * the GPS badge and the Brewery JSON-LD's `geo` can never disagree.
+ */
+export const MAP_URL = `https://www.google.com/maps/dir/?api=1&destination=${GEO.latitude},${GEO.longitude}`;
 
 /**
  * Taproom hours in schema.org `openingHours` shorthand. Drives the
@@ -69,6 +101,30 @@ export const MAP_URL =
 export const OPENING_HOURS = ["Mo-Su 10:00-22:00"] as const;
 
 export const PRICE_RANGE = "$ ";
+
+/**
+ * How quickly an enquiry gets answered, per locale.
+ *
+ * Rendered in the Contact section. Deliberately NOT emitted into the Brewery
+ * JSON-LD: schema.org has no honest field for "we reply within N hours"
+ * (`hoursAvailable` describes opening hours, not responsiveness), and forcing
+ * it into one would be structured data that misstates what it marks up.
+ *
+ * A stated response time is a conversion signal — a visitor deciding whether
+ * to phone a brewery wants to know they will not be left hanging.
+ *
+ * ⚠️ CONFIRM THIS NUMBER before it goes live. It is a promise to customers,
+ * not decoration, and it was chosen as a conservative default rather than
+ * measured. Change both strings together if the real commitment differs.
+ */
+export const RESPONSE_TIME = {
+  vi: "Chúng tôi phản hồi mọi liên hệ trong vòng 24 giờ làm việc.",
+  en: "We reply to every enquiry within 24 working hours.",
+} as const;
+
+export function responseTimeFor(locale: string): string {
+  return RESPONSE_TIME[locale as keyof typeof RESPONSE_TIME] ?? RESPONSE_TIME.en;
+}
 
 /**
  * The head keyword set for the site, per locale. These land in the homepage
