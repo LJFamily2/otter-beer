@@ -15,7 +15,7 @@ describe("Footer Component", () => {
     render(<Footer locale="vi" />);
 
     expect(
-      screen.getByText(/© 2024 OTTER BEER COMPANY. NẤU BẰNG DANH DỰ./i)
+      screen.getByText(/© 2024 OTTER BEER COMPANY. NẤU BẰNG NIỀM ĐAM MÊ./i)
     ).toBeInTheDocument();
 
     expect(screen.getByRole("link", { name: /chính sách bảo mật/i })).toBeInTheDocument();
@@ -36,7 +36,7 @@ describe("Footer Component", () => {
     render(<Footer locale="en" />);
 
     expect(
-      screen.getByText(/© 2024 OTTER BEER COMPANY. BREWED WITH HONOR./i)
+      screen.getByText(/© 2024 OTTER BEER COMPANY. BREWED WITH PASSION./i)
     ).toBeInTheDocument();
 
     expect(screen.getByRole("link", { name: /privacy policy/i })).toBeInTheDocument();

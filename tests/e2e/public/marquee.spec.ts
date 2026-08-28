@@ -25,7 +25,7 @@ test.describe("Public homepage — Brand marquee", () => {
     await expect(region(page)).toBeVisible();
     await expect(region(page).getByText("OTTER BEER").first()).toBeVisible();
     await expect(
-      region(page).getByText("HƯƠNG VỊ TÂY NINH, TRẢI NGHIỆM KHÁC BIỆT").first()
+      region(page).getByText("HƯƠNG VỊ ĐỊA PHƯƠNG, TRẢI NGHIỆM KHÁC BIỆT").first()
     ).toBeVisible();
   });
 
@@ -34,7 +34,7 @@ test.describe("Public homepage — Brand marquee", () => {
 
     await expect(region(page)).toBeVisible();
     await expect(
-      region(page).getByText("TASTE OF TAY NINH, A DIFFERENT EXPERIENCE").first()
+      region(page).getByText("LOCAL FLAVOR, A DIFFERENT EXPERIENCE").first()
     ).toBeVisible();
   });
 
