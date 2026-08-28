@@ -137,14 +137,14 @@ export default function ContactSection({
         className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-luminosity pointer-events-none"
         style={{
           backgroundImage:
-            "linear-gradient(180deg, rgba(13,15,16,0.92) 0%, rgba(13,15,16,0.85) 50%, rgba(13,15,16,0.95) 100%), url('/images/contact-hero.jpeg')",
+            "linear-gradient(180deg, rgba(13,15,16,0.92) 0%, rgba(13,15,16,0.85) 50%, rgba(13,15,16,0.95) 100%), url('/images/contact-hero.jpg')",
         }}
       />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_20%_40%,rgba(254,214,91,0.07),transparent_60%)] pointer-events-none" />
 
       <div className="relative mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-16">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-14 items-stretch">
-          
+
           {/* Left Column: Editorial Stage */}
           <div className="flex flex-col justify-between lg:col-span-6 space-y-10">
             <div>
