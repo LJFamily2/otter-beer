@@ -6,7 +6,10 @@ import {
   buildOrganizationJsonLd,
   buildStaticPageMetadata,
   jsonLdGraph,
+  toBreadcrumbItems,
+  type BreadcrumbEntry,
 } from "@/lib/seo";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ADDRESS, CONTACT } from "@/config/brand";
 
 interface ContactPageProps {
@@ -29,7 +32,7 @@ export async function generateMetadata({
     description: isVi
       ? `Liên hệ nhà máy bia thủ công Otter Beer tại ${ADDRESS.addressRegion}: đặt bia cho sự kiện, phân phối sỉ, tham quan nhà máy. Gọi ${CONTACT.phonesDisplay[0]} hoặc email ${CONTACT.email}.`
       : `Contact the Otter Beer craft brewery in ${ADDRESS.addressRegion} about private events, wholesale distribution and brewery visits. Call ${CONTACT.phonesDisplay[0]} or email ${CONTACT.email}.`,
-    imagePath: "/images/contact-hero.jpeg",
+    imagePath: "/images/contact-hero.jpg",
   });
 }
 
@@ -42,13 +45,16 @@ export default async function ContactPage({ params }: ContactPageProps) {
    * gets answered, so it carries the Brewery node (full NAP, hours, geo)
    * plus a breadcrumb trail back to the homepage.
    */
+  // One trail, two consumers: the JSON-LD below and the visible <Breadcrumbs>.
+  const trail: BreadcrumbEntry[] = [
+    { name: isVi ? "Trang chủ" : "Home", path: "/" },
+    { name: isVi ? "Liên hệ" : "Contact", path: "/contact" },
+  ];
+
   const jsonLd = jsonLdGraph([
     buildOrganizationJsonLd(),
     buildBreweryJsonLd(locale),
-    buildBreadcrumbJsonLd(locale, [
-      { name: isVi ? "Trang chủ" : "Home", path: "/" },
-      { name: isVi ? "Liên hệ" : "Contact", path: "/contact" },
-    ]),
+    buildBreadcrumbJsonLd(locale, trail),
   ]);
 
   return (
@@ -56,6 +62,10 @@ export default async function ContactPage({ params }: ContactPageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <Breadcrumbs
+        items={toBreadcrumbItems(locale, trail)}
+        className="mx-auto max-w-[1440px] px-4 pt-24 sm:px-8 sm:pt-32 lg:px-16 lg:pt-36"
       />
       <ContactSection locale={locale} />
     </>

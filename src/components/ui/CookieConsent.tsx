@@ -4,18 +4,17 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { DEFAULT_LOCALE } from "@/config/locales";
 import { localizedPath } from "@/lib/seo";
-
-interface CookiePreferences {
-  essential: boolean;
-  analytics: boolean;
-  marketing: boolean;
-}
+import {
+  ACCEPT_ALL,
+  CONSENT_STORAGE_KEY as STORAGE_KEY,
+  ESSENTIAL_ONLY,
+  writeStoredConsent,
+  type CookiePreferences,
+} from "@/lib/analytics/consent";
 
 interface CookieConsentProps {
   locale?: string;
 }
-
-const STORAGE_KEY = "otter_beer_cookie_consent";
 
 /**
  * Essential copy describes what a *visitor* actually stores — the age-gate
@@ -94,28 +93,22 @@ export function CookieConsent({ locale = DEFAULT_LOCALE }: CookieConsentProps) {
     }
   }, []);
 
+  // Each of these persists AND pushes a Consent Mode v2 `update` — see
+  // writeStoredConsent. Previously they only wrote to localStorage, so
+  // "Only essential cookies" dismissed the banner and changed nothing about
+  // what Google Analytics was allowed to do.
   const handleAcceptAll = () => {
-    const allConsented: CookiePreferences = {
-      essential: true,
-      analytics: true,
-      marketing: true,
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(allConsented));
+    writeStoredConsent(ACCEPT_ALL);
     setIsOpen(false);
   };
 
   const handleRejectNonEssential = () => {
-    const minimalConsent: CookiePreferences = {
-      essential: true,
-      analytics: false,
-      marketing: false,
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(minimalConsent));
+    writeStoredConsent(ESSENTIAL_ONLY);
     setIsOpen(false);
   };
 
   const handleSavePreferences = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
+    writeStoredConsent({ ...preferences, essential: true });
     setShowSettings(false);
     setIsOpen(false);
   };

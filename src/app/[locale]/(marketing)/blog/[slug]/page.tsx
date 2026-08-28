@@ -5,7 +5,14 @@ import { notFound } from "next/navigation";
 import { blogPostService } from "@/services/BlogPostService";
 import { pickTranslation } from "@/lib/utils/BlogPostPresenter";
 import { formatDate } from "@/lib/utils/formatDate";
-import { buildBlogPostMetadata, buildBlogPostJsonLd, localizedPath } from "@/lib/seo";
+import {
+  buildBlogPostMetadata,
+  buildBlogPostJsonLd,
+  blogPostBreadcrumbTrail,
+  localizedPath,
+  toBreadcrumbItems,
+} from "@/lib/seo";
+import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { publicImageUrl } from "@/lib/storage/constants";
 import type { PopulatedAuthor } from "@/types/blogPost";
 import { Card } from "@/components/ui/Card";
@@ -63,6 +70,15 @@ export default async function BlogDetailPage({
   ]);
 
   const author = post.authorId as unknown as PopulatedAuthor;
+  const homeLabel = isVi ? "Trang chủ" : "Home";
+  const blogLabel = isVi ? "Tin tức" : "News";
+  // Same trail the JSON-LD below publishes — see blogPostBreadcrumbTrail.
+  const trail = blogPostBreadcrumbTrail(
+    homeLabel,
+    blogLabel,
+    translation.title,
+    translation.slug
+  );
   // Full page graph (Organization + WebSite + BlogPosting + BreadcrumbList),
   // not just the article node — see buildBlogPostJsonLd.
   const jsonLd = buildBlogPostJsonLd(
@@ -70,8 +86,8 @@ export default async function BlogDetailPage({
     locale,
     translation,
     author?.name ?? "Otter Beer",
-    isVi ? "Tin tức" : "News",
-    isVi ? "Trang chủ" : "Home"
+    blogLabel,
+    homeLabel
   );
 
   return (
@@ -82,6 +98,8 @@ export default async function BlogDetailPage({
       />
 
       <article>
+        <Breadcrumbs items={toBreadcrumbItems(locale, trail)} className="mb-6" />
+
         <div className="mb-8">
           <p className="text-[13px] font-bold uppercase tracking-[0.1em] text-secondary">
             {post.tags[0] ? `${post.tags[0]} • ` : ""}
@@ -99,7 +117,11 @@ export default async function BlogDetailPage({
           <div className="relative my-8 aspect-video w-full overflow-hidden rounded-lg shadow-sm">
             <Image
               src={publicImageUrl(post.coverImageKey)}
-              alt=""
+              alt={
+                isVi
+                  ? `Ảnh bìa bài viết: ${translation.title}`
+                  : `Cover image for: ${translation.title}`
+              }
               fill
               className="object-cover"
               sizes="(max-width: 900px) 100vw, 66vw"
@@ -130,6 +152,9 @@ export default async function BlogDetailPage({
           <Card className="p-6">
             <div className="flex items-center gap-4">
               <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-surface-container-high">
+                {/* Decorative by WCAG H67: the author's name is rendered as
+                    text immediately beside this avatar inside the same card,
+                    so a descriptive alt would announce the name twice. */}
                 {author.image ? (
                   <Image src={author.image} alt="" width={56} height={56} />
                 ) : null}
@@ -168,7 +193,11 @@ export default async function BlogDetailPage({
                       {recent.coverImageKey ? (
                         <Image
                           src={publicImageUrl(recent.coverImageKey)}
-                          alt=""
+                          alt={
+                            isVi
+                              ? `Ảnh bìa bài viết: ${recentTranslation.title}`
+                              : `Cover image for: ${recentTranslation.title}`
+                          }
                           fill
                           className="object-cover"
                           sizes="56px"

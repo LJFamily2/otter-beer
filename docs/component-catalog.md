@@ -111,6 +111,16 @@ Homepage/public-page building blocks, one Figma frame per component.
 | `FaqSection` | `FaqSection.tsx` | Homepage FAQ — the site's AEO surface, sits between `NewsBlogSection` and `ContactSection`. Server Component built on native `<details>`/`<summary>` (not a JS accordion) so every answer ships in the server-rendered HTML whether or not the item is open. Content comes from `src/config/faq.ts`, which also feeds the `FAQPage` JSON-LD on the homepage — visible copy and markup are the same strings by construction. Anchored at `#faq` |
 | `ProductShowcase` | `ProductShowcase.tsx` | Homepage product carousel — Client Component, receives `beers: BeerShowcaseItem[]` as a prop (built server-side in `page.tsx` via `beerService.listShowcasePublished()` + `BeerPresenter.toShowcaseItem()`, one entry per `status: "published"` Beer, newest first). Section is omitted entirely when there are zero published beers. Per-beer `themeColor`/`themeColorContainer` (admin-set hex fields on `Beer`, editable in `BeerForm`) drive the section's `--color-primary`/`--color-primary-container` CSS vars; fall back to the brand default (`DEFAULT_THEME_COLOR`/`DEFAULT_THEME_COLOR_CONTAINER` in `src/config/beer.ts`) when unset. Shop/find-locally CTAs are hidden individually when a beer has no `shopUrl`/`findLocallyUrl`; prev/next nav is hidden when only one beer is published. Product variants (`Beer.variants` — an image plus a per-locale short name; packaging is the motivating case, e.g. lon / bao bì 6 lon / thùng 24 lon, but the field is not packaging-specific — edited in `BeerForm` under “Phiên bản sản phẩm”) render as a row of sharp rectangular pills under the can; picking one swaps the hero image. The pills inherit the section's `--color-primary`, so they recolor per beer. The row leads with the beer's main `imageKey` (labelled by `Beer.imageNames`, required once variants exist) and is followed by each variant, so a visitor switches between the main shot and the packs; the main image is selected by default. Shown on every breakpoint whenever the beer has at least one variant; a beer with none renders its main `imageKey` with no picker at all, exactly as before. `imageSrc` stays the main image either way, so the Product JSON-LD in `src/lib/seo.ts` is unaffected |
 
+## Analytics components (`src/components/analytics/`)
+
+Consent-gated measurement. Deliberately separate from `ui/` — these render no
+visible interface and exist purely to enforce an ordering guarantee.
+
+| Component | File | Description |
+|---|---|---|
+| `Analytics` | `Analytics.tsx` | Google Analytics behind Google Consent Mode v2. Renders nothing unless `NEXT_PUBLIC_GA_ID` is set. Emits, in order: a plain inline `<script>` registering every consent signal as `denied` with `wait_for_update`, then `<GoogleAnalytics>` (gtag.js, `afterInteractive`), then `<ConsentSync>`. Mounted first inside `<body>` in `src/app/layout.tsx` so the denied default is parsed before the tag is injected. Uses a raw inline script rather than `next/script`'s `beforeInteractive`, which Next requires to live literally inside `app/layout.tsx` — see the comment in the file |
+| `ConsentSync` | `ConsentSync.tsx` | Client Component, renders `null`. Replays an already-stored consent decision into Consent Mode on mount, so a returning visitor who accepted analytics is not stuck on the denied default forever — the banner never reappears for them, so nothing else would push an update |
+
 ## Admin-only components (`src/components/admin/`)
 
 Not part of the general-purpose UI kit — admin-specific pieces that assume
@@ -136,5 +146,7 @@ own route-aware active-state detection (see the Navigation entry above).
   summary list above **and** a full entry in `docs/component-library.md`.
 - Adding a `src/components/admin/*` component → add a row to the admin
   table above.
+- Adding a `src/components/analytics/*` component → add a row to the
+  analytics table above.
 - Retiring/deleting something → remove its row in the same change, don't
   leave a stale entry.

@@ -1,6 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import ContactSection from "@/app/[locale]/(marketing)/contact/Contact";
-import { ADDRESS, CONTACT } from "@/config/brand";
+import {
+  ADDRESS,
+  CONTACT,
+  GEO,
+  MAP_URL,
+  formatGeo,
+  responseTimeFor,
+} from "@/config/brand";
 
 describe("ContactSection", () => {
   it("renders the hero headline, CTA buttons, and contact details", () => {
@@ -83,6 +90,85 @@ describe("ContactSection", () => {
       expect(iframe).toHaveAttribute(
         "src",
         expect.stringContaining("google.com/maps/embed"),
+      );
+    });
+  });
+
+  describe("directions", () => {
+    /**
+     * Regression: `copy.directions` and `MAP_URL` both existed, and nothing
+     * rendered either. The address was a dead end — a visitor who wanted to
+     * drive to the brewery had to copy the text out by hand.
+     */
+    it("renders a Get Directions link, which nothing used to render at all", () => {
+      render(<ContactSection locale="en" />);
+
+      const link = screen.getByTestId("contact-directions");
+      expect(link).toBeInTheDocument();
+      expect(link).toHaveTextContent(/get directions/i);
+    });
+
+    it("points at the brewery's exact coordinates", () => {
+      render(<ContactSection locale="en" />);
+
+      expect(screen.getByTestId("contact-directions")).toHaveAttribute(
+        "href",
+        MAP_URL,
+      );
+      expect(MAP_URL).toContain(`${GEO.latitude},${GEO.longitude}`);
+    });
+
+    it("opens in a new tab without leaking the opener", () => {
+      render(<ContactSection locale="en" />);
+
+      const link = screen.getByTestId("contact-directions");
+      expect(link).toHaveAttribute("target", "_blank");
+      expect(link.getAttribute("rel")).toContain("noopener");
+    });
+
+    it("localises the label", () => {
+      render(<ContactSection locale="vi" />);
+
+      expect(screen.getByTestId("contact-directions")).toHaveTextContent(
+        /chỉ đường/i,
+      );
+    });
+  });
+
+  describe("GPS badge", () => {
+    /**
+     * The badge used to be a hardcoded string in COPY that disagreed with
+     * brand.ts GEO — the visible text and the Brewery JSON-LD named two
+     * different places. It is now derived from the single source.
+     */
+    it("renders the same coordinates the structured data publishes", () => {
+      render(<ContactSection locale="en" />);
+
+      expect(screen.getByText(formatGeo("en"))).toBeInTheDocument();
+      expect(screen.getByText(new RegExp(String(GEO.latitude)))).toBeInTheDocument();
+    });
+
+    it("uses Vietnamese cardinal letters for the vi locale", () => {
+      render(<ContactSection locale="vi" />);
+
+      expect(screen.getByText(formatGeo("vi"))).toBeInTheDocument();
+    });
+  });
+
+  describe("response-time promise", () => {
+    it("states how quickly an enquiry is answered", () => {
+      render(<ContactSection locale="en" />);
+
+      expect(screen.getByTestId("contact-response-time")).toHaveTextContent(
+        responseTimeFor("en"),
+      );
+    });
+
+    it("localises the promise", () => {
+      render(<ContactSection locale="vi" />);
+
+      expect(screen.getByTestId("contact-response-time")).toHaveTextContent(
+        responseTimeFor("vi"),
       );
     });
   });
