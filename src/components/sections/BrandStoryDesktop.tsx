@@ -118,27 +118,38 @@ export function BrandStoryDesktop({ locale, chapters: chaptersProp = [] }: Brand
   };
 
   function turn(direction: "next" | "prev") {
-    if (!bookRef.current) return;
+    const flipInstance = bookRef.current?.pageFlip();
+    if (!flipInstance) return;
 
-    if (direction === "next" && !isLast) {
-      bookRef.current.pageFlip().flipNext();
-      playPageTurn();
-      const nextIndex = Math.min(pageIndex + 2, LAST_PAGE_INDEX);
-      setPageIndex(nextIndex);
-    } else if (direction === "prev" && !isFirst) {
-      bookRef.current.pageFlip().flipPrev();
-      playPageTurn();
-      const prevIndex = Math.max(pageIndex - 2, 0);
-      setPageIndex(prevIndex);
+    try {
+      if (direction === "next" && !isLast) {
+        flipInstance.flipNext();
+        playPageTurn();
+        const nextIndex = Math.min(pageIndex + 2, LAST_PAGE_INDEX);
+        setPageIndex(nextIndex);
+      } else if (direction === "prev" && !isFirst) {
+        flipInstance.flipPrev();
+        playPageTurn();
+        const prevIndex = Math.max(pageIndex - 2, 0);
+        setPageIndex(prevIndex);
+      }
+    } catch (error) {
+      console.warn("Page flip error:", error);
     }
   }
 
   function turnToChapter(chapterIndex: number) {
-    if (!bookRef.current) return;
-    const targetPage = CHAPTERS[chapterIndex].startSpread * 2;
-    bookRef.current.pageFlip().turnToPage(targetPage);
-    playPageTurn();
-    setPageIndex(targetPage);
+    const flipInstance = bookRef.current?.pageFlip();
+    if (!flipInstance) return;
+
+    try {
+      const targetPage = CHAPTERS[chapterIndex].startSpread * 2;
+      flipInstance.turnToPage(targetPage);
+      playPageTurn();
+      setPageIndex(targetPage);
+    } catch (error) {
+      console.warn("Turn to chapter error:", error);
+    }
   }
 
   function onKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
@@ -185,9 +196,8 @@ export function BrandStoryDesktop({ locale, chapters: chaptersProp = [] }: Brand
           {/* Golden Spotlight Overlay Layer - Clipped Strictly to Text Glyphs with Smooth 500ms Fade */}
           <h2
             aria-hidden
-            className={`pointer-events-none absolute inset-0 font-display text-[60px] leading-[1.32] tracking-[-0.01em] uppercase transition-opacity duration-500 ease-out xl:text-[68px] ${
-              isTitleHovered ? "opacity-100" : "opacity-0"
-            }`}
+            className={`pointer-events-none absolute inset-0 font-display text-[60px] leading-[1.32] tracking-[-0.01em] uppercase transition-opacity duration-500 ease-out xl:text-[68px] ${isTitleHovered ? "opacity-100" : "opacity-0"
+              }`}
             style={{
               backgroundImage: titleMousePos
                 ? `radial-gradient(circle 140px at ${titleMousePos.x}px ${titleMousePos.y}px, #e9c349 0%, #c5a059 50%, transparent 85%)`
@@ -333,11 +343,10 @@ export function BrandStoryDesktop({ locale, chapters: chaptersProp = [] }: Brand
                     onClick={() => turnToChapter(index)}
                     aria-current={isCurrent ? "true" : undefined}
                     aria-label={copy.goToChapter(chapter.title)}
-                    className={`group absolute top-0 bottom-0 flex flex-col items-center border-l border-[#cfc7b4] pt-6 transition-all duration-500 ease-out hover:brightness-105 ${
-                      isCurrent
+                    className={`group absolute top-0 bottom-0 flex flex-col items-center border-l border-[#cfc7b4] pt-6 transition-all duration-500 ease-out hover:brightness-105 ${isCurrent
                         ? "z-30 bg-[#f8f5ed]"
                         : "bg-[#eae4d5] hover:bg-[#f4efe2]"
-                    }`}
+                      }`}
                     style={{
                       left: `${isCurrent ? 0 : ACTIVE_TAB_WIDTH + (offsetIndex - 1) * TAB_STEP_OFFSET}px`,
                       width: `${isCurrent ? ACTIVE_TAB_WIDTH : INACTIVE_TAB_WIDTH}px`,
@@ -363,11 +372,10 @@ export function BrandStoryDesktop({ locale, chapters: chaptersProp = [] }: Brand
                             {Array.from({ length: chapter.spreadCount }).map((_, dot) => (
                               <span
                                 key={dot}
-                                className={`h-[4px] w-[4px] rounded-full transition-colors duration-300 ${
-                                  dot === spreadInChapter
+                                className={`h-[4px] w-[4px] rounded-full transition-colors duration-300 ${dot === spreadInChapter
                                     ? "bg-[#2a0b12]/80"
                                     : "bg-[#2a0b12]/25"
-                                }`}
+                                  }`}
                               />
                             ))}
                           </span>
@@ -452,11 +460,10 @@ export function BrandStoryDesktop({ locale, chapters: chaptersProp = [] }: Brand
                   return (
                     <span
                       key={spread}
-                      className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
-                        spread === currentSpreadIndex
+                      className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${spread === currentSpreadIndex
                           ? "scale-125 bg-[#e9c349] shadow-[0_0_8px_rgba(233,195,73,0.8)]"
                           : "bg-[#f5f1ea]/30"
-                      }`}
+                        }`}
                     />
                   );
                 })}
@@ -489,9 +496,8 @@ const PageFace = React.forwardRef<
     <div
       ref={ref}
       aria-hidden={ariaHidden}
-      className={`relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-[#f6f4ee] ${
-        side === "left" ? "rounded-l-[4px]" : "rounded-r-[4px]"
-      }`}
+      className={`relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-[#f6f4ee] ${side === "left" ? "rounded-l-[4px]" : "rounded-r-[4px]"
+        }`}
     >
       {title && <h3 className="sr-only">{title}</h3>}
       {src !== null && (
@@ -526,9 +532,8 @@ const PageFace = React.forwardRef<
       {/* Page edge detail line */}
       <div
         aria-hidden
-        className={`pointer-events-none absolute inset-y-1 z-10 w-[8px] opacity-25 bg-[repeating-linear-gradient(to_right,rgba(42,11,18,0.2)_0px,rgba(42,11,18,0.2)_1px,transparent_1px,transparent_3px)] ${
-          side === "left" ? "left-0 rounded-l-[3px]" : "right-0 rounded-r-[3px]"
-        }`}
+        className={`pointer-events-none absolute inset-y-1 z-10 w-[8px] opacity-25 bg-[repeating-linear-gradient(to_right,rgba(42,11,18,0.2)_0px,rgba(42,11,18,0.2)_1px,transparent_1px,transparent_3px)] ${side === "left" ? "left-0 rounded-l-[3px]" : "right-0 rounded-r-[3px]"
+          }`}
       />
 
       {/* Book spine gutter shadow - anchored precisely to the spine edge of each leaf */}
