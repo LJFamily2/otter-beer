@@ -26,6 +26,26 @@ export interface IBeerTranslation {
   description: string;
 }
 
+/**
+ * One language's label for a packaging variant — "Lon" / "Can". Mirrors
+ * IBeerTranslation's array-of-subdocuments shape so the image stays shared
+ * across languages while the label follows the site's locale.
+ */
+export interface IBeerVariantName {
+  locale: string;
+  /** Pill label under the showcase image, e.g. "Bao bi 6 lon". */
+  shortName: string;
+}
+
+/**
+ * A packaging option for a beer (single can, 6-pack, 24-case). Each carries
+ * its own photo; the showcase swaps the hero image when a visitor picks one.
+ */
+export interface IBeerVariant {
+  imageKey: string;
+  names: IBeerVariantName[];
+}
+
 export interface IBeer extends Document {
   imageKey?: string;
   abv: number;
@@ -40,6 +60,12 @@ export interface IBeer extends Document {
   isFeatured: boolean;
   status: BeerStatus;
   translations: IBeerTranslation[];
+  /**
+   * Packaging variants. Empty for beers that only ever ship one way — the
+   * showcase then falls back to `imageKey` and renders no picker, which is
+   * exactly how every beer behaved before variants existed.
+   */
+  variants: IBeerVariant[];
   createdBy: Types.ObjectId;
   updatedBy: Types.ObjectId;
   createdAt: Date;
@@ -52,6 +78,29 @@ const BeerTranslationSchema = new Schema<IBeerTranslation>(
     style: { type: String, required: true, trim: true, maxlength: 60 },
     headline: { type: String, required: true, trim: true, maxlength: 200 },
     description: { type: String, required: true, trim: true, maxlength: 400 },
+  },
+  { _id: false }
+);
+
+const BeerVariantNameSchema = new Schema<IBeerVariantName>(
+  {
+    locale: { type: String, required: true, trim: true, lowercase: true },
+    shortName: { type: String, required: true, trim: true, maxlength: 40 },
+  },
+  { _id: false }
+);
+
+const BeerVariantSchema = new Schema<IBeerVariant>(
+  {
+    imageKey: { type: String, required: true, trim: true },
+    names: {
+      type: [BeerVariantNameSchema],
+      default: [],
+      validate: {
+        validator: (v: IBeerVariantName[]) => v.length > 0,
+        message: "At least one language's label is required per variant.",
+      },
+    },
   },
   { _id: false }
 );
@@ -80,6 +129,7 @@ const BeerSchema = new Schema<IBeer>(
         message: "At least one language's content is required.",
       },
     },
+    variants: { type: [BeerVariantSchema], default: [] },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
     updatedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   },
@@ -88,6 +138,8 @@ const BeerSchema = new Schema<IBeer>(
 
 BeerSchema.index({ "translations.locale": 1 });
 BeerSchema.index({ status: 1, isFeatured: 1 });
+/** Backs the variant half of BeerRepository.isKeyPubliclyVisible — hit on every public media request. */
+BeerSchema.index({ "variants.imageKey": 1 });
 /** Backs BeerRepository.listShowcasePublished — status filter + createdAt sort in one index scan. */
 BeerSchema.index({ status: 1, createdAt: -1 });
 

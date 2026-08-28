@@ -22,6 +22,7 @@ const COPY = {
     sectionLabel: "Các dòng bia thủ công Otter Beer",
     prevProduct: "Sản phẩm trước",
     nextProduct: "Sản phẩm tiếp theo",
+    variantLabel: "Chọn quy cách đóng gói",
   },
   en: {
     shop: "SHOP NOW",
@@ -33,11 +34,13 @@ const COPY = {
     sectionLabel: "Otter Beer craft beer range",
     prevProduct: "Previous Product",
     nextProduct: "Next Product",
+    variantLabel: "Choose pack size",
   },
 } as const;
 
 export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [variantIndex, setVariantIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
 
@@ -47,11 +50,22 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
 
   if (!currentBeer) return null;
 
+  const variants = currentBeer.variants ?? [];
+  // Guards the frame between a beer switch and the variant reset below, when
+  // a stale index could still point past the new beer's shorter list.
+  const activeVariantIndex = variantIndex < variants.length ? variantIndex : 0;
+  const activeVariant = variants[activeVariantIndex] ?? null;
+  // Beers with no packaging variants keep rendering exactly as before: the
+  // main image, and no picker.
+  const heroImageSrc = activeVariant?.imageSrc ?? currentBeer.imageSrc;
+
   const handlePrev = () => {
+    setVariantIndex(0);
     setCurrentIndex((prev) => (prev === 0 ? beers.length - 1 : prev - 1));
   };
 
   const handleNext = () => {
+    setVariantIndex(0);
     setCurrentIndex((prev) => (prev === beers.length - 1 ? 0 : prev + 1));
   };
 
@@ -175,7 +189,7 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
             {/* Animated Can Image Container */}
             <AnimatePresence mode="wait">
               <motion.div
-                key={currentBeer.id}
+                key={`${currentBeer.id}-${activeVariantIndex}`}
                 initial={{ opacity: 0, scale: 0.92, y: 15 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.92, y: -15 }}
@@ -183,8 +197,8 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
                 className="relative h-full w-full transform-gpu transition-all duration-500 ease-out group-hover:-translate-y-2 group-hover:scale-105"
               >
                 <Image
-                  src={currentBeer.imageSrc}
-                  alt={`${currentBeer.headline.replace(/\s+/g, " ").trim()} — ${currentBeer.style} Otter Beer, ${currentBeer.abv} ABV`}
+                  src={heroImageSrc}
+                  alt={`${currentBeer.headline.replace(/\s+/g, " ").trim()}${activeVariant ? ` — ${activeVariant.shortName}` : ""} — ${currentBeer.style} Otter Beer, ${currentBeer.abv} ABV`}
                   fill
                   className="object-contain drop-shadow-[0_25px_30px_rgba(0,40,103,0.3)]"
                   sizes="(max-width: 1024px) 80vw, 360px"
@@ -196,6 +210,35 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
 
           {/* Realistic 3D Ground Reflection Shadow */}
           <div className="h-4 w-48 rounded-full bg-gradient-to-r from-transparent via-primary/30 to-transparent blur-md transition-all duration-500 group-hover:w-56 group-hover:opacity-80" />
+
+          {/* Packaging Variant Picker — sharp rectangular pills that inherit the
+              beer's --color-primary, so the row recolors with the section. */}
+          {variants.length > 1 ? (
+            <div
+              role="group"
+              aria-label={copy.variantLabel}
+              className="mt-6 flex flex-wrap items-center justify-center gap-2"
+            >
+              {variants.map((variant, index) => {
+                const isActive = index === activeVariantIndex;
+                return (
+                  <button
+                    key={`${variant.shortName}-${index}`}
+                    type="button"
+                    onClick={() => setVariantIndex(index)}
+                    aria-pressed={isActive}
+                    className={`cursor-pointer border px-4 py-2 text-[11px] font-bold tracking-[0.12em] uppercase transition-all duration-200 active:scale-95 ${
+                      isActive
+                        ? "border-primary bg-primary text-white shadow-sm"
+                        : "border-primary/25 bg-white/70 text-primary backdrop-blur-md hover:border-primary/60 hover:bg-white"
+                    }`}
+                  >
+                    {variant.shortName}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
 
           {/* Mobile Spec Pill */}
           <div className="mt-6 flex items-center justify-center gap-4 border border-primary/20 bg-white/90 px-6 py-2.5 shadow-sm backdrop-blur-md lg:hidden">

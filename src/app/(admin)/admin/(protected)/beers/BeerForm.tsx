@@ -24,6 +24,22 @@ function emptyTranslation(): TranslationFormState {
   return { style: "", headline: "", description: "" };
 }
 
+/**
+ * One packaging option being edited. The image is shared across languages;
+ * only the pill label is per-locale, mirroring how the beer's own copy is
+ * stored (see src/models/Beer.ts).
+ */
+export interface VariantFormState {
+  imageKey?: string;
+  names: Partial<Record<LocaleCode, string>>;
+}
+
+function emptyVariant(): VariantFormState {
+  const names: Partial<Record<LocaleCode, string>> = {};
+  for (const locale of LOCALES) names[locale.code] = "";
+  return { names };
+}
+
 export interface BeerFormInitialData {
   imageKey?: string;
   abv: number;
@@ -35,6 +51,7 @@ export interface BeerFormInitialData {
   isFeatured: boolean;
   status: "draft" | "published";
   translations: Partial<Record<LocaleCode, TranslationFormState>>;
+  variants?: VariantFormState[];
 }
 
 const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
@@ -79,6 +96,12 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
     }
     return initial;
   });
+  const [variants, setVariants] = useState<VariantFormState[]>(() =>
+    (initialData?.variants ?? []).map((variant) => ({
+      imageKey: variant.imageKey,
+      names: { ...emptyVariant().names, ...variant.names },
+    }))
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -91,6 +114,28 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
       return next;
     });
     setTranslations((prev) => ({ ...prev, [locale]: { ...prev[locale], ...patch } }));
+  }
+
+  function addVariant() {
+    setVariants((prev) => [...prev, emptyVariant()]);
+  }
+
+  function removeVariant(index: number) {
+    setVariants((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function updateVariant(index: number, patch: Partial<VariantFormState>) {
+    setVariants((prev) =>
+      prev.map((variant, i) => (i === index ? { ...variant, ...patch } : variant))
+    );
+  }
+
+  function updateVariantName(index: number, locale: LocaleCode, value: string) {
+    setVariants((prev) =>
+      prev.map((variant, i) =>
+        i === index ? { ...variant, names: { ...variant.names, [locale]: value } } : variant
+      )
+    );
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -141,6 +186,21 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
       newFieldErrors.themeColorContainer = "Mã hex không hợp lệ";
     }
 
+    variants.forEach((variant, index) => {
+      if (!variant.imageKey) {
+        validationErrors.push(`Phiên bản ${index + 1}: cần tải ảnh.`);
+      }
+      for (const localeCode of requiredLocales) {
+        const localeLabel =
+          LOCALES.find((l) => l.code === localeCode)?.label ?? localeCode;
+        if (!(variant.names[localeCode as LocaleCode] ?? "").trim()) {
+          validationErrors.push(
+            `Phiên bản ${index + 1}: cần nhập tên (${localeLabel}).`
+          );
+        }
+      }
+    });
+
     if (validationErrors.length > 0) {
       setErrors(validationErrors);
       setFieldErrors(newFieldErrors);
@@ -172,6 +232,15 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
       isFeatured,
       status,
       translations: activeTranslations,
+      variants: variants.map((variant) => ({
+        imageKey: variant.imageKey,
+        names: LOCALES.filter(
+          (locale) => (variant.names[locale.code] ?? "").trim().length > 0
+        ).map((locale) => ({
+          locale: locale.code,
+          shortName: (variant.names[locale.code] ?? "").trim(),
+        })),
+      })),
     };
 
     setIsSubmitting(true);
@@ -340,6 +409,77 @@ export function BeerForm({ mode, beerId, initialData }: BeerFormProps) {
           <label className={labelClass}>Ảnh sản phẩm</label>
           <ImageUploadField imageKey={imageKey} onChange={setImageKey} namespace="beers" />
         </div>
+      </Card>
+
+      <Card className={sectionClass}>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className={sectionTitleClass}>Phiên bản đóng gói</h2>
+            <p className="max-w-[520px] text-sm text-on-surface-variant">
+              Mỗi phiên bản là một quy cách đóng gói (lon, bao bì 6 lon, thùng 24 lon) với
+              ảnh riêng. Từ 2 phiên bản trở lên, trang chủ sẽ hiển thị thanh chọn ngay dưới
+              ảnh. Để trống nếu sản phẩm chỉ có một ảnh — khi đó ảnh sản phẩm ở trên được
+              dùng.
+            </p>
+          </div>
+          <Button type="button" variant="secondary" size="sm" onClick={addVariant}>
+            Thêm phiên bản
+          </Button>
+        </div>
+
+        {variants.length === 0 ? (
+          <p className="rounded border border-dashed border-[rgba(196,198,210,0.7)] bg-surface p-4 text-sm text-on-surface-variant">
+            Chưa có phiên bản nào.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {variants.map((variant, index) => (
+              <div
+                key={index}
+                className="flex flex-col gap-4 rounded border border-[rgba(196,198,210,0.5)] bg-surface p-4"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <span className={labelClass}>Phiên bản {index + 1}</span>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => removeVariant(index)}
+                  >
+                    Xóa
+                  </Button>
+                </div>
+
+                <ImageUploadField
+                  imageKey={variant.imageKey}
+                  onChange={(key) => updateVariant(index, { imageKey: key })}
+                  namespace="beers"
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  {LOCALES.map((locale) => (
+                    <Input
+                      key={locale.code}
+                      label={
+                        <>
+                          Tên ngắn ({locale.label}){" "}
+                          {locale.required ? (
+                            <span className="text-error font-bold">*</span>
+                          ) : null}
+                        </>
+                      }
+                      id={`variant-${index}-name-${locale.code}`}
+                      maxLength={40}
+                      placeholder={locale.code === "en" ? "VD: 6-PACK" : "VD: BAO BÌ 6 LON"}
+                      value={variant.names[locale.code] ?? ""}
+                      onChange={(e) => updateVariantName(index, locale.code, e.target.value)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       <Card className={sectionClass}>

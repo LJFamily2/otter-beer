@@ -25,6 +25,59 @@ export const BeerTranslationInputSchema = z.object({
     .max(400, "Mô tả không được vượt quá 400 ký tự"),
 });
 
+export const BeerVariantNameInputSchema = z.object({
+  locale: localeEnum,
+  shortName: z
+    .string({ message: "Vui lòng nhập tên phiên bản" })
+    .trim()
+    .min(1, "Vui lòng nhập tên phiên bản")
+    .max(40, "Tên phiên bản không được vượt quá 40 ký tự"),
+});
+
+export const BeerVariantInputSchema = z.object({
+  imageKey: z
+    .string({ message: "Vui lòng tải ảnh cho phiên bản" })
+    .trim()
+    .min(1, "Vui lòng tải ảnh cho phiên bản"),
+  names: z
+    .array(BeerVariantNameInputSchema)
+    .min(1, "Vui lòng nhập tên phiên bản"),
+});
+
+/**
+ * Each variant needs a label in every required locale and may not repeat a
+ * locale — same contract validateTranslationSet enforces for the beer's own
+ * copy, but scoped per variant so the error points at the offending row.
+ */
+function validateVariantSet(
+  variants: { names: { locale: string }[] }[],
+  ctx: z.RefinementCtx
+) {
+  variants.forEach((variant, index) => {
+    const locales = variant.names.map((n) => n.locale);
+
+    const missing = getRequiredLocales().filter((l) => !locales.includes(l));
+    if (missing.length > 0) {
+      const missingLabels = missing.map((l) =>
+        l === "vi" ? "Tiếng Việt" : l === "en" ? "Tiếng Anh" : l
+      );
+      ctx.addIssue({
+        code: "custom",
+        path: ["variants", index, "names"],
+        message: `Phiên bản ${index + 1}: thiếu tên ở ngôn ngữ bắt buộc: ${missingLabels.join(", ")}`,
+      });
+    }
+
+    if (new Set(locales).size !== locales.length) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["variants", index, "names"],
+        message: `Phiên bản ${index + 1}: mỗi ngôn ngữ chỉ được xuất hiện một lần`,
+      });
+    }
+  });
+}
+
 function validateTranslationSet(
   translations: { locale: string }[],
   ctx: z.RefinementCtx
@@ -71,6 +124,7 @@ const baseFields = {
   themeColorContainer: hexColor.optional(),
   isFeatured: z.boolean().default(false),
   status: z.enum(BEER_STATUSES).default("draft"),
+  variants: z.array(BeerVariantInputSchema).default([]),
 };
 
 export const BeerCreateSchema = z
@@ -80,7 +134,10 @@ export const BeerCreateSchema = z
       .array(BeerTranslationInputSchema)
       .min(1, "Vui lòng điền nội dung cho ít nhất một ngôn ngữ bắt buộc"),
   })
-  .superRefine((data, ctx) => validateTranslationSet(data.translations, ctx));
+  .superRefine((data, ctx) => {
+    validateTranslationSet(data.translations, ctx);
+    validateVariantSet(data.variants, ctx);
+  });
 
 export const BeerUpdateSchema = z
   .object({
@@ -94,9 +151,11 @@ export const BeerUpdateSchema = z
     isFeatured: z.boolean().optional(),
     status: z.enum(BEER_STATUSES).optional(),
     translations: z.array(BeerTranslationInputSchema).min(1).optional(),
+    variants: z.array(BeerVariantInputSchema).optional(),
   })
   .superRefine((data, ctx) => {
     if (data.translations) validateTranslationSet(data.translations, ctx);
+    if (data.variants) validateVariantSet(data.variants, ctx);
   });
 
 export type BeerCreateInput = z.infer<typeof BeerCreateSchema>;
