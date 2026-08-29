@@ -13,53 +13,14 @@ import { test, expect } from "@playwright/test";
  */
 
 test.describe("above-the-fold CTA", () => {
-  test("renders both hero CTAs on the homepage", async ({ page }) => {
+  test("does not render hero CTAs on the homepage", async ({ page }) => {
     await page.goto("/");
 
-    await expect(page.getByTestId("hero-cta-primary")).toBeVisible();
-    await expect(page.getByTestId("hero-cta-secondary")).toBeVisible();
+    await expect(page.getByTestId("hero-cta-primary")).not.toBeVisible();
+    await expect(page.getByTestId("hero-cta-secondary")).not.toBeVisible();
   });
 
-  test("is genuinely above the fold, not merely present", async ({ page }) => {
-    await page.goto("/");
-
-    const box = await page.getByTestId("hero-cta-primary").boundingBox();
-    const viewport = page.viewportSize();
-
-    expect(box).not.toBeNull();
-    expect(viewport).not.toBeNull();
-    // Bottom edge inside the first screen, with no scrolling.
-    expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(
-      viewport?.height ?? 0
-    );
-  });
-
-  test("primary CTA reaches the product showcase", async ({ page }) => {
-    await page.goto("/");
-
-    await expect(page.getByTestId("hero-cta-primary")).toHaveAttribute(
-      "href",
-      /#products$/
-    );
-  });
-
-  test("secondary CTA navigates to the contact page", async ({ page }) => {
-    await page.goto("/");
-    await page.getByTestId("hero-cta-secondary").click();
-
-    await expect(page).toHaveURL(/\/contact$/);
-  });
-
-  test("ships in the server HTML so a crawler sees the action too", async ({
-    request,
-  }) => {
-    const html = await (await request.get("/")).text();
-    const dom = html.replace(/<script[\s\S]*?<\/script>/gi, "");
-
-    expect(dom).toContain('data-testid="hero-cta-primary"');
-  });
-
-  test("does not stop the carousel indicators working", async ({ page }) => {
+  test("carousel indicators work cleanly without CTAs", async ({ page }) => {
     await page.goto("/");
 
     const indicators = page.getByRole("group", { name: "Hero slides" });
