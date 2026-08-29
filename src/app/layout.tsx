@@ -5,7 +5,6 @@ import { getServerLocale } from "@/lib/utils/getServerLocale";
 import { env } from "@/lib/env";
 import { BRAND_NAME, LEGAL_NAME } from "@/config/brand";
 import {
-  LOGO_PATH,
   OG_IMAGE_PATH,
   OG_IMAGE_HEIGHT,
   OG_IMAGE_WIDTH,
@@ -66,8 +65,13 @@ export const metadata: Metadata = {
   },
 
   icons: {
-    icon: [{ url: LOGO_PATH, type: "image/png" }],
-    apple: [{ url: LOGO_PATH }],
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+      { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
   },
 
   openGraph: {
