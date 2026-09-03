@@ -126,14 +126,22 @@ function SlideMedia({
             draggable={false}
           />
         ) : (
+          /* Three slides are mounted at once (prev / current / next), all at
+             `sizes="100vw"`, so left equal they race each other for bandwidth
+             and the one actually on screen — the LCP element — finishes last.
+             `fetchPriority` orders them instead of `loading="lazy"`, which
+             would defer the neighbours until they slide in and show a blank
+             cell mid-swipe. Note `priority` is deprecated in Next 16, and it
+             was already inert here: it does not emit a preload link alongside
+             `loading`/`fetchPriority` (see the Image docs' preload section). */
           <Image
             src={slide.src}
             alt={slide.alt}
             fill
             sizes="100vw"
             className="object-cover"
-            priority={priority}
             loading="eager"
+            fetchPriority={priority ? "high" : "low"}
             draggable={false}
           />
         )}

@@ -197,6 +197,25 @@ describe("Header", () => {
     expect(mobileLink).toHaveAttribute("href", "/");
   });
 
+  /**
+   * "OTTER BEER" sits in a flex row with the language selector and the menu
+   * button. At ~360px the wide 0.18em tracking leaves ~15px of slack, so on a
+   * narrower phone "BEER" wrapped onto a second line under "OTTER".
+   */
+  it("keeps the mobile OTTER BEER title on a single line", () => {
+    render(<Header />);
+
+    expect(screen.getByText("OTTER BEER")).toHaveClass("whitespace-nowrap");
+  });
+
+  it("tightens the mobile title on the narrowest screens so it cannot overflow", () => {
+    render(<Header />);
+
+    const title = screen.getByText("OTTER BEER");
+    expect(title).toHaveClass("max-[380px]:tracking-[0.1em]");
+    expect(title).toHaveClass("max-[340px]:text-xl");
+  });
+
   it("toggles mobile menu drawer on circular menu button click", async () => {
     const user = userEvent.setup();
     render(<Header />);

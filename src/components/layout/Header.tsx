@@ -173,10 +173,17 @@ export function Header({
             href="/"
             onClick={() => setMobileMenuOpen(false)}
             aria-label="Otter Beer"
-            className="flex flex-col items-start justify-center group transition-opacity hover:opacity-90 min-[900px]:hidden z-10"
+            className="flex shrink-0 flex-col items-start justify-center group transition-opacity hover:opacity-90 min-[900px]:hidden z-10"
           >
+            {/* `whitespace-nowrap` is load-bearing: "OTTER BEER" is two words in
+                a flex row that also carries the language selector and the menu
+                button. At ~360px the wide 0.18em tracking leaves only ~15px of
+                slack, so anything narrower (a 320px phone, or a larger system
+                font) pushed "BEER" onto a second line. The tracking/size steps
+                below buy that space back on the narrowest screens rather than
+                letting the title overflow the header instead of wrapping. */}
             <span
-              className={`font-black text-2xl sm:text-3xl uppercase tracking-[0.18em] transition-colors duration-300 leading-none ${
+              className={`font-black text-2xl sm:text-3xl uppercase tracking-[0.18em] whitespace-nowrap max-[380px]:tracking-[0.1em] max-[340px]:text-xl transition-colors duration-300 leading-none ${
                 mobileMenuOpen || !isScrolled
                   ? "text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
                   : "text-primary"
