@@ -67,6 +67,32 @@ describe("HeroSection Component", () => {
       expect(screen.getByAltText(/hoa bia Saaz/i)).toBeInTheDocument();
     });
 
+    /**
+     * All three mounted slides are full-viewport (`sizes="100vw"`). Left at
+     * equal priority they race each other for bandwidth and the one actually
+     * on screen — the LCP element — finishes last. They stay `eager` rather
+     * than `lazy` so a swipe never lands on a blank cell.
+     */
+    it("lets the on-screen slide outrank its neighbours for bandwidth", () => {
+      const { container } = render(<HeroSection />);
+
+      const priorities = [...container.querySelectorAll("img")].map((img) =>
+        img.getAttribute("fetchpriority")
+      );
+
+      expect(priorities).toContain("high");
+      expect(priorities.filter((p) => p === "high")).toHaveLength(1);
+      expect(priorities.filter((p) => p === "low").length).toBeGreaterThan(0);
+    });
+
+    it("keeps every mounted slide eager so a swipe never shows a blank cell", () => {
+      const { container } = render(<HeroSection />);
+
+      for (const img of container.querySelectorAll("img")) {
+        expect(img.getAttribute("loading")).toBe("eager");
+      }
+    });
+
     it("gives every slide alt text that names the brand", () => {
       const { container } = render(<HeroSection />);
 
