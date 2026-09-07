@@ -162,7 +162,7 @@ export function BrandStoryMobile({ locale, chapters: chaptersProp = [] }: BrandS
   return (
     <div
       ref={sectionRef}
-      className="relative w-full bg-[#00153e] text-[#fdf9f4] overflow-hidden min-h-[110dvh] flex flex-col justify-between pt-16 pb-24 select-none"
+      className="relative w-full bg-[#00153e] text-[#fdf9f4] overflow-hidden min-h-[110dvh] flex flex-col justify-between pt-8 pb-24 select-none"
     >
       {/* Fixed Parallax Radial Background Stage */}
       <div

@@ -7,13 +7,13 @@ import { BrandStorySection } from "@/components/sections/BrandStorySection";
 import { NewsBlogSection } from "@/components/sections/NewsBlogSection";
 import { FaqSection } from "@/components/sections/FaqSection";
 import ContactSection from "./contact/Contact";
-import { beerService } from "@/services/BeerService";
 import { heroSectionService } from "@/services/HeroSectionService";
 import { blogPostService } from "@/services/BlogPostService";
+import { beerService } from "@/services/BeerService";
 import { brandStoryService } from "@/services/BrandStoryService";
-import { toShowcaseItem } from "@/lib/utils/BeerPresenter";
 import { toSlideItem } from "@/lib/utils/HeroSectionPresenter";
 import { toNewsCardItem } from "@/lib/utils/BlogPostPresenter";
+import { toShowcaseItem } from "@/lib/utils/BeerPresenter";
 import { toBookChapters } from "@/lib/utils/BrandStoryPresenter";
 import { buildHomeJsonLd, buildHomeMetadata } from "@/lib/seo";
 import { faqFor } from "@/config/faq";
@@ -34,24 +34,24 @@ export async function generateMetadata({
 export default async function HomePage({ params }: HomePageProps) {
   const { locale } = await params;
 
-  const beers = await beerService
-    .listShowcasePublished()
-    .then((items) => items.map((beer) => toShowcaseItem(beer, locale)).filter((item) => item !== null))
-    .catch(() => []);
-
   const heroSlides = await heroSectionService
     .listPublishedSlides()
     .then((slides) => slides.map((slide) => toSlideItem(slide, locale)).filter((item) => item !== null))
     .catch(() => []);
 
-  const posts = await blogPostService
-    .getRecentPublished(NEWS_RAIL_SIZE)
-    .then((items) => items.map((post) => toNewsCardItem(post, locale)).filter((item) => item !== null))
+  const beers = await beerService
+    .listShowcasePublished()
+    .then((items) => items.map((beer) => toShowcaseItem(beer, locale)).filter((item) => item !== null))
     .catch(() => []);
 
   const brandStoryChapters = await brandStoryService
     .getPublished()
     .then((brandStory) => toBookChapters(brandStory, locale))
+    .catch(() => []);
+
+  const posts = await blogPostService
+    .getRecentPublished(NEWS_RAIL_SIZE)
+    .then((items) => items.map((post) => toNewsCardItem(post, locale)).filter((item) => item !== null))
     .catch(() => []);
 
   const faq = faqFor(locale);
@@ -76,10 +76,10 @@ export default async function HomePage({ params }: HomePageProps) {
       />
 
       <HeroSection locale={locale} slides={heroSlides} />
+      <BrandStorySection locale={locale} chapters={brandStoryChapters} />
       <MarqueeSection locale={locale} />
       <TaglineSection locale={locale} />
       {beers.length > 0 ? <ProductShowcase locale={locale} beers={beers} /> : null}
-      <BrandStorySection locale={locale} chapters={brandStoryChapters} />
       {posts.length > 0 ? <NewsBlogSection locale={locale} posts={posts} /> : null}
       <FaqSection locale={locale} />
       {/* The page's single <h1> lives in HeroSection, so the contact block
