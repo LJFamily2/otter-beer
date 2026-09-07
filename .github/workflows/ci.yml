@@ -124,6 +124,12 @@ jobs:
     # Only run E2E on PRs to main (expensive — skip on every push to dev)
     if: github.event_name == 'pull_request' && github.base_ref == 'main'
 
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -161,7 +167,7 @@ jobs:
         env:
           CI: true
           PLAYWRIGHT_BASE_URL: http://localhost:3000
-          MONGODB_URI: ${{ secrets.MONGODB_URI_TEST }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI_TEST || 'mongodb://localhost:27017/otter-beer-e2e' }}
           NEXT_PUBLIC_SITE_URL: http://localhost:3000
           AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-dummy-secret-32-chars-minimum-x' }}
           BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
