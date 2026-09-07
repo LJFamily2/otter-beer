@@ -125,7 +125,7 @@ export default defineConfig({
 
   // Start the Next.js dev server automatically before tests
   webServer: {
-    command: process.env.CI ? "pnpm run build && pnpm run start" : "pnpm run dev",
+    command: "pnpm run dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     stdout: "ignore",
