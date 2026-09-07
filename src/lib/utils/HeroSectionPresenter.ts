@@ -22,6 +22,7 @@ export function pickTranslation(
 /** Plain, serializable shape HeroSection (a Client Component) can receive as a prop. */
 export interface HeroSlideItem {
   src: string;
+  mobileSrc?: string;
   alt: string;
   mediaType: HeroMediaType;
 }
@@ -38,6 +39,7 @@ export function toSlideItem(slide: IHeroSlide, locale: string): HeroSlideItem | 
 
   return {
     src: publicMediaUrl(slide.mediaKey),
+    mobileSrc: slide.mobileMediaKey ? publicMediaUrl(slide.mobileMediaKey) : undefined,
     alt: translation.alt,
     mediaType: slide.mediaType,
   };

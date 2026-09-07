@@ -37,11 +37,12 @@ describe("pickTranslation", () => {
 });
 
 describe("toSlideItem", () => {
-  it("maps a slide's fields to the hero shape for the requested locale", () => {
-    const item = toSlideItem(slide({ mediaKey: "hero/lager.jpg" }), "vi");
+  it("maps a slide's fields to the hero shape for the requested locale including mobileSrc", () => {
+    const item = toSlideItem(slide({ mediaKey: "hero/lager.jpg", mobileMediaKey: "hero/lager-mobile.jpg" }), "vi");
 
     expect(item).toEqual({
       src: "/api/media/public/hero/lager.jpg",
+      mobileSrc: "/api/media/public/hero/lager-mobile.jpg",
       alt: "Mô tả",
       mediaType: "image",
     });

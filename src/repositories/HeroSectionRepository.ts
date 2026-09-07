@@ -42,7 +42,12 @@ export class HeroSectionRepository extends BaseRepository<IHeroSection> {
     const model = await this.ready();
     const count = await model
       .countDocuments({
-        slides: { $elemMatch: { mediaKey: key, status: "published" } },
+        slides: { 
+          $elemMatch: { 
+            $or: [{ mediaKey: key }, { mobileMediaKey: key }],
+            status: "published" 
+          } 
+        },
       })
       .exec();
     return count > 0;
