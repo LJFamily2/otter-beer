@@ -75,6 +75,7 @@ export function buildContentSecurityPolicy({ isDev = false }: CspOptions = {}): 
     "img-src": ["'self'", "data:", "blob:", ...AVATAR_IMG, ...GA_IMG],
     "connect-src": [
       "'self'",
+      "https://api.cloudinary.com",
       ...(isDev ? ["ws:", "wss:"] : []),
       ...GA_CONNECT,
     ],
