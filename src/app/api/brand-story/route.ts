@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 import { RouteGuard } from "@/lib/auth/RouteGuard";
 import { MODULE_KEYS } from "@/config/permissions";
 import { brandStoryService } from "@/services/BrandStoryService";
@@ -37,6 +38,7 @@ export const PUT = withRateLimit(
       }
 
       const brandStory = await brandStoryService.replaceChapters(parsed.data, session.user.id);
+      revalidatePath('/', 'layout');
       return NextResponse.json({ chapters: brandStory.chapters });
     }
   ),
