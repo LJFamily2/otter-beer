@@ -3,7 +3,6 @@ import { DEFAULT_THEME_COLOR, DEFAULT_THEME_COLOR_CONTAINER } from "@/config/bee
 import { publicImageUrl } from "@/lib/storage/constants";
 import type { IBeer, IBeerTranslation, IBeerVariant } from "@/models/Beer";
 
-const FALLBACK_IMAGE_SRC = "/images/otter-beer-single-can.png";
 
 /**
  * Picks the translation to render for a given locale, falling back to the
@@ -116,8 +115,9 @@ function buildVariantItems(
 export function toShowcaseItem(beer: IBeer, locale: string): BeerShowcaseItem | null {
   const translation = pickTranslation(beer, locale);
   if (!translation) return null;
+  if (!beer.imageKey) return null;
 
-  const mainImageSrc = beer.imageKey ? publicImageUrl(beer.imageKey) : FALLBACK_IMAGE_SRC;
+  const mainImageSrc = publicImageUrl(beer.imageKey);
 
   return {
     id: String(beer._id),

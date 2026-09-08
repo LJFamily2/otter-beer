@@ -1,6 +1,4 @@
 import {
-  BRAND_STORY_BOOK,
-  BRAND_STORY_CHAPTERS,
   buildBrandStoryBook,
   chapterIndexForSpread,
 } from "@/config/brandStoryChapters";
@@ -81,23 +79,4 @@ describe("chapterIndexForSpread", () => {
   });
 });
 
-describe("BRAND_STORY_BOOK", () => {
-  it("is built from the shipped chapter list", () => {
-    expect(BRAND_STORY_BOOK.chapters).toHaveLength(BRAND_STORY_CHAPTERS.length);
-    expect(BRAND_STORY_BOOK.pages.length).toBe(BRAND_STORY_BOOK.totalSpreads * 2);
-  });
 
-  it("has at least one chapter holding more than two images", () => {
-    // Guards the whole point of chapter groups: a tab must be able to span
-    // more than a single page-turn.
-    expect(BRAND_STORY_CHAPTERS.some((c) => c.images.length > 2)).toBe(true);
-  });
-
-  it("points every non-blank page at a real public image path", () => {
-    for (const page of BRAND_STORY_BOOK.pages) {
-      if (page.src !== null) {
-        expect(page.src).toMatch(/^\/images\/[\w.-]+$/);
-      }
-    }
-  });
-});

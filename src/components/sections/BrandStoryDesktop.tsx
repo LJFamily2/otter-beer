@@ -4,7 +4,6 @@ import React, { useState, useRef, useMemo } from "react";
 import { playPageTurn } from "@/lib/utils/pageTurnSound";
 import HTMLFlipBook from "react-pageflip";
 import {
-  BRAND_STORY_CHAPTERS,
   buildBrandStoryBook,
   chapterIndexForSpread,
   type BrandStoryChapter,
@@ -12,8 +11,7 @@ import {
 
 interface BrandStoryDesktopProps {
   locale: string;
-  /** Falls back to a static sample book when omitted or empty, so the section is never blank. */
-  chapters?: BrandStoryChapter[];
+  chapters: BrandStoryChapter[];
 }
 
 const COPY = {
@@ -72,8 +70,7 @@ const FlipBook = HTMLFlipBook as unknown as React.ComponentType<
   }
 >;
 
-export function BrandStoryDesktop({ locale, chapters: chaptersProp = [] }: BrandStoryDesktopProps) {
-  const chapters = chaptersProp.length > 0 ? chaptersProp : BRAND_STORY_CHAPTERS;
+export function BrandStoryDesktop({ locale, chapters }: BrandStoryDesktopProps) {
   const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
   const [pageIndex, setPageIndex] = useState(0);
   const [titleMousePos, setTitleMousePos] = useState<{ x: number; y: number } | null>(null);
