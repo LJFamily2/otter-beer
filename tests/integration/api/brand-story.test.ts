@@ -7,6 +7,7 @@
  */
 
 jest.mock("@/auth", () => ({ auth: jest.fn() }));
+jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
 jest.mock("@/services/BrandStoryService", () => ({
   brandStoryService: { get: jest.fn(), replaceChapters: jest.fn() },
 }));
