@@ -170,7 +170,9 @@ interface HeroSectionProps {
   slides: HeroSlideItem[];
 }
 
-export function HeroSection({ locale = "vi", slides }: HeroSectionProps) {
+export function HeroSection({ locale = "vi", slides = [] }: HeroSectionProps) {
+  if (!slides || slides.length === 0) return null;
+
   const copy = HERO_COPY[locale as keyof typeof HERO_COPY] ?? HERO_COPY.en;
   const prefersReducedMotion = useReducedMotion() ?? false;
 
