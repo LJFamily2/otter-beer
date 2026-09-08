@@ -21,10 +21,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
 
   // Retry on CI only
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 0,
 
-  // Parallel workers — control concurrency to prevent Next dev server timeouts
-  workers: process.env.CI ? 2 : 4,
+  // Parallel workers
+  workers: process.env.CI ? "50%" : 4,
 
   // Reporter
   reporter: process.env.CI
