@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 import { RouteGuard } from "@/lib/auth/RouteGuard";
 import { MODULE_KEYS } from "@/config/permissions";
 import {
@@ -51,6 +52,7 @@ export const PATCH = withRateLimit(
         if (!post) {
           return NextResponse.json({ error: "Not found" }, { status: 404 });
         }
+        revalidatePath('/', 'layout');
         return NextResponse.json(post);
       } catch (err) {
         if (err instanceof SlugConflictError) {
@@ -74,6 +76,7 @@ export const DELETE = withRateLimit(
       if (!deleted) {
         return NextResponse.json({ error: "Not found" }, { status: 404 });
       }
+      revalidatePath('/', 'layout');
       return new NextResponse(null, { status: 204 });
     }
   ),
