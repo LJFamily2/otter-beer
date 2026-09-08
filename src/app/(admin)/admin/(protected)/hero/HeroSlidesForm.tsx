@@ -19,6 +19,7 @@ export interface HeroSlideFormState {
   /** React key only — slides have no id, this collection is replaced whole on save. */
   key: string;
   mediaKey?: string;
+  mobileMediaKey?: string;
   mediaType: HeroMediaType;
   status: HeroSlideStatus;
   translations: Record<LocaleCode, { alt: string }>;
@@ -59,6 +60,7 @@ export function HeroSlidesForm({ initialSlides, canEdit }: HeroSlidesFormProps) 
       {
         key,
         mediaKey: undefined,
+        mobileMediaKey: undefined,
         mediaType: "image",
         status: "draft",
         translations: emptyTranslations(),
@@ -95,6 +97,23 @@ export function HeroSlidesForm({ initialSlides, canEdit }: HeroSlidesFormProps) 
               ...s,
               mediaKey: value?.key,
               mediaType: value?.mediaType ?? "image",
+            }
+          : s
+      )
+    );
+    setSaved(false);
+  }
+
+  function updateSlideMobileMedia(
+    key: string,
+    value: { key: string; mediaType: HeroMediaType } | undefined
+  ) {
+    setSlides((prev) =>
+      prev.map((s) =>
+        s.key === key
+          ? {
+              ...s,
+              mobileMediaKey: value?.key,
             }
           : s
       )
@@ -155,6 +174,7 @@ export function HeroSlidesForm({ initialSlides, canEdit }: HeroSlidesFormProps) 
     const payload = {
       slides: slides.map((slide) => ({
         mediaKey: slide.mediaKey,
+        mobileMediaKey: slide.mobileMediaKey,
         mediaType: slide.mediaType,
         status: slide.status,
         translations: LOCALES.filter(
@@ -285,16 +305,29 @@ export function HeroSlidesForm({ initialSlides, canEdit }: HeroSlidesFormProps) 
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className={labelClass}>Ảnh hoặc video (16:9)</label>
-                  <MediaUploadField
-                    mediaKey={slide.mediaKey}
-                    mediaType={slide.mediaType}
-                    onChange={(value) => updateSlideMedia(slide.key, value)}
-                    namespace="hero"
-                    allowVideo
-                    warnOnNon16x9
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className={labelClass}>Ảnh/Video Desktop (16:9)</label>
+                    <MediaUploadField
+                      mediaKey={slide.mediaKey}
+                      mediaType={slide.mediaType}
+                      onChange={(value) => updateSlideMedia(slide.key, value)}
+                      namespace="hero"
+                      allowVideo
+                      warnOnNon16x9
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className={labelClass}>Ảnh Mobile (9:16)</label>
+                    <MediaUploadField
+                      mediaKey={slide.mobileMediaKey}
+                      mediaType="image"
+                      onChange={(value) => updateSlideMobileMedia(slide.key, value)}
+                      namespace="hero"
+                      allowVideo={false}
+                      aspectRatio="9/16"
+                    />
+                  </div>
                 </div>
 
                 <Input

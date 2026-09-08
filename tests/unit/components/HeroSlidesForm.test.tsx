@@ -164,7 +164,7 @@ describe("HeroSlidesForm", () => {
       const fetchMock = mockFetchOk();
       render(<HeroSlidesForm initialSlides={[]} canEdit />);
       fireEvent.click(screen.getByRole("button", { name: /thêm slide/i }));
-      fireEvent.click(screen.getByRole("button", { name: "stub-upload-video" }));
+      fireEvent.click(screen.getAllByRole("button", { name: "stub-upload-video" })[0]);
       fireEvent.change(screen.getByLabelText(/mô tả ảnh/i), {
         target: { value: "Alt" },
       });
