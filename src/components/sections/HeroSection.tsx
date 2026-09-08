@@ -171,8 +171,6 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ locale = "vi", slides = [] }: HeroSectionProps) {
-  if (!slides || slides.length === 0) return null;
-
   const copy = HERO_COPY[locale as keyof typeof HERO_COPY] ?? HERO_COPY.en;
   const prefersReducedMotion = useReducedMotion() ?? false;
 
@@ -347,6 +345,8 @@ export function HeroSection({ locale = "vi", slides = [] }: HeroSectionProps) {
   // image is already decoded before it is ever needed and a drag has something
   // real to pull into view.
   const windowPages = [page - 1, page, page + 1];
+
+  if (!slides || slides.length === 0) return null;
 
   return (
     <section
