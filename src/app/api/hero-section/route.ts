@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 import { RouteGuard } from "@/lib/auth/RouteGuard";
 import { MODULE_KEYS } from "@/config/permissions";
 import { heroSectionService } from "@/services/HeroSectionService";
@@ -40,6 +41,7 @@ export const PUT = withRateLimit(
         parsed.data,
         session.user.id
       );
+      revalidatePath('/', 'layout');
       return NextResponse.json({ slides: heroSection.slides });
     }
   ),

@@ -12,6 +12,7 @@ import {
 
 export interface HeroSlideItem {
   src: string;
+  mobileSrc?: string;
   alt: string;
   mediaType?: "image" | "video";
 }
@@ -104,9 +105,9 @@ function SlideMedia({
   priority: boolean;
 }) {
   return (
-    <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+    <div className="absolute inset-0 h-full w-full flex items-center justify-center overflow-hidden">
       <div
-        className="relative"
+        className="relative h-full w-full"
         style={{
           aspectRatio: "16 / 9",
           maxHeight: "100dvh",
@@ -134,16 +135,30 @@ function SlideMedia({
              cell mid-swipe. Note `priority` is deprecated in Next 16, and it
              was already inert here: it does not emit a preload link alongside
              `loading`/`fetchPriority` (see the Image docs' preload section). */
-          <Image
-            src={slide.src}
-            alt={slide.alt}
-            fill
-            sizes="100vw"
-            className="object-cover"
-            loading="eager"
-            fetchPriority={priority ? "high" : "low"}
-            draggable={false}
-          />
+          <>
+            <Image
+              src={slide.src}
+              alt={slide.alt}
+              fill
+              sizes="(max-width: 768px) 100vw, 100vw"
+              className={`object-cover ${slide.mobileSrc ? "hidden sm:block" : ""}`}
+              loading="eager"
+              fetchPriority={priority ? "high" : "low"}
+              draggable={false}
+            />
+            {slide.mobileSrc && (
+              <Image
+                src={slide.mobileSrc}
+                alt={slide.alt}
+                fill
+                sizes="(max-width: 768px) 100vw, 100vw"
+                className="object-cover sm:hidden"
+                loading="eager"
+                fetchPriority={priority ? "high" : "low"}
+                draggable={false}
+              />
+            )}
+          </>
         )}
       </div>
     </div>
