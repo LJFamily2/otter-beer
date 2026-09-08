@@ -166,7 +166,7 @@ const HERO_COPY = {
 } as const;
 
 interface HeroSectionProps {
-  locale: string;
+  locale?: string;
   slides: HeroSlideItem[];
 }
 
