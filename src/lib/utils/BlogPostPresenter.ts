@@ -21,7 +21,6 @@ export function pickTranslation(
   );
 }
 
-const FALLBACK_IMAGE_SRC = "/images/otter-beer-premium-lager.jpg";
 
 /** Plain, serializable shape NewsBlogSection (a Client Component) can receive as a prop. */
 export interface NewsCardItem {
@@ -36,16 +35,17 @@ export interface NewsCardItem {
 /**
  * Maps a published BlogPost to the plain shape NewsBlogSection's rail
  * renders. Returns null when the post has no usable translation for any
- * locale (data integrity guard — translations is required to have at least
- * one entry at the schema level, so this should not happen for a saved post).
+ * locale, or when it has no cover image (data integrity guard — a card
+ * without an image is not renderable).
  */
 export function toNewsCardItem(post: IBlogPost, locale: string): NewsCardItem | null {
   const translation = pickTranslation(post, locale);
   if (!translation) return null;
+  if (!post.coverImageKey) return null;
 
   return {
     id: String(post._id),
-    imageSrc: post.coverImageKey ? publicMediaUrl(post.coverImageKey) : FALLBACK_IMAGE_SRC,
+    imageSrc: publicMediaUrl(post.coverImageKey),
     title: translation.title,
     tag: post.tags[0],
     href: localizedPath(locale, `/blog/${translation.slug}`),

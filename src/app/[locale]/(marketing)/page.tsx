@@ -79,7 +79,7 @@ export default async function HomePage({ params }: HomePageProps) {
       <MarqueeSection locale={locale} />
       <TaglineSection locale={locale} />
       {beers.length > 0 ? <ProductShowcase locale={locale} beers={beers} /> : null}
-      <BrandStorySection locale={locale} chapters={brandStoryChapters} />
+      {brandStoryChapters.length > 0 ? <BrandStorySection locale={locale} chapters={brandStoryChapters} /> : null}
       {posts.length > 0 ? <NewsBlogSection locale={locale} posts={posts} /> : null}
       <FaqSection locale={locale} />
       {/* The page's single <h1> lives in HeroSection, so the contact block
