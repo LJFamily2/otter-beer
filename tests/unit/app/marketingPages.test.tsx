@@ -12,22 +12,22 @@ jest.mock("next/image", () => ({
 
 describe("Marketing Pages Smoke Test", () => {
   it("renders About page without crashing", () => {
-    const { container } = render(<AboutPage />);
+    const { container } = render(<AboutPage params={Promise.resolve({ locale: "en" })} />);
     expect(container).toBeTruthy();
   });
 
   it("renders Events page without crashing", () => {
-    const { container } = render(<EventsPage />);
+    const { container } = render(<EventsPage params={Promise.resolve({ locale: "en" })} />);
     expect(container).toBeTruthy();
   });
 
   it("renders Menu page without crashing", () => {
-    const { container } = render(<MenuPage />);
+    const { container } = render(<MenuPage params={Promise.resolve({ locale: "en" })} />);
     expect(container).toBeTruthy();
   });
 
   it("renders Contact page without crashing", () => {
-    const { container } = render(<ContactPage />);
+    const { container } = render(<ContactPage params={Promise.resolve({ locale: "en" })} />);
     expect(container).toBeTruthy();
   });
 });
