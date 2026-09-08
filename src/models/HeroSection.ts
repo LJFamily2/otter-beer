@@ -37,6 +37,8 @@ export interface IHeroSlideTranslation {
 export interface IHeroSlide {
   /** Storage key for the slide's image or video — see src/lib/storage. */
   mediaKey: string;
+  /** Storage key for the slide's mobile image (vertical). */
+  mobileMediaKey?: string;
   /** Which of the two the key points at; drives <img> vs <video> at render time. */
   mediaType: HeroMediaType;
   /** Per-slide, so a slide can be staged without pulling the whole hero down. */
@@ -68,6 +70,7 @@ const HeroSlideTranslationSchema = new Schema<IHeroSlideTranslation>(
 const HeroSlideSchema = new Schema<IHeroSlide>(
   {
     mediaKey: { type: String, required: true, trim: true },
+    mobileMediaKey: { type: String, trim: true },
     mediaType: {
       type: String,
       enum: HERO_MEDIA_TYPES,

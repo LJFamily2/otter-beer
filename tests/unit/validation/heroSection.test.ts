@@ -30,6 +30,24 @@ describe("HeroSlideInputSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts an optional mobileMediaKey", () => {
+    const result = HeroSlideInputSchema.safeParse(
+      baseSlide({ mobileMediaKey: "hero/2026-08-25/mobile-uuid.jpg" })
+    );
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.mobileMediaKey).toBe("hero/2026-08-25/mobile-uuid.jpg");
+    }
+  });
+
+  it("trims the mobileMediaKey text", () => {
+    const result = HeroSlideInputSchema.safeParse(
+      baseSlide({ mobileMediaKey: "  hero/mobile.jpg  " })
+    );
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.mobileMediaKey).toBe("hero/mobile.jpg");
+  });
+
   it("accepts both locales at once", () => {
     const result = HeroSlideInputSchema.safeParse(
       baseSlide({
