@@ -162,6 +162,15 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm exec playwright install chromium
 
+      - name: Build Next.js app
+        run: pnpm run build
+        env:
+          CI: true
+          MONGODB_URI: ${{ secrets.MONGODB_URI_TEST || 'mongodb://localhost:27017/otter-beer-e2e' }}
+          NEXT_PUBLIC_SITE_URL: https://otterbeer.vn
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-dummy-secret-32-chars-minimum-x' }}
+          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+
       - name: Run Playwright E2E tests
         run: pnpm run test:e2e
         env:
