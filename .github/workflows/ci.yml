@@ -169,6 +169,8 @@ jobs:
           MONGODB_URI: ${{ secrets.MONGODB_URI_TEST || 'mongodb://localhost:27017/otter-beer-e2e' }}
           NEXT_PUBLIC_SITE_URL: https://otterbeer.vn
           AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-dummy-secret-32-chars-minimum-x' }}
+          AUTH_TRUST_HOST: 'true'
+          NEXTAUTH_URL: http://localhost:3000
           BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
 
       - name: Run Playwright E2E tests
@@ -179,6 +181,8 @@ jobs:
           MONGODB_URI: ${{ secrets.MONGODB_URI_TEST || 'mongodb://localhost:27017/otter-beer-e2e' }}
           NEXT_PUBLIC_SITE_URL: https://otterbeer.vn
           AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-dummy-secret-32-chars-minimum-x' }}
+          AUTH_TRUST_HOST: 'true'
+          NEXTAUTH_URL: http://localhost:3000
           BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
 
       - name: Upload Playwright report
