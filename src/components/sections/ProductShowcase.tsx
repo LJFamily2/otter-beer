@@ -280,7 +280,7 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="font-display text-[clamp(34px,5vw,52px)] leading-[1.08] tracking-[0.12em] whitespace-pre-line text-primary uppercase"
+            className="font-display text-[clamp(34px,5vw,52px)] leading-[1.25] tracking-[0.12em] whitespace-pre-line text-primary uppercase"
           >
             {currentBeer.headline}
           </motion.h2>
