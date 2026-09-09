@@ -111,6 +111,7 @@ function SlideMedia({
             sizes="(max-width: 768px) 100vw, 100vw"
             className={`object-cover ${slide.mobileSrc ? "hidden sm:block" : ""}`}
             loading="eager"
+            priority={priority}
             fetchPriority={priority ? "high" : "low"}
             draggable={false}
           />
@@ -122,6 +123,7 @@ function SlideMedia({
               sizes="(max-width: 768px) 100vw, 100vw"
               className="object-cover sm:hidden"
               loading="eager"
+              priority={priority}
               fetchPriority={priority ? "high" : "low"}
               draggable={false}
             />
@@ -359,7 +361,7 @@ export function HeroSection({ locale = "vi", slides = [] }: HeroSectionProps) {
                 className="absolute inset-0 transition-opacity duration-300"
                 style={{ opacity: i === slideIndex ? 1 : 0 }}
               >
-                <SlideMedia slide={slide} priority={i === 0} />
+                <SlideMedia slide={slide} priority={i === slideIndex} />
               </div>
             ))}
           </div>
@@ -394,7 +396,7 @@ export function HeroSection({ locale = "vi", slides = [] }: HeroSectionProps) {
                   animate={{ scale: p === page ? 1 : OFFSCREEN_SCALE }}
                   transition={SLIDE_SPRING}
                 >
-                  <SlideMedia slide={slides[slideIndexFor(p, slides.length)]} priority={p === 0} />
+                  <SlideMedia slide={slides[slideIndexFor(p, slides.length)]} priority={p === page} />
                 </motion.div>
               </div>
             ))}
