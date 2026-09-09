@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { env } from "@/lib/env";
 import { SYSTEM_ROLE_KEYS, isSuperAdminRoleKey } from "@/config/roles";
 import { UserRepository } from "@/repositories/UserRepository";
@@ -85,19 +86,44 @@ export class AuthService {
     } as Partial<IUser>);
   }
 
-  async getUserWithRoleKey(
-    email: string
-  ): Promise<{ user: IUser; roleKey: string; roleLevel: number } | null> {
-    const user = await this.userRepository.findByEmailWithRole(email);
-    if (!user) return null;
-    const role = user.roleId as unknown as { key: string; level: number };
-    // superAdmin's level is hardcoded rather than trusted from the DB row,
-    // mirroring the same safety-valve pattern PermissionService uses for
-    // its matrix bypass — a bad edit to the Role document can never strip
-    // superAdmin's ability to manage every other role.
-    const roleLevel = isSuperAdminRoleKey(role.key) ? 0 : role.level;
-    return { user, roleKey: role.key, roleLevel };
+  private readonly userCache = new Map<
+    string,
+    { value: { user: IUser; roleKey: string; roleLevel: number } | null; timestamp: number }
+  >();
+  private readonly TTL_MS = 15000;
+
+  clearUserCache(email?: string): void {
+    if (email) {
+      this.userCache.delete(email.trim().toLowerCase());
+    } else {
+      this.userCache.clear();
+    }
   }
+
+  getUserWithRoleKey = cache(
+    async (
+      email: string
+    ): Promise<{ user: IUser; roleKey: string; roleLevel: number } | null> => {
+      const normalizedEmail = email.trim().toLowerCase();
+      const cached = this.userCache.get(normalizedEmail);
+      if (cached && Date.now() - cached.timestamp < this.TTL_MS) {
+        return cached.value;
+      }
+
+      const user = await this.userRepository.findByEmailWithRole(normalizedEmail);
+      if (!user) {
+        this.userCache.set(normalizedEmail, { value: null, timestamp: Date.now() });
+        return null;
+      }
+      const role = user.roleId as unknown as { key: string; level: number };
+      const roleLevel = isSuperAdminRoleKey(role.key) ? 0 : role.level;
+      const result = { user, roleKey: role.key, roleLevel };
+
+      this.userCache.set(normalizedEmail, { value: result, timestamp: Date.now() });
+      return result;
+    }
+  );
 }
 
 export const authService = new AuthService();
+

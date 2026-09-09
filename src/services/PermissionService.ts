@@ -1,3 +1,4 @@
+import { cache } from "react";
 import {
   MODULE_KEYS_LIST,
   noAccessGrant,
@@ -60,16 +61,37 @@ function parseRowsToMatrix(rows: IPermission[]): PermissionMatrix {
  * 3. superAdmin Bypass: Hardcoded safety valve so superAdmins are never locked out.
  */
 export class PermissionService {
+  private readonly userMatrixCache = new Map<
+    string,
+    { value: EffectiveUserMatrix; timestamp: number }
+  >();
+  private readonly roleMatrixCache = new Map<
+    string,
+    { value: PermissionMatrix; timestamp: number }
+  >();
+  private readonly TTL_MS = 15000;
+
   constructor(
     private readonly permissionRepository: PermissionRepository = new PermissionRepository(),
     private readonly roleRepository: RoleRepository = new RoleRepository(),
     private readonly userRepository: UserRepository = new UserRepository()
   ) {}
 
+  clearCache(): void {
+    this.userMatrixCache.clear();
+    this.roleMatrixCache.clear();
+  }
+
   /** Resolves role baseline defaults by role ID. */
   async getMatrixForRoleId(roleId: string): Promise<PermissionMatrix> {
+    const cached = this.roleMatrixCache.get(`id:${roleId}`);
+    if (cached && Date.now() - cached.timestamp < this.TTL_MS) {
+      return cached.value;
+    }
     const rows = await this.permissionRepository.findByRole(roleId);
-    return parseRowsToMatrix(rows);
+    const result = parseRowsToMatrix(rows);
+    this.roleMatrixCache.set(`id:${roleId}`, { value: result, timestamp: Date.now() });
+    return result;
   }
 
   /** Resolves role baseline defaults by role key. */
@@ -77,9 +99,15 @@ export class PermissionService {
     if (isSuperAdminRoleKey(roleKey)) {
       return fullMatrix();
     }
+    const cached = this.roleMatrixCache.get(`key:${roleKey}`);
+    if (cached && Date.now() - cached.timestamp < this.TTL_MS) {
+      return cached.value;
+    }
     const role = await this.roleRepository.findByKey(roleKey);
     if (!role) return emptyMatrix();
-    return this.getMatrixForRoleId(String(role._id));
+    const result = await this.getMatrixForRoleId(String(role._id));
+    this.roleMatrixCache.set(`key:${roleKey}`, { value: result, timestamp: Date.now() });
+    return result;
   }
 
   /**
@@ -87,35 +115,51 @@ export class PermissionService {
    * - If user has custom overrides, uses user matrix (`isCustom: true`).
    * - Otherwise, inherits their role's default matrix (`isCustom: false`).
    */
-  async getMatrixForUser(
-    userId: string,
-    roleKey?: string
-  ): Promise<EffectiveUserMatrix> {
-    // 1. Check if user has custom overrides
-    const userRows = (await this.permissionRepository.findByUser(userId)) || [];
-    if (userRows.length > 0) {
-      return { matrix: parseRowsToMatrix(userRows), isCustom: true };
-    }
-
-    // 2. Resolve role key if not provided
-    let resolvedRoleKey = roleKey;
-    if (!resolvedRoleKey) {
-      const user = await this.userRepository.findByIdWithRole(userId);
-      if (!user) {
-        return { matrix: emptyMatrix(), isCustom: false };
+  getMatrixForUser = cache(
+    async (
+      userId: string,
+      roleKey?: string
+    ): Promise<EffectiveUserMatrix> => {
+      const cacheKey = `${userId}:${roleKey ?? ""}`;
+      const cached = this.userMatrixCache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < this.TTL_MS) {
+        return cached.value;
       }
-      const role = user.roleId as unknown as { key: string };
-      resolvedRoleKey = role.key;
-    }
 
-    if (isSuperAdminRoleKey(resolvedRoleKey)) {
-      return { matrix: fullMatrix(), isCustom: false };
-    }
+      // 1. Check if user has custom overrides
+      const userRows = (await this.permissionRepository.findByUser(userId)) || [];
+      if (userRows.length > 0) {
+        const result = { matrix: parseRowsToMatrix(userRows), isCustom: true };
+        this.userMatrixCache.set(cacheKey, { value: result, timestamp: Date.now() });
+        return result;
+      }
 
-    // 3. Fall back to role baseline defaults
-    const roleMatrix = await this.getMatrixForRoleKey(resolvedRoleKey);
-    return { matrix: roleMatrix, isCustom: false };
-  }
+      // 2. Resolve role key if not provided
+      let resolvedRoleKey = roleKey;
+      if (!resolvedRoleKey) {
+        const user = await this.userRepository.findByIdWithRole(userId);
+        if (!user) {
+          const result = { matrix: emptyMatrix(), isCustom: false };
+          this.userMatrixCache.set(cacheKey, { value: result, timestamp: Date.now() });
+          return result;
+        }
+        const role = user.roleId as unknown as { key: string };
+        resolvedRoleKey = role.key;
+      }
+
+      if (isSuperAdminRoleKey(resolvedRoleKey)) {
+        const result = { matrix: fullMatrix(), isCustom: false };
+        this.userMatrixCache.set(cacheKey, { value: result, timestamp: Date.now() });
+        return result;
+      }
+
+      // 3. Fall back to role baseline defaults
+      const roleMatrix = await this.getMatrixForRoleKey(resolvedRoleKey);
+      const result = { matrix: roleMatrix, isCustom: false };
+      this.userMatrixCache.set(cacheKey, { value: result, timestamp: Date.now() });
+      return result;
+    }
+  );
 
   async can(
     userId: string,
@@ -156,6 +200,7 @@ export class PermissionService {
         grant.actions
       );
     }
+    this.clearCache();
     return this.getMatrixForRoleId(roleId);
   }
 
@@ -188,6 +233,7 @@ export class PermissionService {
         grant.actions
       );
     }
+    this.clearCache();
     return this.getMatrixForUser(userId, role.key);
   }
 
@@ -213,16 +259,20 @@ export class PermissionService {
     }
 
     await this.permissionRepository.deleteByUser(userId);
+    this.clearCache();
     return this.getMatrixForUser(userId, role.key);
   }
 
   async deleteForUser(userId: string): Promise<void> {
     await this.permissionRepository.deleteByUser(userId);
+    this.clearCache();
   }
 
   async deleteForRole(roleId: string): Promise<void> {
     await this.permissionRepository.deleteByRole(roleId);
+    this.clearCache();
   }
 }
 
 export const permissionService = new PermissionService();
+
