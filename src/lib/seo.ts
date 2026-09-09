@@ -336,6 +336,49 @@ export function buildWebSiteJsonLd(locale: string): Record<string, unknown> {
 }
 
 /**
+ * SiteNavigationElement schema explicitly feeds Google the links we want shown as Sitelinks.
+ */
+export function buildSiteNavigationJsonLd(locale: string): Record<string, unknown> {
+  const isVi = locale === "vi";
+  return {
+    "@type": "ItemList",
+    "@id": `${siteUrl()}/#sitenavigation`,
+    itemListElement: [
+      {
+        "@type": "SiteNavigationElement",
+        position: 1,
+        name: isVi ? "Sản phẩm" : "Products",
+        url: absoluteUrl(locale, "/menu"),
+      },
+      {
+        "@type": "SiteNavigationElement",
+        position: 2,
+        name: isVi ? "Câu chuyện" : "Our Story",
+        url: absoluteUrl(locale, "/about"),
+      },
+      {
+        "@type": "SiteNavigationElement",
+        position: 3,
+        name: isVi ? "Sự kiện" : "Events",
+        url: absoluteUrl(locale, "/events"),
+      },
+      {
+        "@type": "SiteNavigationElement",
+        position: 4,
+        name: isVi ? "Tin tức" : "News",
+        url: absoluteUrl(locale, "/blog"),
+      },
+      {
+        "@type": "SiteNavigationElement",
+        position: 5,
+        name: isVi ? "Liên hệ" : "Contact",
+        url: absoluteUrl(locale, "/contact"),
+      },
+    ],
+  };
+}
+
+/**
  * The physical brewery/taproom. `Brewery` is a `LocalBusiness` subtype, so this
  * one node covers "brewery near me" local-pack eligibility, the map/NAP panel,
  * and the "where are they / when are they open" answer.
@@ -484,6 +527,7 @@ export function buildHomeJsonLd(
   return jsonLdGraph([
     buildOrganizationJsonLd(),
     buildWebSiteJsonLd(locale),
+    buildSiteNavigationJsonLd(locale),
     buildBreweryJsonLd(locale),
     ...buildBeerProductsJsonLd(beers),
     faq.length ? buildFaqJsonLd(locale, faq) : null,

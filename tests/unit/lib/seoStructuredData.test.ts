@@ -8,6 +8,7 @@ import {
   buildOrganizationJsonLd,
   buildStaticPageMetadata,
   buildWebSiteJsonLd,
+  buildSiteNavigationJsonLd,
   jsonLdGraph,
   organizationId,
   staticAlternates,
@@ -143,6 +144,20 @@ describe("buildWebSiteJsonLd", () => {
 
     expect(site.publisher).toEqual({ "@id": organizationId() });
     expect(site.potentialAction).toMatchObject({ "@type": "SearchAction" });
+  });
+});
+
+describe("buildSiteNavigationJsonLd", () => {
+  it("emits the SiteNavigationElement with standard menu links", () => {
+    const nav = buildSiteNavigationJsonLd("vi");
+    
+    expect(nav["@type"]).toBe("ItemList");
+    expect(nav.itemListElement).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ "@type": "SiteNavigationElement", name: "Sản phẩm" }),
+        expect.objectContaining({ "@type": "SiteNavigationElement", name: "Liên hệ" }),
+      ])
+    );
   });
 });
 

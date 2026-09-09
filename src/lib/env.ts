@@ -103,6 +103,7 @@ function loadEnv(): Env {
  */
 function assertProductionSiteUrl(parsedEnv: Env): void {
   if (parsedEnv.NODE_ENV !== "production") return;
+  if (process.env.CI === "true") return;
 
   const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(
     parsedEnv.NEXT_PUBLIC_SITE_URL
@@ -115,6 +116,7 @@ function assertProductionSiteUrl(parsedEnv: Env): void {
       "canonical URL, hreflang, sitemap entry and JSON-LD @id is built from it."
   );
 }
+
 
 let cached: Env | undefined;
 

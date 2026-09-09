@@ -101,10 +101,16 @@ export async function uploadMedia(
   }
   formData.append("file", file);
 
-  const uploadResponse = await fetch(presigned.url, {
-    method: "POST",
-    body: formData,
-  });
+  let uploadResponse: Response;
+  try {
+    uploadResponse = await fetch(presigned.url, {
+      method: "POST",
+      body: formData,
+    });
+  } catch (err) {
+    throw new MediaUploadError("Kết nối mạng bị gián đoạn. Vui lòng kiểm tra lại mạng hoặc tắt trình chặn quảng cáo rồi thử lại.");
+  }
+
   if (!uploadResponse.ok) {
     throw new MediaUploadError("Tải tệp lên thất bại.");
   }

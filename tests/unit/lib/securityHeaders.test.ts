@@ -56,6 +56,11 @@ describe("buildContentSecurityPolicy", () => {
       expect(connectSrc).toContain("https://*.analytics.google.com");
     });
 
+    it("allows Cloudinary API through connect-src for media uploads", () => {
+      const connectSrc = directive(prod, "connect-src");
+      expect(connectSrc).toContain("https://api.cloudinary.com");
+    });
+
     it("allows exactly one framed origin — the Google Maps embed on /contact", () => {
       expect(directive(prod, "frame-src")).toEqual(["https://www.google.com"]);
     });

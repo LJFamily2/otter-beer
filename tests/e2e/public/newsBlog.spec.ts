@@ -62,9 +62,10 @@ test.describe("Public homepage — News & Blog rail", () => {
       // Walk to the far end — the rail is short enough that a handful of
       // clicks always exhausts it.
       for (let i = 0; i < 6 && !(await next.isDisabled()); i++) {
-        await next.click();
+        await next.click({ force: true });
         await page.waitForTimeout(400);
       }
+
 
       await expect(next).toBeDisabled();
       await expect

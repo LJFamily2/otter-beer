@@ -189,4 +189,17 @@ describe("uploadMedia", () => {
       })
     ).rejects.toThrow(MediaUploadError);
   });
+
+  it("throws a user-friendly error when the upload fetch call throws a network error", async () => {
+    fetchMock
+      .mockResolvedValueOnce(presignResponse("hero/2026-08-25/uuid.mp4"))
+      .mockRejectedValueOnce(new TypeError("Failed to fetch")); // network error
+
+    await expect(
+      uploadMedia(fileOf(100, "clip.mp4", "video/mp4"), {
+        namespace: "hero",
+        allowVideo: true,
+      })
+    ).rejects.toThrow("Kết nối mạng bị gián đoạn. Vui lòng kiểm tra lại mạng hoặc tắt trình chặn quảng cáo rồi thử lại.");
+  });
 });
