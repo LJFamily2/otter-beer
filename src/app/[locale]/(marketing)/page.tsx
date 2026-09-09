@@ -13,8 +13,12 @@ import { beerService } from "@/services/BeerService";
 import { brandStoryService } from "@/services/BrandStoryService";
 import { toSlideItem } from "@/lib/utils/HeroSectionPresenter";
 import { toNewsCardItem } from "@/lib/utils/BlogPostPresenter";
+<<<<<<< feat/marketing-pages-layout
 import { toShowcaseItem } from "@/lib/utils/BeerPresenter";
 import { toBookChapters } from "@/lib/utils/BrandStoryPresenter";
+=======
+import { toBookChapters, DEFAULT_BRAND_STORY_CHAPTERS } from "@/lib/utils/BrandStoryPresenter";
+>>>>>>> local
 import { buildHomeJsonLd, buildHomeMetadata } from "@/lib/seo";
 import { faqFor } from "@/config/faq";
 
@@ -46,8 +50,13 @@ export default async function HomePage({ params }: HomePageProps) {
 
   const brandStoryChapters = await brandStoryService
     .getPublished()
-    .then((brandStory) => toBookChapters(brandStory, locale))
-    .catch(() => []);
+    .then((brandStory) => {
+      const chapters = toBookChapters(brandStory, locale);
+      return chapters.length > 0
+        ? chapters
+        : (DEFAULT_BRAND_STORY_CHAPTERS[locale] ?? DEFAULT_BRAND_STORY_CHAPTERS.en);
+    })
+    .catch(() => DEFAULT_BRAND_STORY_CHAPTERS[locale] ?? DEFAULT_BRAND_STORY_CHAPTERS.en);
 
   const posts = await blogPostService
     .getRecentPublished(NEWS_RAIL_SIZE)
