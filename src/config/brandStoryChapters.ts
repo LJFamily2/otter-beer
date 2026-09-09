@@ -1,55 +1,23 @@
 /**
- * The homepage flipbook's chapter list.
+ * Shared types and pure layout utilities for the homepage flipbook.
  *
  * A chapter is a *group* of images, not a single spread. The reader has to
  * turn through every page of a chapter before the next chapter's tab becomes
- * the current one — so "Community" holding 3 images means 3 images' worth of
- * page-turning before the "Journal" tab takes over.
+ * the current one.
  *
  * Because the book shows two pages at a time, a chapter with an odd number of
  * images is padded with one blank leaf. That keeps every chapter opening on a
  * left-hand page, the way a printed magazine section does.
+ *
+ * The chapter data itself is stored in MongoDB and fetched at runtime via
+ * BrandStoryService — there is no static fallback list here.
  */
 export interface BrandStoryChapter {
   title: string;
   images: string[];
 }
 
-export const BRAND_STORY_CHAPTERS: BrandStoryChapter[] = [
-  {
-    title: "Our Story",
-    images: [
-      "/images/otter-beer-premium-lager.jpg",
-      "/images/contact-hero.jpg",
-      "/images/otter-beer-hero.png",
-    ],
-  },
-  {
-    title: "Ingredients",
-    images: ["/images/otter-beer-single-3d.png", "/images/otter-beer-single-can.png"],
-  },
-  {
-    title: "Brewing",
-    images: [
-      "/images/otter-beer-premium-lager-transparent.png",
-      "/images/new-bg.png",
-      "/images/brand-story-bg.jpg",
-      "/images/age-verification-bg.jpg",
-    ],
-  },
-  {
-    title: "Community",
-    images: [
-      "/images/contact-hero.jpg",
-      "/images/otter-beer-premium-lager.jpg",
-      "/images/otter-beer-hero.png",
-    ],
-  },
-  {
-    title: "Journal",
-    images: ["/images/footer-bg.png", "/images/otter-beer-single-3d.png"],
-  },
-];
+
 
 export interface BrandStoryPage {
   /** `null` marks a padding leaf — a blank page, not a missing image. */
@@ -117,4 +85,3 @@ export function chapterIndexForSpread(book: BrandStoryBook, spreadIndex: number)
   return spreadIndex < 0 ? 0 : book.chapters.length - 1;
 }
 
-export const BRAND_STORY_BOOK = buildBrandStoryBook(BRAND_STORY_CHAPTERS);

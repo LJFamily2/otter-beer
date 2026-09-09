@@ -5,8 +5,7 @@ import type { BrandStoryChapter } from "@/config/brandStoryChapters";
 
 interface BrandStorySectionProps {
   locale: string;
-  /** Published chapters from the backend. Each of Desktop/Mobile falls back to its own static sample book when omitted or empty. */
-  chapters?: BrandStoryChapter[];
+  chapters: BrandStoryChapter[];
 }
 
 export function BrandStorySection({ locale, chapters }: BrandStorySectionProps) {

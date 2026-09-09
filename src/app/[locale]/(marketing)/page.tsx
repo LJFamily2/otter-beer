@@ -13,12 +13,8 @@ import { beerService } from "@/services/BeerService";
 import { brandStoryService } from "@/services/BrandStoryService";
 import { toSlideItem } from "@/lib/utils/HeroSectionPresenter";
 import { toNewsCardItem } from "@/lib/utils/BlogPostPresenter";
-<<<<<<< feat/marketing-pages-layout
 import { toShowcaseItem } from "@/lib/utils/BeerPresenter";
-import { toBookChapters } from "@/lib/utils/BrandStoryPresenter";
-=======
 import { toBookChapters, DEFAULT_BRAND_STORY_CHAPTERS } from "@/lib/utils/BrandStoryPresenter";
->>>>>>> local
 import { buildHomeJsonLd, buildHomeMetadata } from "@/lib/seo";
 import { faqFor } from "@/config/faq";
 

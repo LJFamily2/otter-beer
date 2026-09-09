@@ -17,29 +17,6 @@ export interface HeroSlideItem {
   mediaType?: "image" | "video";
 }
 
-/** Alt text describes what is actually in each frame and names the brand and
- *  the place — image search reads these, and so does an answer engine trying
- *  to caption the page. "Flagship Hero" described the slot, not the picture.
- *  Rendered only as a fallback — see `slides` prop — when the backend has no
- *  published hero slides yet, so the section is never empty. */
-const FALLBACK_SLIDES: HeroSlideItem[] = [
-  {
-    src: "/images/otter-beer-hero.png",
-    alt: "Lon bia thủ công Otter Beer trên nền tối — dòng bia chủ lực nấu tại Tây Ninh",
-  },
-  {
-    src: "/images/otter-beer-premium-lager.jpg",
-    alt: "Bia Otter Beer Premium Lager rót ra ly, bọt mịn, màu vàng hổ phách",
-  },
-  {
-    src: "/images/contact-hero.jpg",
-    alt: "Không gian taproom của nhà máy bia Otter Beer tại Tây Ninh",
-  },
-  {
-    src: "/images/brand-story-bg.jpg",
-    alt: "Mạch nha vàng và hoa bia Saaz — nguyên liệu nấu bia thủ công Otter Beer",
-  },
-];
 
 /** How long each slide rests before autoplay advances. Mirrored into CSS as
  *  `--hero-dwell` so the indicator fill and this timer share a duration. */
@@ -190,12 +167,10 @@ const HERO_COPY = {
 
 interface HeroSectionProps {
   locale?: string;
-  /** Published hero slides from the backend. Falls back to a static sample set when omitted or empty, so the section is never blank. */
-  slides?: HeroSlideItem[];
+  slides: HeroSlideItem[];
 }
 
-export function HeroSection({ locale = "vi", slides: slidesProp = [] }: HeroSectionProps) {
-  const slides = slidesProp.length > 0 ? slidesProp : FALLBACK_SLIDES;
+export function HeroSection({ locale = "vi", slides = [] }: HeroSectionProps) {
   const copy = HERO_COPY[locale as keyof typeof HERO_COPY] ?? HERO_COPY.en;
   const prefersReducedMotion = useReducedMotion() ?? false;
 
@@ -370,6 +345,8 @@ export function HeroSection({ locale = "vi", slides: slidesProp = [] }: HeroSect
   // image is already decoded before it is ever needed and a drag has something
   // real to pull into view.
   const windowPages = [page - 1, page, page + 1];
+
+  if (!slides || slides.length === 0) return null;
 
   return (
     <section
