@@ -69,15 +69,15 @@ describe("toShowcaseItem", () => {
   });
 
   it("falls back to the brand default colors when the beer has none set", () => {
-    const item = toShowcaseItem(beer(), "vi");
+    const item = toShowcaseItem(beer({ imageKey: "beers/lager.png" }), "vi");
 
     expect(item?.themeColor).toBe(DEFAULT_THEME_COLOR);
     expect(item?.themeColorContainer).toBe(DEFAULT_THEME_COLOR_CONTAINER);
   });
 
-  it("falls back to a placeholder image when imageKey is unset", () => {
+  it("returns null when imageKey is unset", () => {
     const item = toShowcaseItem(beer(), "vi");
-    expect(item?.imageSrc).toBe("/images/otter-beer-single-can.png");
+    expect(item).toBeNull();
   });
 
   it("returns null when the beer has no translation at all", () => {
@@ -199,7 +199,7 @@ describe("toShowcaseItem", () => {
   });
 
   it("returns an empty variant list for a beer saved before variants existed", () => {
-    const item = toShowcaseItem(beer({ variants: undefined }), "vi");
+    const item = toShowcaseItem(beer({ imageKey: "beers/lager.png", variants: undefined }), "vi");
     expect(item?.variants).toEqual([]);
   });
 });

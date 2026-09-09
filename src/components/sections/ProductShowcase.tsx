@@ -171,9 +171,6 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
                   <p className="font-display text-3xl font-semibold text-primary">
                     {currentBeer.ibu}
                   </p>
-                  <span className="text-xs font-semibold text-primary/40 uppercase">
-                    / 100
-                  </span>
                 </div>
               </div>
 
@@ -300,36 +297,18 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
           </motion.p>
 
           {/* Sharp Architectural Buttons */}
-          {currentBeer.shopUrl || currentBeer.findLocallyUrl ? (
-            <div className="mt-7 flex flex-col gap-4 sm:flex-row">
-              {/* Primary CTA */}
-              {currentBeer.shopUrl ? (
-                <a
-                  href={currentBeer.shopUrl}
-                  className={buttonVariants("primary", "md")}
-                >
-                  <span>{copy.shop}</span>
-                  <svg className="size-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </a>
-              ) : null}
-
-              {/* Secondary CTA */}
-              {currentBeer.findLocallyUrl ? (
-                <a
-                  href={currentBeer.findLocallyUrl}
-                  className={buttonVariants("secondary", "md")}
-                >
-                  <svg className="size-4 text-primary transition-colors group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span>{copy.find}</span>
-                </a>
-              ) : null}
-            </div>
-          ) : null}
+          <div className="mt-7 flex flex-col gap-4 sm:flex-row">
+            {/* Primary CTA */}
+            <a
+              href="#contact"
+              className={buttonVariants("primary", "md")}
+            >
+              <span>{copy.shop}</span>
+              <svg className="size-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+          </div>
         </div>
       </div>
 

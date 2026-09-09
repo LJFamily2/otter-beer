@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 import { RouteGuard } from "@/lib/auth/RouteGuard";
 import { MODULE_KEYS } from "@/config/permissions";
 import { beerService } from "@/services/BeerService";
@@ -43,6 +44,7 @@ export const POST = withRateLimit(
       }
 
       const beer = await beerService.create(parsed.data, session.user.id);
+      revalidatePath('/', 'layout');
       return NextResponse.json(beer, { status: 201 });
     }
   ),

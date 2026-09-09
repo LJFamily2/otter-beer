@@ -29,6 +29,8 @@ interface MediaUploadFieldProps {
    * this field stays usable for surfaces with no fixed aspect ratio.
    */
   warnOnNon16x9?: boolean;
+  /** The aspect ratio for the preview container. Default is "16/9". */
+  aspectRatio?: "16/9" | "9/16";
 }
 
 function megabytes(bytes: number): number {
@@ -51,6 +53,7 @@ export function MediaUploadField({
   namespace,
   allowVideo = false,
   warnOnNon16x9 = false,
+  aspectRatio = "16/9",
 }: MediaUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -102,11 +105,13 @@ export function MediaUploadField({
     : `JPEG, PNG, WebP, hoặc GIF — tối đa ${megabytes(MAX_IMAGE_SIZE_BYTES)}MB`;
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex items-start gap-4 rounded border border-dashed border-[rgba(196,198,210,0.7)] bg-surface p-4">
+    <div className="flex h-full flex-col gap-1.5">
+      <div className="flex h-full flex-col items-center justify-start gap-4 rounded border border-dashed border-[rgba(196,198,210,0.7)] bg-surface p-4">
         <div
           data-testid="media-preview"
-          className="flex aspect-video w-56 shrink-0 items-center justify-center overflow-hidden rounded bg-surface-container-high"
+          className={`flex h-48 shrink-0 items-center justify-center overflow-hidden rounded bg-surface-container-high ${
+            aspectRatio === "9/16" ? "aspect-[9/16]" : "aspect-video"
+          }`}
         >
           {mediaKey ? (
             mediaType === "video" ? (
@@ -134,31 +139,33 @@ export function MediaUploadField({
             </span>
           )}
         </div>
-        <div className="flex flex-col items-start gap-2">
-          <button
-            type="button"
-            className={buttonVariants("secondary")}
-            onClick={() => inputRef.current?.click()}
-            disabled={isUploading}
-          >
-            {isUploading
-              ? "Đang tải..."
-              : mediaKey
-                ? "Thay tệp"
-                : allowVideo
-                  ? "Tải ảnh/video lên"
-                  : "Tải ảnh lên"}
-          </button>
-          {mediaKey ? (
+        <div className="flex w-full flex-col items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-3">
             <button
               type="button"
-              className="cursor-pointer border-none bg-transparent p-0 text-[13px] text-error hover:underline"
-              onClick={handleRemove}
+              className={buttonVariants("secondary")}
+              onClick={() => inputRef.current?.click()}
+              disabled={isUploading}
             >
-              Xóa tệp
+              {isUploading
+                ? "Đang tải..."
+                : mediaKey
+                  ? "Thay tệp"
+                  : allowVideo
+                    ? "Tải ảnh/video lên"
+                    : "Tải ảnh lên"}
             </button>
-          ) : null}
-          <span className="text-xs text-on-surface-variant">{hintText}</span>
+            {mediaKey ? (
+              <button
+                type="button"
+                className="cursor-pointer border-none bg-transparent p-0 text-[13px] text-error hover:underline"
+                onClick={handleRemove}
+              >
+                Xóa tệp
+              </button>
+            ) : null}
+          </div>
+          <span className="text-center text-xs text-on-surface-variant">{hintText}</span>
         </div>
         <input
           ref={inputRef}

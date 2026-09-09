@@ -35,6 +35,7 @@ export default async function HeroSectionPage() {
       return {
         key: `existing-${index}`,
         mediaKey: slide.mediaKey,
+        mobileMediaKey: slide.mobileMediaKey,
         mediaType: slide.mediaType,
         status: slide.status,
         translations,

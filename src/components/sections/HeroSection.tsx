@@ -12,33 +12,11 @@ import {
 
 export interface HeroSlideItem {
   src: string;
+  mobileSrc?: string;
   alt: string;
   mediaType?: "image" | "video";
 }
 
-/** Alt text describes what is actually in each frame and names the brand and
- *  the place — image search reads these, and so does an answer engine trying
- *  to caption the page. "Flagship Hero" described the slot, not the picture.
- *  Rendered only as a fallback — see `slides` prop — when the backend has no
- *  published hero slides yet, so the section is never empty. */
-const FALLBACK_SLIDES: HeroSlideItem[] = [
-  {
-    src: "/images/otter-beer-hero.png",
-    alt: "Lon bia thủ công Otter Beer trên nền tối — dòng bia chủ lực nấu tại Tây Ninh",
-  },
-  {
-    src: "/images/otter-beer-premium-lager.jpg",
-    alt: "Bia Otter Beer Premium Lager rót ra ly, bọt mịn, màu vàng hổ phách",
-  },
-  {
-    src: "/images/contact-hero.jpg",
-    alt: "Không gian taproom của nhà máy bia Otter Beer tại Tây Ninh",
-  },
-  {
-    src: "/images/brand-story-bg.jpg",
-    alt: "Mạch nha vàng và hoa bia Saaz — nguyên liệu nấu bia thủ công Otter Beer",
-  },
-];
 
 /** How long each slide rests before autoplay advances. Mirrored into CSS as
  *  `--hero-dwell` so the indicator fill and this timer share a duration. */
@@ -104,9 +82,9 @@ function SlideMedia({
   priority: boolean;
 }) {
   return (
-    <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+    <div className="absolute inset-0 h-full w-full flex items-center justify-center overflow-hidden">
       <div
-        className="relative"
+        className="relative h-full w-full"
         style={{
           aspectRatio: "16 / 9",
           maxHeight: "100dvh",
@@ -134,16 +112,30 @@ function SlideMedia({
              cell mid-swipe. Note `priority` is deprecated in Next 16, and it
              was already inert here: it does not emit a preload link alongside
              `loading`/`fetchPriority` (see the Image docs' preload section). */
-          <Image
-            src={slide.src}
-            alt={slide.alt}
-            fill
-            sizes="100vw"
-            className="object-cover"
-            loading="eager"
-            fetchPriority={priority ? "high" : "low"}
-            draggable={false}
-          />
+          <>
+            <Image
+              src={slide.src}
+              alt={slide.alt}
+              fill
+              sizes="(max-width: 768px) 100vw, 100vw"
+              className={`object-cover ${slide.mobileSrc ? "hidden sm:block" : ""}`}
+              loading="eager"
+              fetchPriority={priority ? "high" : "low"}
+              draggable={false}
+            />
+            {slide.mobileSrc && (
+              <Image
+                src={slide.mobileSrc}
+                alt={slide.alt}
+                fill
+                sizes="(max-width: 768px) 100vw, 100vw"
+                className="object-cover sm:hidden"
+                loading="eager"
+                fetchPriority={priority ? "high" : "low"}
+                draggable={false}
+              />
+            )}
+          </>
         )}
       </div>
     </div>
@@ -175,12 +167,10 @@ const HERO_COPY = {
 
 interface HeroSectionProps {
   locale?: string;
-  /** Published hero slides from the backend. Falls back to a static sample set when omitted or empty, so the section is never blank. */
-  slides?: HeroSlideItem[];
+  slides: HeroSlideItem[];
 }
 
-export function HeroSection({ locale = "vi", slides: slidesProp = [] }: HeroSectionProps) {
-  const slides = slidesProp.length > 0 ? slidesProp : FALLBACK_SLIDES;
+export function HeroSection({ locale = "vi", slides = [] }: HeroSectionProps) {
   const copy = HERO_COPY[locale as keyof typeof HERO_COPY] ?? HERO_COPY.en;
   const prefersReducedMotion = useReducedMotion() ?? false;
 
@@ -355,6 +345,8 @@ export function HeroSection({ locale = "vi", slides: slidesProp = [] }: HeroSect
   // image is already decoded before it is ever needed and a drag has something
   // real to pull into view.
   const windowPages = [page - 1, page, page + 1];
+
+  if (!slides || slides.length === 0) return null;
 
   return (
     <section

@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useState, useRef, useMemo, useEffect } from "react";
-import { BRAND_STORY_CHAPTERS, type BrandStoryChapter } from "@/config/brandStoryChapters";
+import { type BrandStoryChapter } from "@/config/brandStoryChapters";
 
 interface BrandStoryMobileProps {
   locale: string;
-  /** Falls back to a static sample book when omitted or empty, so the section is never blank. */
-  chapters?: BrandStoryChapter[];
+  chapters: BrandStoryChapter[];
 }
 
 const COPY = {
@@ -48,8 +47,7 @@ interface MobileSlide {
   rotationClass: string;
 }
 
-export function BrandStoryMobile({ locale, chapters: chaptersProp = [] }: BrandStoryMobileProps) {
-  const chapters = chaptersProp.length > 0 ? chaptersProp : BRAND_STORY_CHAPTERS;
+export function BrandStoryMobile({ locale, chapters }: BrandStoryMobileProps) {
   const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -162,7 +160,7 @@ export function BrandStoryMobile({ locale, chapters: chaptersProp = [] }: BrandS
   return (
     <div
       ref={sectionRef}
-      className="relative w-full bg-[#00153e] text-[#fdf9f4] overflow-hidden min-h-[110dvh] flex flex-col justify-between pt-16 pb-24 select-none"
+      className="relative w-full bg-[#00153e] text-[#fdf9f4] overflow-hidden min-h-[110dvh] flex flex-col justify-between pt-8 pb-24 select-none"
     >
       {/* Fixed Parallax Radial Background Stage */}
       <div

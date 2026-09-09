@@ -228,7 +228,7 @@ export default function ContactSection({
   return (
     <section
       id="contact"
-      className="relative isolate overflow-hidden bg-[#0d0f10] text-white pt-28 sm:pt-36 lg:pt-40 pb-16 sm:pb-20 lg:pb-24"
+      className="relative isolate overflow-hidden bg-[#0d0f10] text-white pt-16 sm:pt-36 lg:pt-40 pb-16 sm:pb-20 lg:pb-24"
     >
       {/* Dark Ambient Scrim & Radial Glow */}
       <div

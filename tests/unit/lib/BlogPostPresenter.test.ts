@@ -71,13 +71,13 @@ describe("toNewsCardItem", () => {
   });
 
   it("locale-prefixes the href for a non-default locale", () => {
-    const item = toNewsCardItem(fullPost(), "en");
+    const item = toNewsCardItem(fullPost({ coverImageKey: "news-blog/cover.jpg" }), "en");
     expect(item?.href).toBe("/en/blog/tieu-de");
   });
 
-  it("falls back to a placeholder image when coverImageKey is unset", () => {
+  it("returns null when coverImageKey is unset", () => {
     const item = toNewsCardItem(fullPost(), "vi");
-    expect(item?.imageSrc).toBe("/images/otter-beer-premium-lager.jpg");
+    expect(item).toBeNull();
   });
 
   it("omits the tag when the post has none", () => {

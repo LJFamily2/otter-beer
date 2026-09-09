@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 import { RouteGuard } from "@/lib/auth/RouteGuard";
 import { MODULE_KEYS } from "@/config/permissions";
 import {
@@ -49,6 +50,7 @@ export const POST = withRateLimit(
 
       try {
         const post = await blogPostService.create(parsed.data, session.user.id);
+        revalidatePath('/', 'layout');
         return NextResponse.json(post, { status: 201 });
       } catch (err) {
         if (err instanceof SlugConflictError) {

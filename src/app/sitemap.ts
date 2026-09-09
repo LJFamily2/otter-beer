@@ -21,6 +21,9 @@ const STATIC_ROUTES: readonly {
   changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
 }[] = [
   { path: "/", priority: 1, changeFrequency: "weekly" },
+  { path: "/menu", priority: 0.9, changeFrequency: "weekly" },
+  { path: "/about", priority: 0.9, changeFrequency: "monthly" },
+  { path: "/events", priority: 0.8, changeFrequency: "weekly" },
   { path: "/blog", priority: 0.8, changeFrequency: "weekly" },
   { path: "/contact", priority: 0.7, changeFrequency: "monthly" },
   { path: "/privacy", priority: 0.3, changeFrequency: "yearly" },

@@ -46,6 +46,7 @@ export const HeroSlideInputSchema = z
       .string({ message: "Vui lòng tải ảnh hoặc video cho slide này" })
       .trim()
       .min(1, "Vui lòng tải ảnh hoặc video cho slide này"),
+    mobileMediaKey: z.string().trim().optional(),
     mediaType: z.enum(HERO_MEDIA_TYPES).default("image"),
     status: z.enum(HERO_SLIDE_STATUSES).default("draft"),
     translations: z
