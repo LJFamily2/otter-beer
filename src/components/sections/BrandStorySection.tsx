@@ -9,6 +9,8 @@ interface BrandStorySectionProps {
 }
 
 export function BrandStorySection({ locale, chapters }: BrandStorySectionProps) {
+  if (!chapters || chapters.length === 0) return null;
+
   return (
     /* scroll-mt keeps the fixed header from covering the section when the nav
        jumps to #story — and from swallowing clicks on the book's controls. */

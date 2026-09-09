@@ -11,10 +11,10 @@ import { heroSectionService } from "@/services/HeroSectionService";
 import { blogPostService } from "@/services/BlogPostService";
 import { beerService } from "@/services/BeerService";
 import { brandStoryService } from "@/services/BrandStoryService";
-import { toSlideItem, DEFAULT_HERO_SLIDES } from "@/lib/utils/HeroSectionPresenter";
-import { toNewsCardItem, DEFAULT_NEWS_POSTS } from "@/lib/utils/BlogPostPresenter";
+import { toSlideItem } from "@/lib/utils/HeroSectionPresenter";
+import { toNewsCardItem } from "@/lib/utils/BlogPostPresenter";
 import { toShowcaseItem } from "@/lib/utils/BeerPresenter";
-import { toBookChapters, DEFAULT_BRAND_STORY_CHAPTERS } from "@/lib/utils/BrandStoryPresenter";
+import { toBookChapters } from "@/lib/utils/BrandStoryPresenter";
 import { buildHomeJsonLd, buildHomeMetadata } from "@/lib/seo";
 import { faqFor } from "@/config/faq";
 
@@ -36,13 +36,10 @@ export default async function HomePage({ params }: HomePageProps) {
 
   const heroSlides = await heroSectionService
     .listPublishedSlides()
-    .then((slides) => {
-      const mapped = slides.map((slide) => toSlideItem(slide, locale)).filter((item) => item !== null);
-      return mapped.length > 0
-        ? mapped
-        : (DEFAULT_HERO_SLIDES[locale] ?? DEFAULT_HERO_SLIDES.en);
-    })
-    .catch(() => DEFAULT_HERO_SLIDES[locale] ?? DEFAULT_HERO_SLIDES.en);
+    .then((slides) =>
+      slides.map((slide) => toSlideItem(slide, locale)).filter((item) => item !== null)
+    )
+    .catch(() => []);
 
   const beers = await beerService
     .listShowcasePublished()
@@ -51,23 +48,16 @@ export default async function HomePage({ params }: HomePageProps) {
 
   const brandStoryChapters = await brandStoryService
     .getPublished()
-    .then((brandStory) => {
-      const chapters = toBookChapters(brandStory, locale);
-      return chapters.length > 0
-        ? chapters
-        : (DEFAULT_BRAND_STORY_CHAPTERS[locale] ?? DEFAULT_BRAND_STORY_CHAPTERS.en);
-    })
-    .catch(() => DEFAULT_BRAND_STORY_CHAPTERS[locale] ?? DEFAULT_BRAND_STORY_CHAPTERS.en);
+    .then((brandStory) => toBookChapters(brandStory, locale))
+    .catch(() => []);
 
   const posts = await blogPostService
     .getRecentPublished(NEWS_RAIL_SIZE)
-    .then((items) => {
-      const mapped = items.map((post) => toNewsCardItem(post, locale)).filter((item) => item !== null);
-      return mapped.length > 0
-        ? mapped
-        : (DEFAULT_NEWS_POSTS[locale] ?? DEFAULT_NEWS_POSTS.en);
-    })
-    .catch(() => DEFAULT_NEWS_POSTS[locale] ?? DEFAULT_NEWS_POSTS.en);
+    .then((items) =>
+      items.map((post) => toNewsCardItem(post, locale)).filter((item) => item !== null)
+    )
+    .catch(() => []);
+
 
 
   const faq = faqFor(locale);

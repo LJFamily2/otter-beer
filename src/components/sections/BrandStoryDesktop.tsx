@@ -77,8 +77,13 @@ export function BrandStoryDesktop({ locale, chapters }: BrandStoryDesktopProps) 
   const [isTitleHovered, setIsTitleHovered] = useState(false);
   const bookRef = useRef<PageFlipInstance | null>(null);
 
-  const book = useMemo(() => buildBrandStoryBook(chapters), [chapters]);
+  const book = useMemo(() => buildBrandStoryBook(chapters ?? []), [chapters]);
   const { pages: PAGES, chapters: CHAPTERS, totalSpreads: TOTAL_SPREADS } = book;
+
+  if (!chapters || chapters.length === 0 || CHAPTERS.length === 0) {
+    return null;
+  }
+
   const LAST_PAGE_INDEX = TOTAL_SPREADS * 2 - 2;
 
   const currentSpreadIndex = Math.floor(pageIndex / 2);

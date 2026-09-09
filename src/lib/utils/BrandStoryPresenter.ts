@@ -20,80 +20,8 @@ export function pickTranslation(
   );
 }
 
-export const DEFAULT_BRAND_STORY_CHAPTERS: Record<string, BrandStoryChapter[]> = {
-  vi: [
-    {
-      title: "Câu Chuyện",
-      images: [
-        "/images/contact-hero.jpg",
-        "/images/new-bg.png",
-        "/images/age-verification-bg.jpg",
-      ],
-    },
-    {
-      title: "Nguyên Liệu",
-      images: ["/images/contact-hero.jpg", "/images/new-bg.png"],
-    },
-    {
-      title: "Nấu Bia",
-      images: [
-        "/images/contact-hero.jpg",
-        "/images/new-bg.png",
-        "/images/age-verification-bg.jpg",
-        "/images/contact-hero.jpg",
-      ],
-    },
-    {
-      title: "Cộng Đồng",
-      images: [
-        "/images/contact-hero.jpg",
-        "/images/new-bg.png",
-        "/images/age-verification-bg.jpg",
-      ],
-    },
-    {
-      title: "Nhật Ký",
-      images: ["/images/contact-hero.jpg", "/images/new-bg.png"],
-    },
-  ],
-  en: [
-    {
-      title: "Our Story",
-      images: [
-        "/images/contact-hero.jpg",
-        "/images/new-bg.png",
-        "/images/age-verification-bg.jpg",
-      ],
-    },
-    {
-      title: "Ingredients",
-      images: ["/images/contact-hero.jpg", "/images/new-bg.png"],
-    },
-    {
-      title: "Brewing",
-      images: [
-        "/images/contact-hero.jpg",
-        "/images/new-bg.png",
-        "/images/age-verification-bg.jpg",
-        "/images/contact-hero.jpg",
-      ],
-    },
-    {
-      title: "Community",
-      images: [
-        "/images/contact-hero.jpg",
-        "/images/new-bg.png",
-        "/images/age-verification-bg.jpg",
-      ],
-    },
-    {
-      title: "Journal",
-      images: ["/images/contact-hero.jpg", "/images/new-bg.png"],
-    },
-  ],
-};
-
 /**
+
  * Maps the saved Brand Story's chapters to the flipbook's book shape — see
  * src/config/brandStoryChapters.ts, whose `buildBrandStoryBook` both
  * BrandStoryDesktop and BrandStoryMobile lay this out with. A chapter with

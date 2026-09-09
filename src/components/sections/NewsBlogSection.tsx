@@ -93,6 +93,8 @@ export function NewsBlogSection({ locale = DEFAULT_LOCALE, posts }: NewsBlogSect
   };
 
 
+  if (!posts || posts.length === 0) return null;
+
   return (
     <section
       ref={sectionRef}
