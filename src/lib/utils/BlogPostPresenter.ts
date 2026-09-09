@@ -51,3 +51,39 @@ export function toNewsCardItem(post: IBlogPost, locale: string): NewsCardItem | 
     href: localizedPath(locale, `/blog/${translation.slug}`),
   };
 }
+
+export const DEFAULT_NEWS_POSTS: Record<string, NewsCardItem[]> = {
+  vi: [
+    {
+      id: "default-1",
+      imageSrc: "/images/contact-hero.jpg",
+      title: "Hành Trình Khám Phá Hương Vị Bia Thủ Công Otter Beer",
+      tag: "Tin Tức",
+      href: "/vi/blog",
+    },
+    {
+      id: "default-2",
+      imageSrc: "/images/new-bg.png",
+      title: "Quy Trình Nấu Bia Đạt Chuẩn Tại Tây Ninh",
+      tag: "Sản Xuất",
+      href: "/vi/blog",
+    },
+  ],
+  en: [
+    {
+      id: "default-1",
+      imageSrc: "/images/contact-hero.jpg",
+      title: "Discovering Otter Beer Craft Flavors",
+      tag: "News",
+      href: "/en/blog",
+    },
+    {
+      id: "default-2",
+      imageSrc: "/images/new-bg.png",
+      title: "Premium Brewing Process in Tay Ninh",
+      tag: "Brewing",
+      href: "/en/blog",
+    },
+  ],
+};
+

@@ -11,8 +11,8 @@ import { heroSectionService } from "@/services/HeroSectionService";
 import { blogPostService } from "@/services/BlogPostService";
 import { beerService } from "@/services/BeerService";
 import { brandStoryService } from "@/services/BrandStoryService";
-import { toSlideItem } from "@/lib/utils/HeroSectionPresenter";
-import { toNewsCardItem } from "@/lib/utils/BlogPostPresenter";
+import { toSlideItem, DEFAULT_HERO_SLIDES } from "@/lib/utils/HeroSectionPresenter";
+import { toNewsCardItem, DEFAULT_NEWS_POSTS } from "@/lib/utils/BlogPostPresenter";
 import { toShowcaseItem } from "@/lib/utils/BeerPresenter";
 import { toBookChapters, DEFAULT_BRAND_STORY_CHAPTERS } from "@/lib/utils/BrandStoryPresenter";
 import { buildHomeJsonLd, buildHomeMetadata } from "@/lib/seo";
@@ -36,8 +36,13 @@ export default async function HomePage({ params }: HomePageProps) {
 
   const heroSlides = await heroSectionService
     .listPublishedSlides()
-    .then((slides) => slides.map((slide) => toSlideItem(slide, locale)).filter((item) => item !== null))
-    .catch(() => []);
+    .then((slides) => {
+      const mapped = slides.map((slide) => toSlideItem(slide, locale)).filter((item) => item !== null);
+      return mapped.length > 0
+        ? mapped
+        : (DEFAULT_HERO_SLIDES[locale] ?? DEFAULT_HERO_SLIDES.en);
+    })
+    .catch(() => DEFAULT_HERO_SLIDES[locale] ?? DEFAULT_HERO_SLIDES.en);
 
   const beers = await beerService
     .listShowcasePublished()
@@ -56,8 +61,14 @@ export default async function HomePage({ params }: HomePageProps) {
 
   const posts = await blogPostService
     .getRecentPublished(NEWS_RAIL_SIZE)
-    .then((items) => items.map((post) => toNewsCardItem(post, locale)).filter((item) => item !== null))
-    .catch(() => []);
+    .then((items) => {
+      const mapped = items.map((post) => toNewsCardItem(post, locale)).filter((item) => item !== null);
+      return mapped.length > 0
+        ? mapped
+        : (DEFAULT_NEWS_POSTS[locale] ?? DEFAULT_NEWS_POSTS.en);
+    })
+    .catch(() => DEFAULT_NEWS_POSTS[locale] ?? DEFAULT_NEWS_POSTS.en);
+
 
   const faq = faqFor(locale);
 
