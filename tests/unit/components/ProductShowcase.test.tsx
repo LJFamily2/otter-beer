@@ -52,22 +52,10 @@ describe("ProductShowcase Component", () => {
     expect(section.style.getPropertyValue("--color-primary-container")).toBe("#654321");
   });
 
-  it("hides the shop CTA when shopUrl is missing but keeps find-locally", () => {
-    render(<ProductShowcase locale="en" beers={[beer({ shopUrl: undefined })]} />);
+  it("renders primary CTA linking to contact section", () => {
+    render(<ProductShowcase locale="en" beers={[beer()]} />);
 
-    expect(screen.queryByRole("link", { name: /shop now/i })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /find locally/i })).toBeInTheDocument();
-  });
-
-  it("renders no CTA links when neither URL is set", () => {
-    render(
-      <ProductShowcase
-        locale="en"
-        beers={[beer({ shopUrl: undefined, findLocallyUrl: undefined })]}
-      />
-    );
-
-    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /shop now/i })).toHaveAttribute("href", "#contact");
   });
 
   it("hides the prev/next navigation when only one beer is published", () => {

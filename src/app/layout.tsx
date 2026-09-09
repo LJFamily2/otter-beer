@@ -111,7 +111,7 @@ export default async function RootLayout({
   const lang = await getServerLocale();
 
   return (
-    <html lang={lang} className={`${anton.variable} ${hankenGrotesk.variable} scroll-smooth`}>
+    <html lang={lang} className={`${anton.variable} ${hankenGrotesk.variable} scroll-smooth`} data-scroll-behavior="smooth">
       <body>
         {/* First thing in the document body: the Consent Mode "denied" default
             has to be parsed before gtag.js is injected, or there is a window in

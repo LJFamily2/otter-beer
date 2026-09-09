@@ -149,7 +149,7 @@ export function AgeVerificationGate({
       }
     >
       {/* Background Photo */}
-      <div className="pointer-events-none absolute inset-0 z-0 select-none" aria-hidden>
+      <div className="pointer-events-none absolute inset-0 z-0 h-full w-full select-none" aria-hidden>
         <Image
           src="/images/age-verification-bg.jpg"
           alt=""
