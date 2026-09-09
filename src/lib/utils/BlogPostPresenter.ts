@@ -59,14 +59,28 @@ export const DEFAULT_NEWS_POSTS: Record<string, NewsCardItem[]> = {
       imageSrc: "/images/contact-hero.jpg",
       title: "Hành Trình Khám Phá Hương Vị Bia Thủ Công Otter Beer",
       tag: "Tin Tức",
-      href: "/vi/blog",
+      href: "/blog",
     },
     {
       id: "default-2",
       imageSrc: "/images/new-bg.png",
       title: "Quy Trình Nấu Bia Đạt Chuẩn Tại Tây Ninh",
       tag: "Sản Xuất",
-      href: "/vi/blog",
+      href: "/blog",
+    },
+    {
+      id: "default-3",
+      imageSrc: "/images/age-verification-bg.jpg",
+      title: "Bí Quyết Kết Hợp Bia Thủ Công Và Món Ăn",
+      tag: "Ẩm Thực",
+      href: "/blog",
+    },
+    {
+      id: "default-4",
+      imageSrc: "/images/contact-hero.jpg",
+      title: "Tham Quan Nhà Máy Bia Otter Beer Tây Ninh",
+      tag: "Sự Kiện",
+      href: "/blog",
     },
   ],
   en: [
@@ -84,6 +98,21 @@ export const DEFAULT_NEWS_POSTS: Record<string, NewsCardItem[]> = {
       tag: "Brewing",
       href: "/en/blog",
     },
+    {
+      id: "default-3",
+      imageSrc: "/images/age-verification-bg.jpg",
+      title: "Pairing Craft Beer with Local Cuisine",
+      tag: "Food",
+      href: "/en/blog",
+    },
+    {
+      id: "default-4",
+      imageSrc: "/images/contact-hero.jpg",
+      title: "Touring the Otter Beer Brewery in Tay Ninh",
+      tag: "Events",
+      href: "/en/blog",
+    },
   ],
 };
+
 
