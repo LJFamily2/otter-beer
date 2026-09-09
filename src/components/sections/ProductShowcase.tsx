@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { buttonVariants } from "@/components/ui/Button";
 import { Tabs } from "@/components/ui/Tabs";
 import type { BeerShowcaseItem } from "@/lib/utils/BeerPresenter";
-import { useSectionPreloader, preloadImages } from "@/hooks/UseSectionPreloader";
 
 interface ProductShowcaseProps {
   locale: string;
@@ -49,52 +48,6 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
   const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
   const currentBeer = beers[currentIndex];
   const hasMultiple = beers.length > 1;
-
-  const sectionRef = useRef<HTMLElement | null>(null);
-
-  // Preload all beers & variant images when approaching section
-  const handlePreloadAll = useCallback(() => {
-    const urls: string[] = [];
-    beers.forEach((beer) => {
-      if (beer.imageSrc) {
-        urls.push(beer.imageSrc);
-        urls.push(`/_next/image?url=${encodeURIComponent(beer.imageSrc)}&w=640&q=75`);
-        urls.push(`/_next/image?url=${encodeURIComponent(beer.imageSrc)}&w=750&q=75`);
-      }
-      (beer.variants ?? []).forEach((v) => {
-        if (v.imageSrc) {
-          urls.push(v.imageSrc);
-          urls.push(`/_next/image?url=${encodeURIComponent(v.imageSrc)}&w=640&q=75`);
-          urls.push(`/_next/image?url=${encodeURIComponent(v.imageSrc)}&w=750&q=75`);
-        }
-      });
-    });
-    preloadImages(urls);
-  }, [beers]);
-
-  useSectionPreloader<HTMLElement>(sectionRef, {
-    rootMargin: "300px",
-    onIntersect: handlePreloadAll,
-  });
-
-  // Eagerly preload active beer's variants when current beer changes
-  useEffect(() => {
-    if (!currentBeer) return;
-    const currentUrls: string[] = [];
-    if (currentBeer.imageSrc) {
-      currentUrls.push(currentBeer.imageSrc);
-      currentUrls.push(`/_next/image?url=${encodeURIComponent(currentBeer.imageSrc)}&w=640&q=75`);
-      currentUrls.push(`/_next/image?url=${encodeURIComponent(currentBeer.imageSrc)}&w=750&q=75`);
-    }
-    (currentBeer.variants ?? []).forEach((v) => {
-      if (v.imageSrc) {
-        currentUrls.push(v.imageSrc);
-        currentUrls.push(`/_next/image?url=${encodeURIComponent(v.imageSrc)}&w=640&q=75`);
-        currentUrls.push(`/_next/image?url=${encodeURIComponent(v.imageSrc)}&w=750&q=75`);
-      }
-    });
-    preloadImages(currentUrls);
-  }, [currentBeer]);
 
   if (!currentBeer) return null;
 
@@ -146,7 +99,6 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
 
   return (
     <section
-      ref={sectionRef}
       id="products"
       aria-label={copy.sectionLabel}
       onTouchStart={handleTouchStart}
