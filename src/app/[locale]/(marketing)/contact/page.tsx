@@ -63,15 +63,12 @@ export default async function ContactPage({ params }: ContactPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-<<<<<<< feat/marketing-pages-layout
-=======
       <div className="bg-[#0d0f10] pt-24 sm:pt-28 lg:pt-32">
         <Breadcrumbs
           items={toBreadcrumbItems(locale, trail)}
           className="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-16"
         />
       </div>
->>>>>>> local
       <ContactSection locale={locale} />
     </>
   );
