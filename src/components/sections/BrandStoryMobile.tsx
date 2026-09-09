@@ -106,10 +106,16 @@ export function BrandStoryMobile({ locale, chapters }: BrandStoryMobileProps) {
   }, [displayChapters]);
 
   const totalSlides = slides.length;
+
+  if (!chapters || chapters.length === 0 || totalSlides === 0) {
+    return null;
+  }
+
   const activeSlide = slides[currentIndex] || slides[0];
 
   // Active chapter determination
   const activeChapterIndex = activeSlide ? activeSlide.chapterIndex : 0;
+
 
   const handleNext = () => {
     if (currentIndex < totalSlides - 1) {
