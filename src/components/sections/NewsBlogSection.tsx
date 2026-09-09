@@ -8,7 +8,6 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { DEFAULT_LOCALE } from "@/config/locales";
 import { localizedPath } from "@/lib/seo";
 import type { NewsCardItem } from "@/lib/utils/BlogPostPresenter";
-import { useSectionPreloader, preloadImages } from "@/hooks/UseSectionPreloader";
 
 const playfair = Playfair_Display({
   subsets: ["latin", "vietnamese"],
@@ -55,22 +54,10 @@ const CARD_GAP_PX = 20;
 
 export function NewsBlogSection({ locale = DEFAULT_LOCALE, posts }: NewsBlogSectionProps) {
   const copy = COPY[locale as keyof typeof COPY] ?? COPY.en;
+  const sectionRef = useRef<HTMLElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
-
-  const sectionRef = useRef<HTMLElement | null>(null);
-
-  const handlePreload = useCallback(() => {
-    if (!posts) return;
-    const urls = posts.map((p) => p.imageSrc).filter(Boolean);
-    preloadImages(urls);
-  }, [posts]);
-
-  useSectionPreloader<HTMLElement>(sectionRef, {
-    rootMargin: "300px",
-    onIntersect: handlePreload,
-  });
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
