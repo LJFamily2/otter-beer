@@ -23,8 +23,9 @@ export default defineConfig({
   // Retry on CI only
   retries: process.env.CI ? 1 : 0,
 
-  // Parallel workers
-  workers: process.env.CI ? "50%" : 4,
+  // Parallel workers — cap at 2 on CI to avoid CPU contention timeouts on GitHub Actions runners
+  workers: process.env.CI ? 2 : 4,
+
 
   // Reporter
   reporter: process.env.CI

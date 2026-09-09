@@ -86,11 +86,12 @@ export function NewsBlogSection({ locale = DEFAULT_LOCALE, posts }: NewsBlogSect
 
     const card = rail.querySelector<HTMLElement>("[data-news-card]");
     const step = card
-      ? card.offsetWidth + CARD_GAP_PX
+      ? Math.max(card.offsetWidth + CARD_GAP_PX, rail.clientWidth * 0.8)
       : rail.clientWidth * FALLBACK_SCROLL_RATIO;
 
     rail.scrollBy({ left: direction * step });
   };
+
 
   return (
     <section
