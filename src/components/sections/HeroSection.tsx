@@ -82,62 +82,52 @@ function SlideMedia({
   priority: boolean;
 }) {
   return (
-    <div className="absolute inset-0 h-full w-full flex items-center justify-center overflow-hidden">
-      <div
-        className="relative h-full w-full"
-        style={{
-          aspectRatio: "16 / 9",
-          maxHeight: "100dvh",
-          height: "100dvh",
-          width: "calc(100dvh * 16 / 9)",
-        }}
-      >
-        {slide.mediaType === "video" ? (
-          <video
+    <div className="absolute inset-0 h-full w-full overflow-hidden">
+      {slide.mediaType === "video" ? (
+        <video
+          src={slide.src}
+          aria-label={slide.alt}
+          className="absolute inset-0 h-full w-full object-cover"
+          autoPlay
+          muted
+          loop
+          playsInline
+          draggable={false}
+        />
+      ) : (
+        /* Three slides are mounted at once (prev / current / next), all at
+           `sizes="100vw"`, so left equal they race each other for bandwidth
+           and the one actually on screen — the LCP element — finishes last.
+           `fetchPriority` orders them instead of `loading="lazy"`, which
+           would defer the neighbours until they slide in and show a blank
+           cell mid-swipe. Note `priority` is deprecated in Next 16, and it
+           was already inert here: it does not emit a preload link alongside
+           `loading`/`fetchPriority` (see the Image docs' preload section). */
+        <>
+          <Image
             src={slide.src}
-            aria-label={slide.alt}
-            className="absolute inset-0 h-full w-full object-cover"
-            autoPlay
-            muted
-            loop
-            playsInline
+            alt={slide.alt}
+            fill
+            sizes="(max-width: 768px) 100vw, 100vw"
+            className={`object-cover ${slide.mobileSrc ? "hidden sm:block" : ""}`}
+            loading="eager"
+            fetchPriority={priority ? "high" : "low"}
             draggable={false}
           />
-        ) : (
-          /* Three slides are mounted at once (prev / current / next), all at
-             `sizes="100vw"`, so left equal they race each other for bandwidth
-             and the one actually on screen — the LCP element — finishes last.
-             `fetchPriority` orders them instead of `loading="lazy"`, which
-             would defer the neighbours until they slide in and show a blank
-             cell mid-swipe. Note `priority` is deprecated in Next 16, and it
-             was already inert here: it does not emit a preload link alongside
-             `loading`/`fetchPriority` (see the Image docs' preload section). */
-          <>
+          {slide.mobileSrc && (
             <Image
-              src={slide.src}
+              src={slide.mobileSrc}
               alt={slide.alt}
               fill
               sizes="(max-width: 768px) 100vw, 100vw"
-              className={`object-cover ${slide.mobileSrc ? "hidden sm:block" : ""}`}
+              className="object-cover sm:hidden"
               loading="eager"
               fetchPriority={priority ? "high" : "low"}
               draggable={false}
             />
-            {slide.mobileSrc && (
-              <Image
-                src={slide.mobileSrc}
-                alt={slide.alt}
-                fill
-                sizes="(max-width: 768px) 100vw, 100vw"
-                className="object-cover sm:hidden"
-                loading="eager"
-                fetchPriority={priority ? "high" : "low"}
-                draggable={false}
-              />
-            )}
-          </>
-        )}
-      </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
