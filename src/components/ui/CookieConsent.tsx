@@ -91,6 +91,16 @@ export function CookieConsent({ locale = DEFAULT_LOCALE }: CookieConsentProps) {
         setIsOpen(true);
       });
     }
+
+    const handleOpenSettings = () => {
+      setIsOpen(true);
+      setShowSettings(true);
+    };
+
+    window.addEventListener("otter-open-cookie-settings", handleOpenSettings);
+    return () => {
+      window.removeEventListener("otter-open-cookie-settings", handleOpenSettings);
+    };
   }, []);
 
   // Each of these persists AND pushes a Consent Mode v2 `update` — see

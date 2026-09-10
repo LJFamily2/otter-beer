@@ -359,18 +359,12 @@ export function buildSiteNavigationJsonLd(locale: string): Record<string, unknow
       {
         "@type": "SiteNavigationElement",
         position: 3,
-        name: isVi ? "Sự kiện" : "Events",
-        url: absoluteUrl(locale, "/events"),
-      },
-      {
-        "@type": "SiteNavigationElement",
-        position: 4,
         name: isVi ? "Tin tức" : "News",
         url: absoluteUrl(locale, "/blog"),
       },
       {
         "@type": "SiteNavigationElement",
-        position: 5,
+        position: 4,
         name: isVi ? "Liên hệ" : "Contact",
         url: absoluteUrl(locale, "/contact"),
       },

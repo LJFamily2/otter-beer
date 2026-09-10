@@ -36,11 +36,11 @@ export default async function MenuPage({ params }: MenuPageProps) {
     .catch(() => []);
 
   return (
-    <div className="pt-[72px] sm:pt-[88px] min-h-screen bg-[#0f0e0c]">
+    <div className="min-h-screen bg-background">
       {beers.length > 0 ? (
         <ProductShowcase locale={locale} beers={beers} />
       ) : (
-        <div className="flex h-[50vh] items-center justify-center text-white/50">
+        <div className="flex h-[50vh] items-center justify-center text-on-surface-variant pt-32 sm:pt-40">
           {locale === "vi" ? "Đang cập nhật thực đơn..." : "Menu coming soon..."}
         </div>
       )}

@@ -63,10 +63,10 @@ describe("Header", () => {
     expect(header).toHaveClass("bg-white/95");
     expect(screen.getByText("Liên hệ")).toHaveClass("bg-primary");
     expect(logo).toHaveClass(
-      "h-[45px]",
-      "w-[75px]",
-      "sm:h-[54px]",
-      "sm:w-[90px]",
+      "h-[60px]",
+      "w-[100px]",
+      "sm:h-[72px]",
+      "sm:w-[120px]",
     );
 
     Object.defineProperty(window, "scrollY", { configurable: true, value: 0 });

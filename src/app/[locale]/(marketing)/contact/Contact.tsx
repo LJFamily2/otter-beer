@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { MAP_URL, formatGeo, responseTimeFor } from "@/config/brand";
+import { MAP_URL, formatGeo } from "@/config/brand";
 
 interface ContactSectionProps {
   locale?: string;
@@ -120,23 +120,6 @@ function LocationIcon() {
         d="M8 1.2A5.6 5.6 0 0 0 2.4 6.8c0 4.1 4.2 7.7 5.2 8.6.2.2.5.2.7 0 .9-.9 5.3-4.5 5.3-8.6A5.6 5.6 0 0 0 8 1.2Zm0 7.6A2 2 0 1 1 8 5a2 2 0 0 1 0 4Z"
         fill="currentColor"
       />
-    </svg>
-  );
-}
-
-function ClockIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      aria-hidden="true"
-      className="h-4 w-4 shrink-0"
-    >
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 2" />
     </svg>
   );
 }
@@ -262,18 +245,6 @@ export default function ContactSection({
               {/* Standfirst Body Copy */}
               <p className="mt-6 max-w-[580px] text-[clamp(1.125rem,1.4vw,1.35rem)] leading-relaxed text-[#d4d4d8] font-light">
                 {copy.body}
-              </p>
-
-              {/* Response-time commitment. A visitor deciding whether to phone
-                  a brewery wants to know they will not be left hanging; this
-                  is the one line that answers it. Sourced from brand.ts so the
-                  promise is stated in exactly one place. */}
-              <p
-                data-testid="contact-response-time"
-                className="mt-4 inline-flex items-center gap-2.5 text-[0.9375rem] font-medium text-[#f9e37a]"
-              >
-                <ClockIcon />
-                <span>{responseTimeFor(locale)}</span>
               </p>
 
               {/* Action Buttons - Solid Accent Block */}

@@ -3,9 +3,7 @@ import {
   CONTACT,
   GEO,
   MAP_URL,
-  RESPONSE_TIME,
   formatGeo,
-  responseTimeFor,
 } from "@/config/brand";
 import { buildBreweryJsonLd } from "@/lib/seo";
 
@@ -57,25 +55,6 @@ describe("formatGeo", () => {
       expect(formatGeo(locale)).toContain(GEO.latitude.toFixed(4));
       expect(formatGeo(locale)).toContain(GEO.longitude.toFixed(4));
     }
-  });
-});
-
-describe("responseTimeFor", () => {
-  it("returns the Vietnamese promise for vi", () => {
-    expect(responseTimeFor("vi")).toBe(RESPONSE_TIME.vi);
-  });
-
-  it("returns the English promise for en", () => {
-    expect(responseTimeFor("en")).toBe(RESPONSE_TIME.en);
-  });
-
-  it("falls back to English for an unsupported locale", () => {
-    expect(responseTimeFor("de")).toBe(RESPONSE_TIME.en);
-  });
-
-  it("states a concrete, checkable timeframe rather than a vague one", () => {
-    expect(RESPONSE_TIME.en).toMatch(/\d+/);
-    expect(RESPONSE_TIME.vi).toMatch(/\d+/);
   });
 });
 

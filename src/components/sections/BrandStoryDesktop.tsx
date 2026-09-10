@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import { playPageTurn } from "@/lib/utils/pageTurnSound";
 import HTMLFlipBook from "react-pageflip";
 import {
@@ -79,6 +79,17 @@ export function BrandStoryDesktop({ locale, chapters }: BrandStoryDesktopProps) 
 
   const book = useMemo(() => buildBrandStoryBook(chapters ?? []), [chapters]);
   const { pages: PAGES, chapters: CHAPTERS, totalSpreads: TOTAL_SPREADS } = book;
+
+  // Eagerly preload all brand story book images into browser cache
+  useEffect(() => {
+    if (!PAGES || PAGES.length === 0) return;
+    PAGES.forEach((page) => {
+      if (page.src) {
+        const img = new window.Image();
+        img.src = page.src;
+      }
+    });
+  }, [PAGES]);
 
   if (!chapters || chapters.length === 0 || CHAPTERS.length === 0) {
     return null;
@@ -248,7 +259,7 @@ export function BrandStoryDesktop({ locale, chapters }: BrandStoryDesktopProps) 
           />
 
           {/* Book Content Container with Left Tabs + Center Spread + Right Tabs */}
-          <div className="relative flex w-full items-stretch justify-center">
+          <div className="relative flex w-full items-stretch justify-center min-h-[500px] lg:min-h-[620px] xl:min-h-[720px]">
             {/* LEFT SIDE STAGGERED TABS (Past/Read Chapters) */}
             <div
               className="relative z-10 flex shrink-0 items-stretch transition-[width] duration-500 ease-out"
@@ -289,7 +300,7 @@ export function BrandStoryDesktop({ locale, chapters }: BrandStoryDesktopProps) 
             </div>
 
             {/* CENTER BOOK SPREAD (2-Page FlipBook) */}
-            <div className="relative min-w-0 flex-1 h-full self-stretch">
+            <div className="relative min-w-0 flex-1 self-stretch aspect-[1126/761] min-h-[480px] lg:min-h-[600px] xl:min-h-[700px]">
               <div className="relative z-10 h-full w-full">
                 <FlipBook
                   width={563}
@@ -493,6 +504,14 @@ const PageFace = React.forwardRef<
   }
 >(({ side, src, title, "aria-hidden": ariaHidden }, ref) => {
   const isPng = src?.toLowerCase().endsWith(".png");
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [prevSrc, setPrevSrc] = useState(src);
+
+  // Reset loaded state when page image src changes (during render to avoid cascading renders)
+  if (src !== prevSrc) {
+    setPrevSrc(src);
+    setIsLoaded(false);
+  }
 
   return (
     <div
@@ -504,6 +523,30 @@ const PageFace = React.forwardRef<
       {title && <h3 className="sr-only">{title}</h3>}
       {src !== null && (
         <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
+          {!isLoaded && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#f6f4ee]/80 pointer-events-none">
+              <svg
+                className="size-6 animate-spin text-[#2a0b12]/40"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+            </div>
+          )}
           {isPng ? (
             <div className="relative flex h-full w-full items-center justify-center p-6 xl:p-8">
               {/* Studio soft drop shadow for product PNGs */}
@@ -516,6 +559,7 @@ const PageFace = React.forwardRef<
                 src={src}
                 alt={title ?? ""}
                 className="relative z-10 max-h-[92%] max-w-[92%] object-contain drop-shadow-[0_14px_22px_rgba(0,0,0,0.25)]"
+                onLoad={() => setIsLoaded(true)}
               />
             </div>
           ) : (
@@ -524,6 +568,7 @@ const PageFace = React.forwardRef<
               src={src}
               alt={title ?? ""}
               className="h-full w-full object-cover"
+              onLoad={() => setIsLoaded(true)}
             />
           )}
         </div>

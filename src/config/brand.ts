@@ -102,29 +102,6 @@ export const OPENING_HOURS = ["Mo-Su 10:00-22:00"] as const;
 
 export const PRICE_RANGE = "$ ";
 
-/**
- * How quickly an enquiry gets answered, per locale.
- *
- * Rendered in the Contact section. Deliberately NOT emitted into the Brewery
- * JSON-LD: schema.org has no honest field for "we reply within N hours"
- * (`hoursAvailable` describes opening hours, not responsiveness), and forcing
- * it into one would be structured data that misstates what it marks up.
- *
- * A stated response time is a conversion signal — a visitor deciding whether
- * to phone a brewery wants to know they will not be left hanging.
- *
- * ⚠️ CONFIRM THIS NUMBER before it goes live. It is a promise to customers,
- * not decoration, and it was chosen as a conservative default rather than
- * measured. Change both strings together if the real commitment differs.
- */
-export const RESPONSE_TIME = {
-  vi: "Chúng tôi phản hồi mọi liên hệ trong vòng 24 giờ làm việc.",
-  en: "We reply to every enquiry within 24 working hours.",
-} as const;
-
-export function responseTimeFor(locale: string): string {
-  return RESPONSE_TIME[locale as keyof typeof RESPONSE_TIME] ?? RESPONSE_TIME.en;
-}
 
 /**
  * The head keyword set for the site, per locale. These land in the homepage

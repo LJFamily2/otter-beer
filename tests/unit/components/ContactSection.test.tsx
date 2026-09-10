@@ -6,7 +6,6 @@ import {
   GEO,
   MAP_URL,
   formatGeo,
-  responseTimeFor,
 } from "@/config/brand";
 
 describe("ContactSection", () => {
@@ -152,24 +151,6 @@ describe("ContactSection", () => {
       render(<ContactSection locale="vi" />);
 
       expect(screen.getByText(formatGeo("vi"))).toBeInTheDocument();
-    });
-  });
-
-  describe("response-time promise", () => {
-    it("states how quickly an enquiry is answered", () => {
-      render(<ContactSection locale="en" />);
-
-      expect(screen.getByTestId("contact-response-time")).toHaveTextContent(
-        responseTimeFor("en"),
-      );
-    });
-
-    it("localises the promise", () => {
-      render(<ContactSection locale="vi" />);
-
-      expect(screen.getByTestId("contact-response-time")).toHaveTextContent(
-        responseTimeFor("vi"),
-      );
     });
   });
 });
