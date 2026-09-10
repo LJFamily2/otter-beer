@@ -31,6 +31,16 @@ export class BeerService {
     return this.repository.listShowcasePublished();
   }
 
+  private async revalidatePublicPages(): Promise<void> {
+    try {
+      const { revalidatePath } = await import("next/cache");
+      revalidatePath("/[locale]", "page");
+      revalidatePath("/[locale]/menu", "page");
+    } catch {
+      // Ignored outside Next.js request context (e.g. unit tests)
+    }
+  }
+
   async create(input: BeerCreateInput, actorId: string): Promise<IBeer> {
     const actorObjectId = new Types.ObjectId(actorId);
     const created = await this.repository.create({
@@ -53,6 +63,7 @@ export class BeerService {
     if (created.isFeatured) {
       await this.repository.clearFeaturedExcept(String(created._id));
     }
+    this.revalidatePublicPages();
     return created;
   }
 
@@ -82,11 +93,15 @@ export class BeerService {
     if (updated?.isFeatured) {
       await this.repository.clearFeaturedExcept(id);
     }
+    this.revalidatePublicPages();
     return updated;
   }
 
   async delete(id: string): Promise<boolean> {
     const deleted = await this.repository.deleteById(id);
+    if (deleted) {
+      this.revalidatePublicPages();
+    }
     return Boolean(deleted);
   }
 }

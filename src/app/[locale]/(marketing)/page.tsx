@@ -34,29 +34,28 @@ export async function generateMetadata({
 export default async function HomePage({ params }: HomePageProps) {
   const { locale } = await params;
 
-  const heroSlides = await heroSectionService
-    .listPublishedSlides()
-    .then((slides) =>
-      slides.map((slide) => toSlideItem(slide, locale)).filter((item) => item !== null)
-    )
-    .catch(() => []);
-
-  const beers = await beerService
-    .listShowcasePublished()
-    .then((items) => items.map((beer) => toShowcaseItem(beer, locale)).filter((item) => item !== null))
-    .catch(() => []);
-
-  const brandStoryChapters = await brandStoryService
-    .getPublished()
-    .then((brandStory) => toBookChapters(brandStory, locale))
-    .catch(() => []);
-
-  const posts = await blogPostService
-    .getRecentPublished(NEWS_RAIL_SIZE)
-    .then((items) =>
-      items.map((post) => toNewsCardItem(post, locale)).filter((item) => item !== null)
-    )
-    .catch(() => []);
+  const [heroSlides, beers, brandStoryChapters, posts] = await Promise.all([
+    heroSectionService
+      .listPublishedSlides()
+      .then((slides) =>
+        slides.map((slide) => toSlideItem(slide, locale)).filter((item) => item !== null)
+      )
+      .catch(() => []),
+    beerService
+      .listShowcasePublished()
+      .then((items) => items.map((beer) => toShowcaseItem(beer, locale)).filter((item) => item !== null))
+      .catch(() => []),
+    brandStoryService
+      .getPublished()
+      .then((brandStory) => toBookChapters(brandStory, locale))
+      .catch(() => []),
+    blogPostService
+      .getRecentPublished(NEWS_RAIL_SIZE)
+      .then((items) =>
+        items.map((post) => toNewsCardItem(post, locale)).filter((item) => item !== null)
+      )
+      .catch(() => []),
+  ]);
 
 
 
