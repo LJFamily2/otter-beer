@@ -6,10 +6,8 @@ import {
   buildOrganizationJsonLd,
   buildStaticPageMetadata,
   jsonLdGraph,
-  toBreadcrumbItems,
   type BreadcrumbEntry,
 } from "@/lib/seo";
-import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ADDRESS, CONTACT } from "@/config/brand";
 
 interface ContactPageProps {
@@ -45,7 +43,6 @@ export default async function ContactPage({ params }: ContactPageProps) {
    * gets answered, so it carries the Brewery node (full NAP, hours, geo)
    * plus a breadcrumb trail back to the homepage.
    */
-  // One trail, two consumers: the JSON-LD below and the visible <Breadcrumbs>.
   const trail: BreadcrumbEntry[] = [
     { name: isVi ? "Trang chủ" : "Home", path: "/" },
     { name: isVi ? "Liên hệ" : "Contact", path: "/contact" },
@@ -63,12 +60,6 @@ export default async function ContactPage({ params }: ContactPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div className="bg-[#0d0f10] pt-24 sm:pt-28 lg:pt-32">
-        <Breadcrumbs
-          items={toBreadcrumbItems(locale, trail)}
-          className="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-16"
-        />
-      </div>
       <ContactSection locale={locale} />
     </>
   );

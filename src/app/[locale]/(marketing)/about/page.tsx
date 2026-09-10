@@ -32,11 +32,11 @@ export default async function AboutPage({ params }: AboutPageProps) {
     .catch(() => []);
 
   return (
-    <div className="pt-[72px] sm:pt-[88px] min-h-screen bg-[#F5F2EB]">
+    <div className="min-h-screen bg-[#0e0c0b]">
       {brandStoryChapters.length > 0 ? (
         <BrandStorySection locale={locale} chapters={brandStoryChapters} />
       ) : (
-        <div className="flex h-[50vh] items-center justify-center text-primary/50">
+        <div className="flex h-[50vh] items-center justify-center text-[#fdf9f4]/50 pt-[72px] sm:pt-[88px]">
           {locale === "vi"
             ? "Đang cập nhật câu chuyện..."
             : "Story coming soon..."}

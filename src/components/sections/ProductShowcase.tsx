@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { buttonVariants } from "@/components/ui/Button";
@@ -42,6 +42,7 @@ const COPY = {
 export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [variantIndex, setVariantIndex] = useState(0);
+  const [isImageLoading, setIsImageLoading] = useState(true);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
 
@@ -49,16 +50,44 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
   const currentBeer = beers[currentIndex];
   const hasMultiple = beers.length > 1;
 
-  if (!currentBeer) return null;
-
-  const variants = currentBeer.variants ?? [];
+  const variants = currentBeer?.variants ?? [];
   // Guards the frame between a beer switch and the variant reset below, when
   // a stale index could still point past the new beer's shorter list.
   const activeVariantIndex = variantIndex < variants.length ? variantIndex : 0;
   const activeVariant = variants[activeVariantIndex] ?? null;
   // Beers with no packaging variants keep rendering exactly as before: the
   // main image, and no picker.
-  const heroImageSrc = activeVariant?.imageSrc ?? currentBeer.imageSrc;
+  const heroImageSrc = activeVariant?.imageSrc ?? currentBeer?.imageSrc;
+
+  // Eagerly preload all beer and variant images in browser cache as soon as section mounts
+  useEffect(() => {
+    if (!beers || beers.length === 0) return;
+
+    const urls = new Set<string>();
+    beers.forEach((beer) => {
+      if (beer.imageSrc) urls.add(beer.imageSrc);
+      if (beer.variants) {
+        beer.variants.forEach((v) => {
+          if (v.imageSrc) urls.add(v.imageSrc);
+        });
+      }
+    });
+
+    urls.forEach((src) => {
+      const img = new window.Image();
+      img.src = src;
+    });
+  }, [beers]);
+
+  const [prevHeroImageSrc, setPrevHeroImageSrc] = useState(heroImageSrc);
+
+  // Reset loading spinner whenever hero image source changes (during render to avoid cascading renders)
+  if (heroImageSrc !== prevHeroImageSrc) {
+    setPrevHeroImageSrc(heroImageSrc);
+    setIsImageLoading(true);
+  }
+
+  if (!currentBeer) return null;
 
   const handlePrev = () => {
     setVariantIndex(0);
@@ -103,7 +132,7 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
       aria-label={copy.sectionLabel}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className="relative flex min-h-[100vh] flex-col items-center justify-center overflow-hidden bg-background px-5 py-16 sm:py-20 lg:py-24 transition-colors duration-700 select-none touch-pan-y"
+      className="relative flex min-h-[100vh] flex-col items-center justify-center overflow-hidden bg-background px-5 pt-32 sm:pt-36 lg:pt-40 pb-16 sm:pb-20 lg:pb-24 transition-colors duration-700 select-none touch-pan-y"
       style={{
         "--color-primary": currentBeer.themeColor,
         "--color-primary-container": currentBeer.themeColorContainer
@@ -118,7 +147,7 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
         <div className="absolute top-0 right-0 h-[400px] w-[400px] rounded-full bg-radial from-primary/5 to-transparent blur-2xl" />
 
         {/* Top-Shifted Editorial Background Watermark */}
-        <div className="absolute top-6 sm:top-8 lg:top-0 inset-x-0 flex items-start justify-center pointer-events-none select-none">
+        <div className="absolute top-28 sm:top-32 lg:top-36 inset-x-0 flex items-start justify-center pointer-events-none select-none">
           <span className="font-display text-[20vw] sm:text-[12vw] leading-normal whitespace-nowrap text-transparent [-webkit-text-stroke:2px_rgba(0,40,103,0.08)] tracking-wider uppercase transition-all duration-500 py-2">
             {currentBeer.style}
           </span>
@@ -184,6 +213,43 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
             {/* Soft Ambient Light Halo */}
             <div className="absolute size-[85%] rounded-full bg-radial from-secondary-container/50 via-primary-container/20 to-transparent blur-3xl transition-transform duration-700 group-hover:scale-110" />
 
+            {/* Loading Spinner Indicator */}
+            <AnimatePresence>
+              {isImageLoading ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
+                >
+                  <div className="flex items-center justify-center rounded-2xl bg-white/40 p-4 shadow-sm backdrop-blur-md border border-white/50">
+                    <svg
+                      className="size-8 animate-spin text-primary"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      aria-label="Loading image"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="3.5"
+                      />
+                      <path
+                        className="opacity-80"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                  </div>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+
             {/* Animated Can Image Container */}
             <AnimatePresence mode="wait">
               <motion.div
@@ -201,6 +267,7 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
                   className="object-contain drop-shadow-[0_25px_30px_rgba(0,40,103,0.3)]"
                   sizes="(max-width: 1024px) 80vw, 360px"
                   priority
+                  onLoad={() => setIsImageLoading(false)}
                 />
               </motion.div>
             </AnimatePresence>

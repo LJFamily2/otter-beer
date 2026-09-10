@@ -136,10 +136,10 @@ export function Header({
       <header
         className={`relative z-50 w-full transition-all duration-300 ${
           mobileMenuOpen
-            ? "h-[64px] sm:h-[88px] bg-transparent"
+            ? "h-[64px] sm:h-[108px] bg-transparent"
             : isScrolled
-            ? "h-[60px] sm:h-[72px] bg-white/95 backdrop-blur-md shadow-sm"
-            : "h-[72px] sm:h-[88px] bg-gradient-to-b from-black/50 via-black/15 to-transparent"
+            ? "h-[68px] sm:h-[84px] bg-white/95 backdrop-blur-md shadow-sm"
+            : "h-[90px] sm:h-[108px] bg-gradient-to-b from-black/50 via-black/15 to-transparent"
         } ${isHidden ? "-translate-y-full" : "translate-y-0"}`}
       >
         <div className="mx-auto flex h-full max-w-[1400px] items-center justify-between px-6 sm:px-10 lg:px-16">
@@ -207,15 +207,15 @@ export function Header({
             <div
               className={`relative transition-all duration-300 ${
                 isScrolled
-                  ? "h-[45px] w-[75px] sm:h-[54px] sm:w-[90px]"
-                  : "h-[60px] w-[100px] sm:h-[80px] sm:w-[130px]"
+                  ? "h-[60px] w-[100px] sm:h-[72px] sm:w-[120px]"
+                  : "h-[82px] w-[136px] sm:h-[108px] sm:w-[180px]"
               }`}
             >
               <Image
                 src="/images/header/logo.png"
                 alt="Otter Beer Logo"
                 fill
-                sizes="(max-width: 640px) 135px, 190px"
+                sizes="(max-width: 640px) 180px, 250px"
                 className="object-contain"
                 priority
               />

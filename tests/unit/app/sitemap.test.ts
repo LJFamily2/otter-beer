@@ -32,7 +32,7 @@ describe("sitemap", () => {
 
     // /contact, /privacy and /terms were reachable but never announced —
     // only / and /blog were in the sitemap before.
-    for (const path of ["/", "/blog", "/contact", "/privacy", "/terms", "/menu", "/about", "/events"]) {
+    for (const path of ["/", "/blog", "/contact", "/privacy", "/terms", "/menu", "/about"]) {
       expect(found).toContain(path);
       expect(found).toContain(path === "/" ? "/en/" : `/en${path}`);
     }

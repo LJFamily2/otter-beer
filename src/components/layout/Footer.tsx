@@ -1,6 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { DEFAULT_LOCALE } from "@/config/locales";
-import { SOCIAL_PROFILES } from "@/config/brand";
+import { LEGAL_NAME, SOCIAL_PROFILES } from "@/config/brand";
 
 const [FACEBOOK_URL, INSTAGRAM_URL] = SOCIAL_PROFILES;
 
@@ -15,10 +17,11 @@ const COPY = {
     shop: "SẢN PHẨM",
     news: "TIN TỨC",
     contactNav: "LIÊN HỆ",
-    copyright: "© 2024 OTTER BEER COMPANY. NẤU BẰNG NIỀM ĐAM MÊ.",
+    copyright: `© 2024 - 2026 CÔNG TY TNHH BADENBEER. NẤU BẰNG NIỀM ĐAM MÊ.`,
     legalLabel: "Liên kết pháp lý và liên hệ",
     privacyPolicy: "CHÍNH SÁCH BẢO MẬT",
     termsOfService: "ĐIỀU KHOẢN DỊCH VỤ",
+    cookieSettings: "CÀI ĐẶT COOKIE",
     wholesale: "PHÂN PHỐI SỈ",
     contact: "LIÊN HỆ",
   },
@@ -28,10 +31,11 @@ const COPY = {
     shop: "SHOP",
     news: "NEWS",
     contactNav: "CONTACT",
-    copyright: "© 2024 OTTER BEER COMPANY. BREWED WITH PASSION.",
+    copyright: `© 2024 - 2026 ${LEGAL_NAME}. BREWED WITH PASSION.`,
     legalLabel: "Legal and Contact Links",
     privacyPolicy: "PRIVACY POLICY",
     termsOfService: "TERMS OF SERVICE",
+    cookieSettings: "COOKIE PREFERENCES",
     wholesale: "WHOLESALE",
     contact: "CONTACT",
   },
@@ -50,9 +54,9 @@ export function Footer({ locale = DEFAULT_LOCALE }: FooterProps) {
       {/* Footer Content */}
       <div className="relative z-10 mx-auto max-w-[1400px] px-6 py-10 sm:px-10 sm:py-12 lg:px-16 lg:py-14">
         {/* Top Navigation & Action Row */}
-        <div className="flex flex-col items-center justify-between gap-8 md:flex-row md:gap-6">
+        <div className="flex flex-col items-center gap-8 md:grid md:grid-cols-[1fr_auto_1fr] md:gap-6">
           {/* Left spacer for balance on desktop */}
-          <div className="hidden lg:block lg:w-32" aria-hidden="true" />
+          <div className="hidden md:block" aria-hidden="true" />
 
           {/* Center Main Nav Links */}
           <nav
@@ -86,7 +90,7 @@ export function Footer({ locale = DEFAULT_LOCALE }: FooterProps) {
           </nav>
 
           {/* Right Social Icons (Facebook & Instagram) */}
-          <div className="flex items-center gap-4 sm:gap-5">
+          <div className="flex items-center justify-center gap-4 sm:gap-5 md:justify-end">
             <a
               href={FACEBOOK_URL}
               target="_blank"
@@ -136,6 +140,17 @@ export function Footer({ locale = DEFAULT_LOCALE }: FooterProps) {
             >
               {copy.termsOfService}
             </Link>
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("otter-open-cookie-settings"));
+                }
+              }}
+              className="text-[11px] font-semibold uppercase tracking-wider text-primary transition-colors duration-200 hover:text-primary-container hover:underline hover:underline-offset-4 sm:text-xs cursor-pointer"
+            >
+              {copy.cookieSettings}
+            </button>
             <Link
               href={`${prefix}/contact`}
               className="text-[11px] font-semibold uppercase tracking-wider text-primary transition-colors duration-200 hover:text-primary-container hover:underline hover:underline-offset-4 sm:text-xs"
