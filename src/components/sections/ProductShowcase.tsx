@@ -59,24 +59,57 @@ export function ProductShowcase({ locale, beers }: ProductShowcaseProps) {
   // main image, and no picker.
   const heroImageSrc = activeVariant?.imageSrc ?? currentBeer?.imageSrc;
 
-  // Eagerly preload all beer and variant images in browser cache as soon as section mounts
+  // Defer preloading of beer and variant images until browser is idle to avoid network contention with hero section
   useEffect(() => {
     if (!beers || beers.length === 0) return;
 
-    const urls = new Set<string>();
-    beers.forEach((beer) => {
-      if (beer.imageSrc) urls.add(beer.imageSrc);
-      if (beer.variants) {
-        beer.variants.forEach((v) => {
-          if (v.imageSrc) urls.add(v.imageSrc);
-        });
-      }
-    });
+    let cancelled = false;
 
-    urls.forEach((src) => {
-      const img = new window.Image();
-      img.src = src;
-    });
+    const startPreload = () => {
+      if (cancelled) return;
+      const urls = new Set<string>();
+      beers.forEach((beer) => {
+        if (beer.imageSrc) urls.add(beer.imageSrc);
+        if (beer.variants) {
+          beer.variants.forEach((v) => {
+            if (v.imageSrc) urls.add(v.imageSrc);
+          });
+        }
+      });
+
+      urls.forEach((src) => {
+        const img = new window.Image();
+        if ("fetchPriority" in img) {
+          (img as unknown as { fetchPriority: string }).fetchPriority = "low";
+        }
+        img.src = src;
+      });
+    };
+
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      const handle = (
+        window as unknown as {
+          requestIdleCallback: (
+            cb: () => void,
+            opts?: { timeout: number }
+          ) => number;
+        }
+      ).requestIdleCallback(startPreload, { timeout: 4000 });
+      return () => {
+        cancelled = true;
+        if ("cancelIdleCallback" in window) {
+          (
+            window as unknown as { cancelIdleCallback: (id: number) => void }
+          ).cancelIdleCallback(handle);
+        }
+      };
+    } else {
+      const timer = setTimeout(startPreload, 4000);
+      return () => {
+        cancelled = true;
+        clearTimeout(timer);
+      };
+    }
   }, [beers]);
 
   const [prevHeroImageSrc, setPrevHeroImageSrc] = useState(heroImageSrc);

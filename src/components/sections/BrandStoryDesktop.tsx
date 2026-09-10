@@ -80,15 +80,49 @@ export function BrandStoryDesktop({ locale, chapters }: BrandStoryDesktopProps) 
   const book = useMemo(() => buildBrandStoryBook(chapters ?? []), [chapters]);
   const { pages: PAGES, chapters: CHAPTERS, totalSpreads: TOTAL_SPREADS } = book;
 
-  // Eagerly preload all brand story book images into browser cache
+  // Defer preloading of brand story book images until browser is idle to avoid network contention with hero section
   useEffect(() => {
     if (!PAGES || PAGES.length === 0) return;
-    PAGES.forEach((page) => {
-      if (page.src) {
-        const img = new window.Image();
-        img.src = page.src;
-      }
-    });
+
+    let cancelled = false;
+
+    const startPreload = () => {
+      if (cancelled) return;
+      PAGES.forEach((page) => {
+        if (page.src) {
+          const img = new window.Image();
+          if ("fetchPriority" in img) {
+            (img as unknown as { fetchPriority: string }).fetchPriority = "low";
+          }
+          img.src = page.src;
+        }
+      });
+    };
+
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      const handle = (
+        window as unknown as {
+          requestIdleCallback: (
+            cb: () => void,
+            opts?: { timeout: number }
+          ) => number;
+        }
+      ).requestIdleCallback(startPreload, { timeout: 3500 });
+      return () => {
+        cancelled = true;
+        if ("cancelIdleCallback" in window) {
+          (
+            window as unknown as { cancelIdleCallback: (id: number) => void }
+          ).cancelIdleCallback(handle);
+        }
+      };
+    } else {
+      const timer = setTimeout(startPreload, 3500);
+      return () => {
+        cancelled = true;
+        clearTimeout(timer);
+      };
+    }
   }, [PAGES]);
 
   if (!chapters || chapters.length === 0 || CHAPTERS.length === 0) {
