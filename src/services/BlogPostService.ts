@@ -12,6 +12,8 @@ import type {
 } from "@/lib/validation/blogPost";
 import type { IBlogPost, IBlogPostTranslation } from "@/models/BlogPost";
 
+import { cache } from "react";
+
 export class SlugConflictError extends Error {
   constructor(
     public readonly locale: string,
@@ -53,16 +55,15 @@ export class BlogPostService {
     return this.repository.listPublished(options);
   }
 
-  async getPublishedByLocaleSlug(
-    locale: string,
-    slug: string
-  ): Promise<IBlogPost | null> {
-    try {
-      return await this.repository.findPublishedByLocaleSlug(locale, slug);
-    } catch {
-      return null;
+  getPublishedByLocaleSlug = cache(
+    async (locale: string, slug: string): Promise<IBlogPost | null> => {
+      try {
+        return await this.repository.findPublishedByLocaleSlug(locale, slug);
+      } catch {
+        return null;
+      }
     }
-  }
+  );
 
   async getRecentPublished(
     limit: number,

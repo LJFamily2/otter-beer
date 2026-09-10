@@ -94,6 +94,7 @@ export class BlogPostRepository extends BaseRepository<IBlogPost> {
         translations: { $elemMatch: { locale, slug } },
       })
       .populate("authorId", "name image")
+      .lean<IBlogPost>()
       .exec();
   }
 
@@ -108,13 +109,18 @@ export class BlogPostRepository extends BaseRepository<IBlogPost> {
     const pageSize = Math.min(50, Math.max(1, options.pageSize ?? 9));
     const sort = options.sort ?? { publishedAt: -1 };
 
+    const selectFields =
+      "coverImageKey authorId tags status publishedAt translations.locale translations.title translations.slug translations.excerpt createdAt updatedAt";
+
     const [items, total] = await Promise.all([
       model
         .find(query)
+        .select(selectFields)
         .populate("authorId", "name image")
         .sort(sort)
         .skip((page - 1) * pageSize)
         .limit(pageSize)
+        .lean<IBlogPost[]>()
         .exec(),
       model.countDocuments(query).exec(),
     ]);
@@ -136,10 +142,14 @@ export class BlogPostRepository extends BaseRepository<IBlogPost> {
     const model = await this.ready();
     const query: Record<string, unknown> = { status: "published" };
     if (excludePostId) query._id = { $ne: excludePostId };
+    const selectFields =
+      "coverImageKey publishedAt translations.locale translations.title translations.slug translations.excerpt";
     return model
       .find(query)
+      .select(selectFields)
       .sort({ publishedAt: -1 })
       .limit(limit)
+      .lean<IBlogPost[]>()
       .exec();
   }
 

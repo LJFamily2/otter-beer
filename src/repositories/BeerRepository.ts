@@ -61,13 +61,18 @@ export class BeerRepository extends BaseRepository<IBeer> {
     return model
       .findOne({ status: "published", isFeatured: true })
       .sort({ updatedAt: -1 })
+      .lean<IBeer>()
       .exec();
   }
 
   /** Every published beer, newest first — backs the homepage showcase carousel. Uses the {status, createdAt} index, no cap. */
   async listShowcasePublished(): Promise<IBeer[]> {
     const model = await this.ready();
-    return model.find({ status: "published" }).sort({ createdAt: -1 }).exec();
+    return model
+      .find({ status: "published" })
+      .sort({ createdAt: -1 })
+      .lean<IBeer[]>()
+      .exec();
   }
 
   /**

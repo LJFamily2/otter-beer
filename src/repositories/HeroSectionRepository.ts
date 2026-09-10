@@ -14,7 +14,7 @@ export class HeroSectionRepository extends BaseRepository<IHeroSection> {
   /** The one Hero Section document, if it's ever been saved. */
   async get(): Promise<IHeroSection | null> {
     const model = await this.ready();
-    return model.findOne().exec();
+    return model.findOne().lean<IHeroSection>().exec();
   }
 
   /** Upserts the singleton — whole-array replace, mirroring BrandStoryRepository.replaceChapters. */

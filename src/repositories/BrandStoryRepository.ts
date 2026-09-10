@@ -10,7 +10,7 @@ export class BrandStoryRepository extends BaseRepository<IBrandStory> {
   /** The one Brand Story document, if it's ever been saved. */
   async get(): Promise<IBrandStory | null> {
     const model = await this.ready();
-    return model.findOne().exec();
+    return model.findOne().lean<IBrandStory>().exec();
   }
 
   /** Upserts the singleton — whole-array replace, mirroring how /api/permissions replaces a role's whole matrix. */
