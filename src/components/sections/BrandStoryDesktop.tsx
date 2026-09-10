@@ -506,12 +506,20 @@ const PageFace = React.forwardRef<
   const isPng = src?.toLowerCase().endsWith(".png");
   const [isLoaded, setIsLoaded] = useState(false);
   const [prevSrc, setPrevSrc] = useState(src);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   // Reset loaded state when page image src changes (during render to avoid cascading renders)
   if (src !== prevSrc) {
     setPrevSrc(src);
     setIsLoaded(false);
   }
+
+  // Handle cached images or already complete images where onLoad might not fire
+  useEffect(() => {
+    if (imgRef.current && imgRef.current.complete) {
+      setIsLoaded(true);
+    }
+  }, [src]);
 
   return (
     <div
@@ -556,19 +564,25 @@ const PageFace = React.forwardRef<
               />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
+                ref={imgRef}
+                key={src}
                 src={src}
                 alt={title ?? ""}
                 className="relative z-10 max-h-[92%] max-w-[92%] object-contain drop-shadow-[0_14px_22px_rgba(0,0,0,0.25)]"
                 onLoad={() => setIsLoaded(true)}
+                onError={() => setIsLoaded(true)}
               />
             </div>
           ) : (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
+              ref={imgRef}
+              key={src}
               src={src}
               alt={title ?? ""}
               className="h-full w-full object-cover"
               onLoad={() => setIsLoaded(true)}
+              onError={() => setIsLoaded(true)}
             />
           )}
         </div>

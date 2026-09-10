@@ -122,12 +122,20 @@ export function BrandStoryMobile({ locale, chapters }: BrandStoryMobileProps) {
 
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [prevSlideSrc, setPrevSlideSrc] = useState(activeSlide?.src);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   // Reset loading state when active slide image changes (during render to avoid cascading renders)
   if (activeSlide?.src !== prevSlideSrc) {
     setPrevSlideSrc(activeSlide?.src);
     setIsImageLoading(true);
   }
+
+  // Handle cached images or already complete images where onLoad might not fire
+  useEffect(() => {
+    if (imgRef.current && imgRef.current.complete) {
+      setIsImageLoading(false);
+    }
+  }, [activeSlide?.src]);
 
   if (!chapters || chapters.length === 0 || totalSlides === 0) {
     return null;
@@ -281,10 +289,13 @@ export function BrandStoryMobile({ locale, chapters }: BrandStoryMobileProps) {
 
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
+              ref={imgRef}
+              key={activeSlide?.src}
               src={activeSlide.src}
               alt={`${activeSlide.chapterTitle}`}
               className="w-full h-full object-cover transition-opacity duration-300"
               onLoad={() => setIsImageLoading(false)}
+              onError={() => setIsImageLoading(false)}
             />
 
             {/* Inner Vignette / Grain */}
