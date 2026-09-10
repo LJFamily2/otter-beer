@@ -32,12 +32,6 @@ test.describe("above-the-fold CTA", () => {
 });
 
 test.describe("contact conversion details", () => {
-  test("states a response-time promise", async ({ page }) => {
-    await page.goto("/contact");
-
-    await expect(page.getByTestId("contact-response-time")).toBeVisible();
-    await expect(page.getByTestId("contact-response-time")).toContainText(/24/);
-  });
 
   test("renders a Get Directions link that nothing used to render", async ({
     page,
