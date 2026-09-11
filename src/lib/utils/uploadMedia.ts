@@ -107,7 +107,7 @@ export async function uploadMedia(
       method: "POST",
       body: formData,
     });
-  } catch (err) {
+  } catch {
     throw new MediaUploadError("Kết nối mạng bị gián đoạn. Vui lòng kiểm tra lại mạng hoặc tắt trình chặn quảng cáo rồi thử lại.");
   }
 

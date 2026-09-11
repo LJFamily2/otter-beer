@@ -211,7 +211,7 @@ Every repository (`src/repositories/`) builds queries from typed, validated inpu
 
 ## 6. File Upload Security
 
-Media (images everywhere; images **or** video for the hero section) goes straight from the browser to Cloudinary via a short-lived **signed upload**, never through the Next.js server as a request body — see `src/lib/storage/`. (Cloudflare R2 was the original provider and `R2StorageProvider` still works as a drop-in swap — see `StorageService.ts` — but the guarantees below describe the active Cloudinary path.)
+Media (images everywhere; images **or** video for the hero section) goes straight from the browser to Cloudinary via a short-lived **signed upload**, never through the Next.js server as a request body — see `src/lib/storage/`.
 
 | Check | Rule | Where enforced |
 |---|---|---|
@@ -221,7 +221,7 @@ Media (images everywhere; images **or** video for the hero section) goes straigh
 | Object key | Random UUID + date prefix under the namespace folder, server-generated | `StorageService.buildMediaKey` — the client never chooses the storage path |
 | Storage | Cloudinary | `GET /api/media/public/[...key]` gates *which* keys are disclosed (published content — for the hero, only slides whose own `status` is `published` — or admin preview), then fetches the bytes from Cloudinary server-side and streams them — a direct redirect to Cloudinary's CDN was tried but broke every page using `next/image` (its built-in optimizer won't follow redirects, for SSRF-safety), so this route stays the only door rather than exposing raw Cloudinary URLs to the browser. |
 
-R2's presigned POST enforced type/size at the storage layer itself before ever accepting the bytes. Cloudinary only gets type enforcement that way (via the signed `upload_preset`) — size enforcement moved to an app-level post-upload check, the one guarantee this migration weakened rather than preserved.
+Cloudinary gets type enforcement at the storage layer (via the signed `upload_preset`) — size enforcement is an app-level post-upload check.
 
 ---
 

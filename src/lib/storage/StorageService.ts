@@ -25,7 +25,7 @@ const EXTENSION_BY_CONTENT_TYPE: Record<AllowedMediaContentType, string> = {
 /**
  * Domain-level wrapper around a storage provider: builds namespaced object
  * keys, enforces the media allowlist/size caps, and is what services/routes
- * import instead of touching R2StorageProvider directly.
+ * import instead of touching the storage provider directly.
  */
 export class StorageService {
   constructor(private readonly provider: IStorageProvider) {}
@@ -89,6 +89,5 @@ export class StorageService {
   }
 }
 
-// Swapping providers later (or reverting to R2StorageProvider) means
-// changing only this line — see IStorageProvider.
+// Swapping providers later means changing only this line — see IStorageProvider.
 export const storageService = new StorageService(new CloudinaryStorageProvider());

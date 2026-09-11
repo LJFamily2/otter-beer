@@ -31,10 +31,10 @@ Welcome to the official technical documentation for the **OtterBeer** website (o
 - **Frontend**: Next.js 16 App Router with TypeScript — public marketing site (VI + EN)
 - **Backend**: Next.js API Routes — REST API for all data
 - **Database**: MongoDB + Mongoose
-- **Image Storage**: Cloudflare R2 (private bucket, signed URLs)
+- **Image Storage**: Cloudinary
 - **Authentication**: Google OAuth via Auth.js v5 — with a per-module permission matrix (see [rbac.md](./rbac.md))
 - **Admin Panel**: Internal CMS at `/admin` — Vietnamese UI, protected by role + permission matrix
-- **Deployment**: Vercel (frontend + serverless backend) + Cloudflare R2 (storage)
+- **Deployment**: Vercel (frontend + serverless backend) + Cloudinary (storage)
 
 ---
 

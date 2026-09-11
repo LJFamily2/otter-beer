@@ -42,7 +42,7 @@ export function DataTable<T>({
       className={`overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-lowest shadow-sm ${className}`}
     >
       {title || action ? (
-        <div className="flex items-center justify-between border-b border-outline-variant/20 bg-surface-container-low px-6 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline-variant/20 bg-surface-container-low px-6 py-4">
           {title ? (
             <h3 className="font-display text-2xl tracking-wide text-primary">{title}</h3>
           ) : (

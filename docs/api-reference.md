@@ -185,9 +185,9 @@ Bulk-writes one role's matrix. *(Requires `roles_permissions` → `edit`)* Rejec
 
 ---
 
-## 🖼️ Media (Cloudflare R2)
+## 🖼️ Media (Cloudinary)
 
-Images never pass through the Next.js server body — the browser uploads directly to R2 using a presigned POST, and reads go through a short-lived signed URL (bucket is private). See [security.md](./security.md#6-file-upload-security).
+Images never pass through the Next.js server body — the browser uploads directly to Cloudinary using a signed POST. See [security.md](./security.md#6-file-upload-security).
 
 ### `POST /api/media/upload-url`
 
@@ -209,7 +209,7 @@ are accepted only for `hero`.
   "expiresAt": "2026-08-15T10:05:00Z"
 }
 ```
-The client `POST`s the actual file to `url` with `fields` as multipart form fields (standard S3 presigned-POST flow), then saves `key` (not the R2 URL) onto the post.
+The client `POST`s the actual file to `url` with `fields` as multipart form fields, then saves `key` onto the post.
 
 ### `POST /api/media/view-url`
 *(Requires `news_blog` → `view`)*

@@ -65,7 +65,7 @@ Content is fully multi-language: each post has a `translations` array, one entry
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `_id` | ObjectId | Auto | |
-| `coverImageKey` | String | ❌ | R2 object key |
+| `coverImageKey` | String | ❌ | Storage object key |
 | `authorId` | ObjectId | ✅ | ref `User` |
 | `tags` | String[] | ❌ | |
 | `status` | Enum | ✅ | `"draft"` \| `"published"` — default `"draft"` |
@@ -79,7 +79,7 @@ Content is fully multi-language: each post has a `translations` array, one entry
 | `translations[].seoTitle` | String | ❌ | Max 70 chars |
 | `translations[].seoDescription` | String | ❌ | Max 160 chars |
 | `translations[].seoKeywords` | String[] | ❌ | |
-| `translations[].ogImageKey` | String | ❌ | R2 object key; falls back to `coverImageKey` when unset |
+| `translations[].ogImageKey` | String | ❌ | Storage object key; falls back to `coverImageKey` when unset |
 | `createdBy` / `updatedBy` | ObjectId | ✅ | ref `User` — audit trail |
 | `createdAt` / `updatedAt` | Date | Auto | |
 
@@ -122,7 +122,7 @@ Content is fully multi-language: each post has a `translations` array, one entry
 
 ### Not yet implemented (future modules)
 
-The routes/admin pages below are still empty placeholders — schemas here are aspirational from earlier planning and will be revisited (likely reusing the same `translations[]`/R2-object-key patterns as News & Blog) when those modules are actually built.
+The routes/admin pages below are still empty placeholders — schemas here are aspirational from earlier planning and will be revisited (likely reusing the same `translations[]`/storage-object-key patterns as News & Blog) when those modules are actually built.
 
 ### `beers`
 Managed via [`src/models/Beer.ts`](../src/models/Beer.ts) *(not yet created)*
@@ -136,7 +136,7 @@ Managed via [`src/models/Beer.ts`](../src/models/Beer.ts) *(not yet created)*
 | `abv` | Number | ✅ | Alcohol by volume (%) — 0–100 |
 | `ibu` | Number | ❌ | International Bitterness Units |
 | `price` | Number | ✅ | Price in VND |
-| `imageKey` | String | ❌ | R2 object key |
+| `imageKey` | String | ❌ | Storage object key |
 | `isAvailable` | Boolean | ✅ | Default: `true` |
 | `isFeatured` | Boolean | ✅ | Show on homepage — Default: `false` |
 | `tags` | String[] | ❌ | |
@@ -149,7 +149,7 @@ Managed via [`src/models/Event.ts`](../src/models/Event.ts) *(not yet created)*
 | `title` | String | ✅ | |
 | `slug` | String | ✅ | Unique |
 | `description` | String | ✅ | |
-| `coverImageKey` | String | ❌ | R2 object key |
+| `coverImageKey` | String | ❌ | Storage object key |
 | `location` | String | ✅ | |
 | `startDate` / `endDate` | Date | ✅ / ❌ | |
 | `isFree` | Boolean | ✅ | |
@@ -207,23 +207,21 @@ mongodb+srv://<user>:<password>@<cluster>.mongodb.net/otter-beer?retryWrites=tru
 
 ---
 
-## Per-environment database & storage
+## Per-environment database
 
-Development and production use **separate MongoDB clusters** — local development should never be able to read, write, or delete production data. R2 is different: dev and prod share one Cloudflare account/API token, just pointed at two different buckets, so only the bucket name is per-environment.
+Development and production use **separate MongoDB clusters** — local development should never be able to read, write, or delete production data.
 
 | Variable | Dev value lives in | Prod value lives in |
 |---|---|---|
 | `MONGODB_URI` | `.env.development.local` | `.env.production.local` |
-| `R2_BUCKET_NAME` | `.env.development.local` | `.env.production.local` |
-| `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | `.env.local` (shared — same Cloudflare account for both) | same as dev |
 
-The two per-environment files use the exact same variable names — only the values differ — because `src/lib/env.ts` and every repository/service just read `process.env.MONGODB_URI` / `process.env.R2_BUCKET_NAME` etc. with no environment branching in code. Next.js's built-in env loading picks the right file automatically:
+The two per-environment files use the exact same variable names — only the values differ — because `src/lib/env.ts` and every repository/service just read `process.env.MONGODB_URI` with no environment branching in code. Next.js's built-in env loading picks the right file automatically:
 
 - `pnpm dev` (and `pnpm run seed`) loads `.env.development.local`
 - `pnpm build` / `pnpm start` (and `pnpm run seed:prod`) loads `.env.production.local`
-- `.env.local` is shared by both (auth secrets, site URL, R2 account credentials) — see [authentication.md](./authentication.md#environment-variables-envlocal)
+- `.env.local` is shared by both (auth secrets, site URL, Cloudinary credentials) — see [authentication.md](./authentication.md#environment-variables-envlocal)
 
-All three files are git-ignored; only `.env.example` (with blank values) is committed. When deploying to Vercel, set `MONGODB_URI` and `R2_BUCKET_NAME` under the **Production** environment scope in the Vercel dashboard with your prod values (Preview/Development scope gets the dev values); `R2_ACCOUNT_ID`/`R2_ACCESS_KEY_ID`/`R2_SECRET_ACCESS_KEY` can be set once under **All Environments** since they're shared. Vercel injects these directly, so `.env.production.local` is only needed locally if you build/start the prod bundle or run `pnpm run seed:prod` from your own machine.
+All three files are git-ignored; only `.env.example` (with blank values) is committed. When deploying to Vercel, set `MONGODB_URI` under the **Production** environment scope in the Vercel dashboard with your prod value (Preview/Development scope gets the dev value). Vercel injects these directly, so `.env.production.local` is only needed locally if you build/start the prod bundle or run `pnpm run seed:prod` from your own machine.
 
 ---
 
