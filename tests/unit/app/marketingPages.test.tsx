@@ -2,7 +2,6 @@ import { render } from "@testing-library/react";
 import AboutPage from "@/app/[locale]/(marketing)/about/page";
 import MenuPage from "@/app/[locale]/(marketing)/menu/page";
 import ContactPage from "@/app/[locale]/(marketing)/contact/page";
-import HomePage from "@/app/[locale]/(marketing)/page";
 
 jest.mock("next/image", () => ({
   __esModule: true,
