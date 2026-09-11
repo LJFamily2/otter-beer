@@ -109,8 +109,8 @@ export function MediaUploadField({
       <div className="flex h-full flex-col items-center justify-start gap-4 rounded border border-dashed border-[rgba(196,198,210,0.7)] bg-surface p-4">
         <div
           data-testid="media-preview"
-          className={`flex h-48 shrink-0 items-center justify-center overflow-hidden rounded bg-surface-container-high ${
-            aspectRatio === "9/16" ? "aspect-[9/16]" : "aspect-video"
+          className={`flex items-center justify-center overflow-hidden rounded bg-surface-container-high ${
+            aspectRatio === "9/16" ? "w-full max-w-[140px] sm:max-w-[160px] aspect-[9/16]" : "w-full aspect-video"
           }`}
         >
           {mediaKey ? (
