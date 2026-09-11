@@ -112,6 +112,13 @@ export default async function RootLayout({
 
   return (
     <html lang={lang} className={`${anton.variable} ${hankenGrotesk.variable} scroll-smooth`} data-scroll-behavior="smooth">
+      {/*
+        ╔══════════════════════════════════════════════════════════════╗
+        ║  Designed & developed by LJFamily2                          ║
+        ║  https://github.com/LJFamily2                               ║
+        ║  © 2024 – 2026 BadenBeer / Otter Beer                      ║
+        ╚══════════════════════════════════════════════════════════════╝
+      */}
       <body>
         {/* First thing in the document body: the Consent Mode "denied" default
             has to be parsed before gtag.js is injected, or there is a window in
