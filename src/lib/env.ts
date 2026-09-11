@@ -23,13 +23,6 @@ const envSchema = z.object({
   CLOUDINARY_API_SECRET: z.string().min(1),
   CLOUDINARY_UPLOAD_PRESET: z.string().min(1),
 
-  // Cloudflare R2 (S3-compatible) — not the active provider (see
-  // StorageService.ts), kept optional so R2StorageProvider stays available
-  // to switch back to without every env var below suddenly being required.
-  R2_ACCOUNT_ID: z.string().optional(),
-  R2_ACCESS_KEY_ID: z.string().optional(),
-  R2_SECRET_ACCESS_KEY: z.string().optional(),
-  R2_BUCKET_NAME: z.string().optional(),
 
   /**
    * Public origin of the site, e.g. https://otterbeer.vn — no trailing slash.

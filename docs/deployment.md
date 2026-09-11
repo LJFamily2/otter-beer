@@ -4,7 +4,7 @@
 
 OtterBeer's app deploys on **Vercel**, with images and the database hosted externally:
 - Next.js app → Vercel Serverless / Edge Functions
-- Images → Cloudflare R2 (private bucket, signed URLs — not a Vercel product)
+- Images → Cloudinary
 - Database → MongoDB Atlas (external, always-on)
 
 ---
@@ -15,7 +15,7 @@ OtterBeer's app deploys on **Vercel**, with images and the database hosted exter
 |---|---|---|
 | [Vercel](https://vercel.com) | Hobby or Pro | Hosting, serverless |
 | [MongoDB Atlas](https://www.mongodb.com/atlas) | M0 Free / M10 Paid | Database |
-| [Cloudflare R2](https://developers.cloudflare.com/r2/) | Pay-as-you-go (no egress fees) | Image storage |
+| [Cloudinary](https://cloudinary.com) | Pay-as-you-go | Image storage |
 | [Google Cloud Console](https://console.cloud.google.com) | Free | OAuth credentials |
 
 ---
@@ -37,25 +37,25 @@ git push origin main
 3. Framework preset: **Next.js** (auto-detected)
 4. Leave build settings as default (`next build`)
 
-### 3. Set up Cloudflare R2
+### 3. Set up Cloudinary
 
-1. Cloudflare dashboard → **R2** → **Create bucket** (keep it private — do not enable the public bucket URL)
-2. **Manage R2 API tokens** → create a token with read/write access scoped to that bucket
-3. Note the Account ID, Access Key ID, and Secret Access Key for the next step
+1. Cloudinary dashboard → **Settings** → **Access Keys**
+2. Note the Cloud Name, API Key, and API Secret.
+3. Go to **Settings** → **Upload** → **Upload presets** → Add a new preset.
+4. Set it to **Signed** mode.
+5. Turn off "Unique filename" (our object keys are already unique UUIDs).
 
 ### 4. Configure Environment Variables
 
 In Vercel project → **Settings** → **Environment Variables**, add:
 
-`MONGODB_URI` and `R2_BUCKET_NAME` must use **different values per Vercel environment** — Preview and Production should never share a database or bucket (see [database-schema.md](./database-schema.md#per-environment-database--storage)). R2's account credentials are the same Cloudflare account for both, so those three can be set once for all environments. Use Vercel's per-variable environment picker:
+`MONGODB_URI` must use **different values per Vercel environment** — Preview and Production should never share a database (see [database-schema.md](./database-schema.md#per-environment-database--storage)). Use Vercel's per-variable environment picker:
 
 | Variable | Environment | Value |
 |---|---|---|
 | `MONGODB_URI` | Production | Your **prod** Atlas connection string |
 | `MONGODB_URI` | Preview, Development | Your **dev** Atlas connection string |
-| `R2_BUCKET_NAME` | Production | Your prod bucket name |
-| `R2_BUCKET_NAME` | Preview, Development | Your dev bucket name |
-| `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | All | Same Cloudflare account for both environments |
+| `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` / `CLOUDINARY_UPLOAD_PRESET` | All | From Cloudinary dashboard |
 | `NEXT_PUBLIC_SITE_URL` | Production | `https://otterbeer.vn` |
 | `NEXT_PUBLIC_SITE_URL` | Preview | Auto set by Vercel (leave blank, or `https://otter-beer.vercel.app`) |
 | `AUTH_SECRET` | All | `openssl rand -base64 32` |
@@ -135,7 +135,7 @@ Before going live:
 - [ ] `NEXT_PUBLIC_SITE_URL` set to `https://otterbeer.vn`
 - [ ] Google OAuth redirect URIs include production domain
 - [ ] MongoDB Atlas network access configured
-- [ ] R2 bucket created (private) and API token scoped to it
+- [ ] Cloudinary project created and keys provided
 - [ ] `pnpm run seed` run against production DB; first `super_admin` created via sign-in (see step 7)
 - [ ] Custom domain configured and SSL verified
 - [ ] Test sitemap at `https://otterbeer.vn/sitemap.xml`

@@ -30,9 +30,9 @@
 │                    └────┬───────┬────────┘                       │
 │                         │       │                                │
 │              ┌──────────▼─┐  ┌──▼──────────────┐               │
-│              │  MongoDB   │  │  Cloudflare R2   │               │
-│              │  (Atlas)   │  │  (private bucket,│               │
-│              │            │  │   signed URLs)   │               │
+│              │  MongoDB   │  │    Cloudinary    │               │
+│              │  (Atlas)   │  │                  │               │
+│              │            │  │                  │               │
 │              └────────────┘  └─────────────────┘               │
 └─────────────────────────────────────────────────────────────────┘
 
@@ -54,7 +54,7 @@ Route protection: src/proxy.ts (Next.js 16 renamed middleware.ts → proxy.ts)
 | Database | MongoDB + Mongoose | 9.x | Atlas cloud-hosted |
 | Auth | Auth.js (next-auth) | v5 (beta) | Google OAuth only + allowlist |
 | Authorization | Custom permission matrix | — | `src/services/PermissionService.ts` — see [rbac.md](./rbac.md) |
-| Image Storage | Cloudflare R2 | S3-compatible | `@aws-sdk/client-s3` + presigned POST/GET |
+| Image Storage | Cloudinary | API | Cloudinary REST API |
 | Deployment | Vercel | — | Serverless + Edge |
 | i18n | Next.js Proxy (`src/proxy.ts`) | Built-in | Domain path routing (VI default, `/en`); renamed from Middleware in Next 16 |
 
@@ -90,7 +90,7 @@ p:\Otter Beer\otter-beer\
 │   │   │   ├── users/            ← User allowlist management (built)
 │   │   │   ├── roles/            ← Role CRUD (built)
 │   │   │   ├── permissions/      ← Permission-matrix read/update (built)
-│   │   │   ├── media/            ← R2 presigned upload/view URLs (built)
+│   │   │   ├── media/            ← Cloudinary signed upload/view URLs (built)
 │   │   │   ├── beers/            ← Beer REST endpoints (not yet built)
 │   │   │   ├── events/           ← Event REST endpoints (not yet built)
 │   │   │   ├── contact/          ← Contact form submission (not yet built)
@@ -114,7 +114,7 @@ p:\Otter Beer\otter-beer\
 │   ├── lib/
 │   │   ├── db/mongodb.ts         ← Mongoose connection singleton (`Database` class)
 │   │   ├── env.ts                ← Zod-validated environment variables
-│   │   ├── storage/               ← R2StorageProvider, StorageService (presigned URLs)
+│   │   ├── storage/               ← CloudinaryStorageProvider, StorageService
 │   │   ├── auth/RouteGuard.ts    ← API route auth/permission wrapper
 │   │   ├── utils/                 ← SlugGenerator, HtmlSanitizer
 │   │   └── validation/            ← Zod schemas per domain
@@ -179,12 +179,11 @@ Browser → src/proxy.ts
 ```
 Admin form → POST /api/media/upload-url { contentType }
   → RouteGuard.requireAuth + checks news_blog add/edit permission
-  → StorageService.requestImageUpload() → R2StorageProvider
-    → createPresignedPost() with content-type + 5MB size conditions baked in
-  → Returns { url, fields, key } — browser POSTs the file directly to R2
+  → StorageService.requestImageUpload() → CloudinaryStorageProvider
+  → Returns { url, fields, key } — browser POSTs the file directly to Cloudinary
   → key (not a public URL) is saved on the BlogPost document
   → Reading the image later goes through POST /api/media/view-url → a
-    short-lived signed GET URL (bucket is private)
+    short-lived signed GET URL
 ```
 
 ---
@@ -197,8 +196,8 @@ Reduces operational complexity — one deployment, one codebase. API routes run 
 ### Why MongoDB?
 Schema flexibility is important during early design — beer styles, event types, and blog structure may evolve. Mongoose provides schema validation while keeping migration overhead low. The News & Blog module's per-language `translations[]` array is a direct example: adding a language is a data change, not a migration.
 
-### Why Cloudflare R2 for images?
-S3-compatible (so the standard AWS SDK works unmodified), no egress fees, and a private bucket + short-lived signed URLs keeps image access auditable rather than handing out permanent public URLs.
+### Why Cloudinary for images?
+Cloudinary provides excellent out-of-the-box optimization and transformation pipelines, and the current flow uses short-lived signed URLs to keep image access auditable.
 
 ### Why Google OAuth only?
 Simplifies the auth surface. The security model relies on an email allowlist (`User` documents) plus a per-module permission matrix — only invited, active users can sign in, and what they can do is configurable per role rather than a fixed hierarchy. See [authentication.md](./authentication.md) and [rbac.md](./rbac.md) for details.
